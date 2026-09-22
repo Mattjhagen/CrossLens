@@ -4,7 +4,7 @@
 
 Deliver an installable Android debug app that demonstrates the five-screen CrossLens experience using local fictional news fixtures. Implement the boundaries needed for future global sources, translations, and explainable comparisons. No live backend, API key, or translation subscription is required.
 
-Visual quality is part of this outcome. Follow [the design direction](DESIGN_DIRECTION.md) for an original editorial identity, subtle flip-inspired motion, local reading continuity, and the required visual review.
+Visual quality is part of this outcome. Follow [the design direction](DESIGN_DIRECTION.md) for an original editorial identity, subtle flip-inspired motion, local reading continuity, and the required visual review. Follow [the access model](MONETIZATION.md) for the mock free/Plus entitlement and paywall behavior.
 
 This guide is an implementation handoff. The repository initially contains documentation only; commands beginning with `./gradlew` become available after Phase 1 creates the project and wrapper.
 
@@ -28,8 +28,8 @@ Android Studio can create the machine-local `local.properties` SDK path when ope
 ## 2. Give Claude this kickoff prompt
 
 ```text
-Read CLAUDE.md, README.md, docs/ANDROID_BUILD_GUIDE.md, and
-docs/DESIGN_DIRECTION.md. Build the
+Read CLAUDE.md, README.md, docs/ANDROID_BUILD_GUIDE.md,
+docs/DESIGN_DIRECTION.md, and docs/MONETIZATION.md. Build the
 initial CrossLens Android skeleton through all six phases in this guide.
 First inspect the repository and available Android/JDK tools. Then choose
 and document a compatible stable toolchain and implement the app, rather
@@ -57,6 +57,13 @@ and a subtle flip-inspired perspective transition. Use Flipboard as a
 reference for editorial qualities, never copy its branding or exact UI.
 Include a finite mock edition, persisted saved stories and continue reading,
 and accessible reduced motion. Complete the design brief's visual gate.
+
+Implement the documented free/Plus boundary and a polished paywall using a
+local FREE/PLUS_DEMO entitlement. Keep free reading genuinely useful; lock
+only documented deeper comparison, translation, Lens Gap, and discovery
+features. Provide an honest local “Preview Plus in this demo” action and
+reset flow. Do not integrate Google Play Billing, prices, trials, payment
+data, or live entitlement validation in this skeleton.
 
 Work through the acceptance checklist, run the relevant build and test
 commands, and fix failures. If the environment blocks a check, state
@@ -108,10 +115,11 @@ app/src/main/java/com/crosslens/app/
 ### Phase 2 — Domain contracts and offline data
 
 - Implement the proposed README models with typed IDs/enums where helpful and optional values for unknown metadata. Model article language independently of source defaults, and reporting geography independently of event geography.
-- Define `StoryRepository` (observable lists/detail and refresh), `SourceRepository`, `TranslationRepository`, and `PreferencesRepository` contracts. Keep Lens Gap assessments part of fixture story data for now.
+- Define `StoryRepository` (observable lists/detail and refresh), `SourceRepository`, `TranslationRepository`, `PreferencesRepository`, and `EntitlementRepository` contracts. Keep Lens Gap assessments part of fixture story data for now.
 - Add Room entities, relationships, transactional seeding, and Flow queries. Seed once by fixture version and ensure restarts do not duplicate rows or overwrite user preferences. Refresh in mock mode deterministically restores/reads the bundled dataset without network access.
 - Bind mock implementations with Hilt. Define a minimal future Retrofit API/DTO boundary and OkHttp provision, using a reserved `.invalid` base URL if one is necessary. Never invoke it in mock mode; no live repository is required yet.
 - Add a `ReadingStateRepository` backed by DataStore for saved story IDs and last-opened story ID. Keep this state separate from fixture seeding and preserve it on refresh.
+- Add DataStore-backed `AccessTier` state (`FREE`, `PLUS_DEMO`) and one reusable feature-access check. Create an uninvoked future `BillingGateway` interface; do not add a real billing SDK or production payment implementation.
 - Keep I/O off the main thread. Inject a clock/dispatchers where needed for deterministic tests; use a fixed fixture reference time rather than random generated dates.
 
 Fixture requirements:
@@ -119,6 +127,7 @@ Fixture requirements:
 - At least six fictional story clusters, eight fictional sources across at least six countries and four regions, and three original languages, including an RTL language.
 - At least two story clusters with three or more sources and contrasting, evidence-linked framing observations.
 - Include an available demo translation, missing translation, simulated failed translation, disputed claim, sparse-coverage story with no score, equal-score sorting ties, and a broad-agreement demo assessment.
+- Include at least one story with more than two source articles and more than one available translation, so Free and Plus states can be meaningfully exercised.
 - Use original fictional text and reserved example URLs. Mark article links as demo links in the UI; do not present them as real reporting. Use one shared region taxonomy and country-code mapping.
 - Supply deterministic loading/empty/error scenarios through test fakes or a debug-only scenario selector; users must have a retry or reset path where applicable.
 
@@ -131,12 +140,14 @@ Fixture requirements:
 - Every screen uses a ViewModel with immutable `StateFlow` UI state and explicit user actions. Collect with lifecycle awareness. Keep filtering/comparison logic out of composables.
 - Open article URLs through an external browser intent, handling an absent URL or unavailable browser gracefully. Identify placeholder links before opening them.
 - Show all numeric Lens Gap values with an adjacent demo label. The explanation lists illustrative components, sample sources, and limitations. No score means insufficient evidence, not agreement.
+- Free readers can open every Story overview, claims section, source attribution, and original article route. Let them compare the first two source panes, then show the original paywall when they ask for another source, a Plus translation, or the full Lens Gap evidence. The paywall must dismiss cleanly and preserve the reading context.
 
 ### Phase 4 — Discovery and preferences
 
 - Explore combines selected region/country/topic/original-language filters with AND between dimensions and OR within one dimension. Region/country/language filters match source articles; topic filters match story topics. Include a clear-all action and a no-results state.
 - Home supports Latest (updated time descending), Coverage breadth (distinct reporting countries descending), and Demo Lens Gap (score descending, unavailable last). Use updated time then stable story ID as tie-breakers where needed.
 - Settings persists reading language, home country/region, enabled sources, translation display preference, system/light/dark theme, and reduced-motion preference in DataStore.
+- Settings exposes the current local demo access state and a way to reset the Plus preview. It does not claim an active paid subscription.
 - Apply source preferences consistently to lists and article comparisons; a story is visible if at least one enabled source remains. Zero enabled sources shows a recovery action. Home-country preference provides context for future discovery and must not silently hide other countries.
 - Since demo scores describe fixed fixture samples, show “Comparison unavailable for this source selection” and exclude the score from ranking if source preferences remove any sampled articles. Do not recompute a score or attach the old score to a different sample.
 - Language/translation preference selects available fixture translations, with original-text fallback and a visible status. UI localization is separate and can remain English in this milestone.
@@ -149,6 +160,7 @@ Fixture requirements:
 - Add Compose navigation smoke tests for Home → Story → CrossLens → Back, Explore filtering, and Settings changes.
 - Verify light/dark themes, large fonts, screen-reader labels, touch targets, insets, and readable RTL sample text. Keep visible copy in resources and avoid color-only status indicators.
 - Test save/unsave and continue-reading persistence, missing/filtered last-opened stories, and Saved filter interactions. Perform the design brief's visual acceptance gate and capture representative screenshots; verify source switching with animations disabled and with reduced motion enabled.
+- Test Free gating through taps and direct navigation, paywall dismissal, Plus preview/reset persistence, accessibility/back behavior of the sheet, and that a tier change cannot expose stale Plus content after restart or source-selection changes.
 - Run in airplane mode after installation and confirm all five screens, seeded data, and settings work without a backend.
 
 ### Phase 6 — Handoff
@@ -182,6 +194,7 @@ If the SDK is missing, install the documented packages and configure `local.prop
 
 - [ ] The design brief's visual acceptance gate is complete: original editorial identity, polished five-screen layouts, inspected screenshots, offline assets, accessible motion, and no unfinished visual placeholders.
 - [ ] Saved stories and continue reading survive restart; the finite mock edition is honestly labeled.
+- [ ] Free readers retain the documented useful reading experience; Plus-only actions show an original, dismissible, honest paywall. Mock Preview Plus/reset flows persist correctly, and direct navigation does not bypass gates.
 - [ ] A fresh checkout builds with the documented toolchain and committed wrapper.
 - [ ] Debug APK installs and opens on API 29+.
 - [ ] All five screens work with stable-ID navigation and correct back behavior.

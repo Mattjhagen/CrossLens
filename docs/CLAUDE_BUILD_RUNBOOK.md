@@ -15,14 +15,16 @@ Paste this instruction into the interactive session:
 
 ```text
 Read CLAUDE.md, README.md, docs/ANDROID_BUILD_GUIDE.md,
-docs/DESIGN_DIRECTION.md, and docs/CLAUDE_BUILD_RUNBOOK.md.
+docs/DESIGN_DIRECTION.md, docs/MONETIZATION.md, and
+docs/CLAUDE_BUILD_RUNBOOK.md.
 Execute runbook steps 2–11 in order to implement the complete Android
 skeleton. Keep docs/BUILD_STATUS.md current. Use each step's quality gate,
 record real evidence, fix failures, and continue without asking me to
 approve routine implementation decisions. Do not stop after planning.
 
 Treat gorgeous original editorial design as a required deliverable.
-Keep the app mock-data-first and offline. Run the architecture, data,
+Keep the app mock-data-first and offline. Implement the documented local
+FREE/PLUS_DEMO paywall flow without processing payments. Run the architecture, data,
 design, accessibility, security, dependency, and performance audits.
 Do not invent test results or mark blocked checks as passed. If a missing
 tool/device blocks a check, continue independent work, record the exact
@@ -78,9 +80,9 @@ Inspect a rendered Home preview or emulator screen for editorial hierarchy, orig
 
 ## 4. Implement offline data and test its contracts
 
-**Do:** Implement build-guide Phase 2, including deterministic fictional fixtures, Room relationships and idempotent seeding, repository interfaces, Hilt mock bindings, DataStore preferences/reading state, and the inactive Retrofit/OkHttp boundary.
+**Do:** Implement build-guide Phase 2, including deterministic fictional fixtures, Room relationships and idempotent seeding, repository interfaces, Hilt mock bindings, DataStore preferences/reading state, local free/Plus entitlement state, and the inactive Retrofit/OkHttp boundary.
 
-**Check:** Write targeted tests for seed idempotency, stable relationships, original/translated text separation, translation fallback, fixture evidence references, and persistence across repository recreation. Use coroutine test dispatchers for asynchronous logic. Run the unit tests; run Room instrumentation tests when a device is available.
+**Check:** Write targeted tests for seed idempotency, stable relationships, original/translated text separation, translation fallback, fixture evidence references, free/Plus access decisions, and persistence across repository recreation. Use coroutine test dispatchers for asynchronous logic. Run the unit tests; run Room instrumentation tests when a device is available.
 
 ```sh
 ./gradlew :app:testDebugUnitTest
@@ -91,9 +93,9 @@ Inspect a rendered Home preview or emulator screen for editorial hierarchy, orig
 
 ## 5. Build the complete reading experience
 
-**Do:** Implement Home → Story → CrossLens and back, source selection, original/demo-translated content, evidence explanations, save/unsave, continue reading, and the finite mock edition. Implement all loading, empty, error/retry, not-found, and unavailable states. Add the subtle source-pane transition and reduced-motion alternative.
+**Do:** Implement Home → Story → CrossLens and back, source selection, original/demo-translated content, evidence explanations, save/unsave, continue reading, the finite mock edition, and the documented paywall. Implement all loading, empty, error/retry, not-found, and unavailable states. Add the subtle source-pane transition and reduced-motion alternative.
 
-**Check:** Unit-test ViewModel state transitions. Add Compose navigation and state tests, including an invalid story ID and retry recovery. Verify rapid source switching does not leave the title, article body, and source attribution out of sync. Inspect rendered screens as features land.
+**Check:** Unit-test ViewModel state transitions. Add Compose navigation and state tests, including an invalid story ID, retry recovery, gated direct routes, paywall dismissal, local Plus preview, reset, and entitlement changes after restart. Verify rapid source switching does not leave the title, article body, and source attribution out of sync. Inspect rendered screens as features land.
 
 **Gate:** The reading loop works, demo status is unambiguous, evidence remains reachable, and the visual components feel consistent across screens. No placeholder destinations or inert primary actions remain.
 
@@ -129,7 +131,7 @@ Switch from building to reviewing the actual code and rendered behavior. Record 
 | Data and editorial integrity | Fictional labels, translation provenance, attributed claims, valid evidence IDs, null/unavailable scores, sample-aware ranking, no fabricated freshness or regional generalizations. | Edge-case test results plus screenshots of disclosures and unavailable states. |
 | Design and originality | All five screens meet the design brief; hierarchy, image crops, whitespace, typography, empty states, and custom identity are deliberate; flip-inspired motion supports comparison. | Inspected light/dark screenshots with concise observations and corrections. |
 | Accessibility | TalkBack reading order/labels, focus, controls usable without gestures, font scaling, contrast, RTL text, narrow layouts, and both system-disabled and in-app reduced motion. | Device/emulator matrix and manual observations; identify any checks not performed. Automated semantics tests alone do not prove accessibility. |
-| Security and privacy | Merged manifest permissions and exported components, intent/URL handling, app-private storage, logging, tracked secrets/signing material, cleartext/TLS settings, debug-only controls, unnecessary analytics/SDKs. Accept only intended HTTP(S) article links; handle invalid links safely. | Manifest/code review with file references and results of available secret checks. Never copy discovered secrets into reports. Document expected launcher exports; do not blindly disable every exported component. |
+| Security and privacy | Merged manifest permissions and exported components, intent/URL handling, app-private storage, logging, tracked secrets/signing material, cleartext/TLS settings, debug-only controls, unnecessary analytics/SDKs, and free-tier enforcement on direct routes/restarts. Accept only intended HTTP(S) article links; handle invalid links safely. | Manifest/code review with file references and results of available secret checks. Never copy discovered secrets into reports. Document expected launcher exports; do not blindly disable every exported component. Verify the local entitlement is visibly a demo and cannot be described as payment authorization. |
 | Dependencies and build supply chain | Pinned direct/resolved dependencies, reputable repositories, wrapper integrity/checksum configuration, asset/library licenses, and known advisories for the actual resolved versions. | Dependency inventory, official advisory/source links with review date, scanner name/version if used, and concrete findings. Lint is not a vulnerability scan; an unavailable advisory check must be reported as incomplete. |
 | Performance and offline operation | Cold launch, scrolling, image memory, pane switching under rapid input, repeated navigation, and no network attempts from mock repositories. | Device/API/build type, profiling or observation method, actual results, and limitations. Airplane-mode success alone does not prove zero attempted requests; inspect DI/call paths and add a fail-on-use remote test double where appropriate. |
 
@@ -174,11 +176,12 @@ Walk through this sequence and record the outcome:
 3. Select available and unavailable translations; confirm original text and status remain clear.
 4. Exercise every sort and combined Explore filters, including a no-results recovery.
 5. Disable sampled sources; verify comparison score invalidation and visible coverage counts. Disable all sources and recover through settings.
-6. Change theme and reduced motion; inspect all five screens and loading/empty/error states.
-7. Force-stop and relaunch without clearing storage; confirm preferences, saves, and last-opened story persist.
-8. Disable connectivity; relaunch and repeat the primary reading loop. Article browser links are external navigation, not a required offline content feature.
-9. Check large text, a compact display, RTL content, TalkBack, and source controls without swipe gestures.
-10. Capture reviewed screenshots under `docs/screenshots/`. Cover all screens in light/dark mode and representative edge states; record device dimensions/API. Exercise API 29 and a current supported API when available; explicitly record gaps.
+6. As a Free reader, request each Plus feature, dismiss the paywall, then preview Plus and reset it. Confirm Story context remains available and direct routes do not reveal locked content.
+7. Change theme and reduced motion; inspect all five screens and loading/empty/error states.
+8. Force-stop and relaunch without clearing storage; confirm preferences, saves, last-opened story, and mock tier persist.
+9. Disable connectivity; relaunch and repeat the primary reading loop. Article browser links are external navigation, not a required offline content feature.
+10. Check large text, a compact display, RTL content, TalkBack, and source controls without swipe gestures.
+11. Capture reviewed screenshots under `docs/screenshots/`. Cover all screens in light/dark mode and representative edge states; record device dimensions/API. Exercise API 29 and a current supported API when available; explicitly record gaps.
 
 **Gate:** The device checklist and the design brief's acceptance gate pass with recorded observations. Missing screenshots or inaccessible device checks remain incomplete, not implied successes.
 

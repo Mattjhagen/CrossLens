@@ -40,6 +40,12 @@ Build reasons to return from the start: a finite mock edition, locally saved sto
 
 Read [the design direction and visual acceptance gate](docs/DESIGN_DIRECTION.md) alongside the build guide. It defines screen composition, motion, original identity, and the visual evidence required at handoff.
 
+## Free reading and CrossLens Plus
+
+CrossLens will offer a useful free experience and an optional **CrossLens Plus** upgrade. Free readers can discover stories, read event context and claims, save stories, and compare two source perspectives. Plus unlocks the full set of sources and available translations for a story, complete Lens Gap evidence, and deeper discovery controls.
+
+The first Android skeleton contains a clearly labeled local **Preview Plus** entitlement so the paywall and locked states can be designed and tested without processing purchases. It does not contain Google Play Billing, real prices, trials, or payment data. See [the access model](docs/MONETIZATION.md) for the complete free/Plus boundary, paywall behavior, and production requirements.
+
 ## The first five screens
 
 | Screen | Initial skeleton experience |
@@ -92,6 +98,7 @@ These are proposed domain contracts, not existing classes. Use stable IDs, UTC i
 | `LensGapAssessment` | Story ID, status, nullable score, component explanations, source/article sample IDs, coverage window, confidence/limitations, method version, generated time, `isDemo` |
 | `UserPreferences` | Reading language, home country/region, enabled source IDs, translation preference, theme, reduced-motion preference |
 | `ReadingState` | Locally persisted saved story IDs and last-opened story ID; independent of seeded content |
+| `Entitlement` | Active tier (`FREE` or local `PLUS_DEMO`), access-state source, and update time; never a real purchase record in the skeleton |
 
 Keep original and translated content separate. Missing translations fall back to the original with a visible explanation. A corroborated claim still needs evidence; an apparent omission means “not found in this analyzed sample,” not proof of intentional suppression. Keep event location distinct from the country of a reporting source.
 
@@ -109,13 +116,13 @@ Before real ranking ships, evaluate translation artifacts, duplicate/syndicated 
 
 ## Roadmap
 
-1. **Android skeleton:** five screens, local fixtures, offline persistence, preferences, navigation, and meaningful tests.
+1. **Android skeleton:** five screens, local fixtures, offline persistence, preferences, navigation, meaningful tests, and a mock free/Plus access experience.
 2. **Source ingestion:** backend API, source catalog, attribution/content permissions, article normalization, event clustering, and deduplication.
 3. **Translations:** provider abstraction, cache/version handling, original-text access, explicit failure states, and multilingual/RTL validation.
 4. **Explainable comparisons:** evidence-backed frame observations and a human-reviewed Lens Gap evaluation set before production scoring.
 5. **Discovery experiments:** evaluate coverage breadth, cross-country differences, and “outside my usual sources” sorting with transparent controls.
 
-Accounts, subscriptions, scraping, production backend deployment, live translation, and automated political labels are outside the initial build.
+Accounts, real subscriptions/billing, scraping, production backend deployment, live translation, and automated political labels are outside the initial build.
 
 ## Development references
 

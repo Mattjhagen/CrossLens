@@ -1,10 +1,12 @@
 # CrossLens repository instructions
 
-Read `README.md`, `docs/ANDROID_BUILD_GUIDE.md`, `docs/DESIGN_DIRECTION.md`, and `docs/CLAUDE_BUILD_RUNBOOK.md` before implementation. The README defines product intent and proposed domain contracts; the build guide defines the initial milestone and its acceptance criteria.
+Read `README.md`, `docs/ANDROID_BUILD_GUIDE.md`, `docs/DESIGN_DIRECTION.md`, `docs/MONETIZATION.md`, and `docs/CLAUDE_BUILD_RUNBOOK.md` before implementation. The README defines product intent and proposed domain contracts; the build guide defines the initial milestone and its acceptance criteria.
 
 ## Scope
 
 Build a native Android skeleton using Kotlin, Jetpack Compose, Material 3, MVVM, Coroutines/Flow, Hilt, Retrofit/OkHttp, and Room. Use a single app module, minimum API 29, and a mock-data-first repository architecture. Add DataStore for preferences. Keep the app usable offline after installation.
+
+Implement the documented free/Plus experience with a local `FREE`/`PLUS_DEMO` entitlement and a polished paywall. Do not integrate Google Play Billing, collect payment data, fabricate price/trial claims, or label a mock tier as a real subscription.
 
 ## Design priority
 
@@ -19,6 +21,7 @@ A gorgeous, distinctive editorial experience is a first-milestone requirement. F
 - Keep domain models separate from Room entities and network DTOs. Make mock/live selection a dependency-injection concern, not a screen concern.
 - Seed deterministic, explicitly fictional sample reporting into Room idempotently. Preserve settings across restarts. Mock mode must make no network requests.
 - Keep original content and translations separate. Label demo translations and demo Lens Gap values visibly. Do not invent a production scoring formula or label disputed claims as verified.
+- Keep the story overview, claims, source attribution, and original article route available to free readers. Gate only documented Plus benefits through one reusable entitlement check, with direct navigation unable to bypass it. Keep dismiss/restore/upgrade-preview flows honest and accessible.
 - Use string resources, accessible controls, dark/light themes, scalable text, and RTL-compatible layouts. Do not claim UI localization merely because sample articles have translations.
 - Include a working Gradle wrapper, meaningful tests, and an updated README. Never claim a command passed unless it ran successfully; report environmental blockers precisely.
 - Do not commit secrets, SDK paths, generated build outputs, or signing keys. Do not add a license without the owner's choice.
