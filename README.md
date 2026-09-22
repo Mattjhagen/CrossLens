@@ -10,6 +10,8 @@ The goal is informed comparison: show where reporting overlaps, where emphasis d
 
 ## Start building
 
+Start with [the step-by-step Claude CLI runbook](docs/CLAUDE_BUILD_RUNBOOK.md) to build, verify, audit, fix findings, and prepare the handoff. It includes copy-and-paste prompts, quality gates, a device checklist, and required evidence.
+
 Use [the Claude CLI build guide](docs/ANDROID_BUILD_GUIDE.md) for prerequisites, a copy-and-paste kickoff prompt, implementation phases, and completion checks. [CLAUDE.md](CLAUDE.md) provides the repository instructions for Claude Code.
 
 ```sh

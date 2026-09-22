@@ -8,6 +8,8 @@ Visual quality is part of this outcome. Follow [the design direction](DESIGN_DIR
 
 This guide is an implementation handoff. The repository initially contains documentation only; commands beginning with `./gradlew` become available after Phase 1 creates the project and wrapper.
 
+For the execution sequence, copy-and-paste session prompt, step-level gates, audit rubric, and final device checklist, follow [the Claude CLI runbook](CLAUDE_BUILD_RUNBOOK.md). Its steps expand the six implementation phases below.
+
 ## 1. Prepare the workstation
 
 1. Install Android Studio and use its SDK Manager to install a stable Android SDK, platform tools, and an emulator image. Create an API 29+ emulator or enable USB debugging on an Android 10+ device.

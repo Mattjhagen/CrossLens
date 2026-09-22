@@ -1,6 +1,6 @@
 # CrossLens repository instructions
 
-Read `README.md`, `docs/ANDROID_BUILD_GUIDE.md`, and `docs/DESIGN_DIRECTION.md` before implementation. The README defines product intent and proposed domain contracts; the build guide defines the initial milestone and its acceptance criteria.
+Read `README.md`, `docs/ANDROID_BUILD_GUIDE.md`, `docs/DESIGN_DIRECTION.md`, and `docs/CLAUDE_BUILD_RUNBOOK.md` before implementation. The README defines product intent and proposed domain contracts; the build guide defines the initial milestone and its acceptance criteria.
 
 ## Scope
 
@@ -22,6 +22,10 @@ A gorgeous, distinctive editorial experience is a first-milestone requirement. F
 - Use string resources, accessible controls, dark/light themes, scalable text, and RTL-compatible layouts. Do not claim UI localization merely because sample articles have translations.
 - Include a working Gradle wrapper, meaningful tests, and an updated README. Never claim a command passed unless it ran successfully; report environmental blockers precisely.
 - Do not commit secrets, SDK paths, generated build outputs, or signing keys. Do not add a license without the owner's choice.
+
+## Quality gates and audits
+
+Execute the runbook in order and maintain `docs/BUILD_STATUS.md` and `docs/QUALITY_REPORT.md` during implementation. Perform explicit architecture, editorial/data integrity, design, accessibility, security/privacy, dependency, and performance/offline review passes. Record evidence, fix blocking findings, and rerun affected checks. A missing device or tool is a blocked check, not a pass; continue independent work but keep milestone readiness incomplete until mandatory gates pass.
 
 ## Completion
 
