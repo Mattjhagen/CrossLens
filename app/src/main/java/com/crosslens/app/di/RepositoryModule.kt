@@ -19,6 +19,14 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun bindSourceRepository(impl: com.crosslens.app.data.mock.MockSourceRepository): com.crosslens.app.data.repository.SourceRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTranslationRepository(impl: com.crosslens.app.data.mock.MockTranslationRepository): com.crosslens.app.data.repository.TranslationRepository
+
+    @Binds
+    @Singleton
     abstract fun bindUserPreferencesRepository(
         impl: DataStoreUserPreferencesRepository
     ): UserPreferencesRepository
