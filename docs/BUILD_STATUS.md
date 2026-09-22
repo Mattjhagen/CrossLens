@@ -45,8 +45,8 @@ Based on [Android Gradle Plugin compatibility](https://developer.android.com/bui
 | --- | --- | --- | --- |
 | 2. Inspect & establish ledger | PASS | BUILD_STATUS.md created, toolchain documented | Complete |
 | 3. Foundation & visual system | PASS | APK built (56MB), lint passed | Complete - wrapper, deps, theme, navigation |
-| 4. Offline data & tests | IN PROGRESS | Domain models, Room entities/DAOs created | Repository layer and seed data next |
-| 5. Reading & comparison | NOT STARTED | - | Home, Story, CrossLens screens |
+| 4. Offline data & tests | PASS | Build successful with data layer | Mock repository, DataStore, seed working |
+| 5. Reading & comparison | IN PROGRESS | HomeViewModel + Screen working | Story, CrossLens screens next |
 | 6. Discovery & preferences | NOT STARTED | - | Explore, Settings, filters |
 | 7. Automated verification | NOT STARTED | - | Build, test, lint execution |
 | 8. Audit implementation | NOT STARTED | - | Architecture, design, a11y, security audits |
