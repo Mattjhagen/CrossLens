@@ -28,6 +28,16 @@ Claude Code and the Android development tools must be installed first. The guide
 - **Multiple dimensions of perspective:** geographic, political, and institutional context can coexist. Avoid a universal left/center/right classification.
 - **Explain the comparison:** readers should understand the reasons behind a future Lens Gap result and its limitations.
 
+## Design is a core feature
+
+**CrossLens should be gorgeous and make readers want to return.** The visual direction takes inspiration from the owner's love of Flipboard's editorial feel and tactile browsing, expressed through an original CrossLens identity: expressive typography, generous imagery, varied magazine compositions, warm surfaces, and restrained perspective-switch motion.
+
+The first skeleton must already feel thoughtfully designed. Material 3 is the foundation for a custom visual system, and every screen—including empty states and Settings—gets the same care. Subtle flip-inspired transitions should support comparing sources, with accessible controls and reduced-motion alternatives.
+
+Build reasons to return from the start: a finite mock edition, locally saved stories, a continue-reading shortcut, and useful invitations to explore another perspective. Live briefings, followed topics, and meaningful update notifications come later. Return visits should come from beauty, trust, and discovery.
+
+Read [the design direction and visual acceptance gate](docs/DESIGN_DIRECTION.md) alongside the build guide. It defines screen composition, motion, original identity, and the visual evidence required at handoff.
+
 ## The first five screens
 
 | Screen | Initial skeleton experience |
@@ -78,7 +88,8 @@ These are proposed domain contracts, not existing classes. Use stable IDs, UTC i
 | `FrameObservation` | ID, story ID, article IDs, emphasized actors/claims, language or sentiment observations, evidence references, method/version and confidence; optional omission hypothesis with comparison scope |
 | `Perspective` | ID, scope/article IDs, dimension (`GEOGRAPHIC`, `POLITICAL`, `INSTITUTIONAL`), descriptive label, evidence references, attribution and uncertainty |
 | `LensGapAssessment` | Story ID, status, nullable score, component explanations, source/article sample IDs, coverage window, confidence/limitations, method version, generated time, `isDemo` |
-| `UserPreferences` | Reading language, home country/region, enabled source IDs, translation preference, theme |
+| `UserPreferences` | Reading language, home country/region, enabled source IDs, translation preference, theme, reduced-motion preference |
+| `ReadingState` | Locally persisted saved story IDs and last-opened story ID; independent of seeded content |
 
 Keep original and translated content separate. Missing translations fall back to the original with a visible explanation. A corroborated claim still needs evidence; an apparent omission means “not found in this analyzed sample,” not proof of intentional suppression. Keep event location distinct from the country of a reporting source.
 

@@ -1,10 +1,14 @@
 # CrossLens repository instructions
 
-Read `README.md` and `docs/ANDROID_BUILD_GUIDE.md` before implementation. The README defines product intent and proposed domain contracts; the build guide defines the initial milestone and its acceptance criteria.
+Read `README.md`, `docs/ANDROID_BUILD_GUIDE.md`, and `docs/DESIGN_DIRECTION.md` before implementation. The README defines product intent and proposed domain contracts; the build guide defines the initial milestone and its acceptance criteria.
 
 ## Scope
 
 Build a native Android skeleton using Kotlin, Jetpack Compose, Material 3, MVVM, Coroutines/Flow, Hilt, Retrofit/OkHttp, and Room. Use a single app module, minimum API 29, and a mock-data-first repository architecture. Add DataStore for preferences. Keep the app usable offline after installation.
+
+## Design priority
+
+A gorgeous, distinctive editorial experience is a first-milestone requirement. Follow `docs/DESIGN_DIRECTION.md`: magazine composition, expressive type, bundled imagery, original CrossLens perspective motifs, and subtle flip-inspired motion. The owner's Flipboard reference is inspiration for qualities, not permission to reproduce its identity or exact UI. Customize Material 3; do not deliver generic placeholder screens. Implement local saved stories, continue reading, a finite mock edition, and reduced motion. Complete the visual acceptance gate as well as functional checks.
 
 ## Implementation rules
 
