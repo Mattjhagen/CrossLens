@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CrossLens</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_explore">Explore</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">CrossLens</string>
+    <string name="home_subtitle">One event. A world of perspectives.</string>
+    <string name="mock_edition_label">Mock Edition · Demo</string>
+    <string name="edition_complete">You\'re caught up with this demo edition</string>
+    <string name="continue_reading">Continue reading</string>
+    <string name="saved_stories">Saved</string>
+    <string name="no_saved_stories">No saved stories yet</string>
+    <string name="save_story">Save story</string>
+    <string name="unsave_story">Unsave story</string>
+
+    <!-- Sort modes -->
+    <string name="sort_latest">Latest</string>
+    <string name="sort_coverage">Coverage</string>
+    <string name="sort_lens_gap">Demo Lens Gap</string>
+
+    <!-- Story Screen -->
+    <string name="story_not_found">Story not found</string>
+    <string name="compare_perspectives">Compare perspectives</string>
+    <string name="sources_label">Sources</string>
+    <string name="claims_label">Claims</string>
+    <string name="original_article">Read original</string>
+    <string name="demo_link_notice">Demo link · does not navigate to real article</string>
+
+    <!-- Claims -->
+    <string name="claim_reported">Reported</string>
+    <string name="claim_corroborated">Corroborated</string>
+    <string name="claim_disputed">Disputed</string>
+    <string name="claim_unassessed">Unassessed</string>
+
+    <!-- CrossLens Comparison -->
+    <string name="crosslens_title">CrossLens</string>
+    <string name="source_selector">Select source</string>
+    <string name="original_text">Original</string>
+    <string name="translated_text">Translation</string>
+    <string name="translation_unavailable">Translation not available</string>
+    <string name="translation_failed">Translation failed</string>
+    <string name="translation_demo">Demo translation · illustrative</string>
+    <string name="framing_observations">Framing</string>
+    <string name="previous_source">Previous</string>
+    <string name="next_source">Next</string>
+
+    <!-- Lens Gap -->
+    <string name="lens_gap_label">Demo Lens Gap</string>
+    <string name="lens_gap_illustrative">Illustrative</string>
+    <string name="lens_gap_unavailable">Not enough coverage</string>
+    <string name="lens_gap_explanation">Explanation</string>
+
+    <!-- Explore Screen -->
+    <string name="explore_title">Explore</string>
+    <string name="filter_region">Region</string>
+    <string name="filter_country">Country</string>
+    <string name="filter_topic">Topic</string>
+    <string name="filter_language">Original language</string>
+    <string name="clear_filters">Clear all</string>
+    <string name="no_results">No stories match your filters</string>
+    <string name="adjust_filters">Try adjusting your filters</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_reading">Reading</string>
+    <string name="settings_display">Display</string>
+    <string name="settings_access">Access</string>
+    <string name="reading_language">Reading language</string>
+    <string name="home_country">Home country</string>
+    <string name="home_region">Home region</string>
+    <string name="enabled_sources">Enabled sources</string>
+    <string name="translation_preference">Translation display</string>
+    <string name="theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="reduced_motion">Reduced motion</string>
+    <string name="access_tier">Access tier</string>
+    <string name="access_free">Free</string>
+    <string name="access_plus_demo">Plus (Preview)</string>
+    <string name="preview_plus">Preview Plus in this demo</string>
+    <string name="reset_to_free">Reset to Free</string>
+
+    <!-- Paywall -->
+    <string name="paywall_title">CrossLens Plus</string>
+    <string name="paywall_benefit_sources">Compare all sources for this story</string>
+    <string name="paywall_benefit_translations">Read available translations</string>
+    <string name="paywall_benefit_lens_gap">View full Lens Gap analysis</string>
+    <string name="paywall_benefit_discovery">Advanced discovery filters</string>
+    <string name="paywall_demo_notice">This is a demo. Purchases are not available.</string>
+    <string name="paywall_maybe_later">Maybe later</string>
+    <string name="unlock_feature">Unlock this feature</string>
+
+    <!-- States -->
+    <string name="loading">Loading…</string>
+    <string name="error_loading">Error loading content</string>
+    <string name="retry">Retry</string>
+    <string name="empty_state">Nothing to show</string>
+
+    <!-- Accessibility -->
+    <string name="cd_story_image">Story illustration</string>
+    <string name="cd_source_flag">Source country</string>
+    <string name="cd_save_button">Save story button</string>
+    <string name="cd_sort_button">Sort options</string>
+    <string name="cd_filter_button">Filter stories</string>
+    <string name="cd_settings_button">Open settings</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_back">Back</string>
+</resources>

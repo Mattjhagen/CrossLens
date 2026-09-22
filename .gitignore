@@ -1,0 +1,63 @@
+# Android Build
+*.apk
+*.aar
+*.ap_
+*.aab
+*.dex
+*.class
+bin/
+gen/
+out/
+build/
+.gradle/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local configuration
+local.properties
+.idea/
+*.iml
+.DS_Store
+
+# Signing
+*.jks
+*.keystore
+keystore.properties
+
+# Gradle
+.gradle
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# NDK
+obj/
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Android Studio
+.navigation/
+captures/
+output.json
+
+# Secrets and sensitive data
+*.env
+secrets.xml
+google-services.json
+
+# Room schema exports
+app/schemas/
+
+# Test results
+**/test-results/
+**/androidTest-results/
+
+# Misc
+*.swp
+*~
+.~lock.*
