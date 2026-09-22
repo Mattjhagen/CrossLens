@@ -43,16 +43,16 @@ Based on [Android Gradle Plugin compatibility](https://developer.android.com/bui
 
 | Step | Status | Evidence | Blocker / Next Action |
 | --- | --- | --- | --- |
-| 2. Inspect & establish ledger | PASS | BUILD_STATUS.md created, toolchain documented | Complete |
-| 3. Foundation & visual system | PASS | APK built (56MB), lint passed | Complete - wrapper, deps, theme, navigation |
-| 4. Offline data & tests | PASS | Build successful with data layer | Mock repository, DataStore, seed working |
-| 5. Reading & comparison | IN PROGRESS | HomeViewModel + Screen working | Story, CrossLens screens next |
-| 6. Discovery & preferences | NOT STARTED | - | Explore, Settings, filters |
-| 7. Automated verification | NOT STARTED | - | Build, test, lint execution |
-| 8. Audit implementation | NOT STARTED | - | Architecture, design, a11y, security audits |
-| 9. Fix findings | NOT STARTED | - | Address P0/P1 findings |
-| 10. Device acceptance | BLOCKED | - | No emulator/device connected |
-| 11. Handoff documentation | NOT STARTED | - | Update README, screenshots, APK location |
+| 2. Inspect & establish ledger | ✅ PASS | BUILD_STATUS.md created, toolchain documented | Complete |
+| 3. Foundation & visual system | ✅ PASS | APK built (56MB), lint passed (exit 0) | Complete - wrapper, deps, theme, navigation |
+| 4. Offline data & tests | ✅ PASS | Build successful with full data layer | Mock repository, DataStore, seed working |
+| 5. Reading & comparison | 🟡 IN PROGRESS | HomeViewModel + Screen working, displays story list | Story/CrossLens screens remain |
+| 6. Discovery & preferences | ⏳ NOT STARTED | - | Explore, Settings, filters |
+| 7. Automated verification | ⏳ NOT STARTED | - | Build passes, tests not written yet |
+| 8. Audit implementation | ⏳ NOT STARTED | - | Architecture, design, a11y, security audits |
+| 9. Fix findings | ⏳ NOT STARTED | - | Address P0/P1 findings |
+| 10. Device acceptance | ❌ BLOCKED | - | No emulator/device connected |
+| 11. Handoff documentation | 🟡 IN PROGRESS | PROGRESS_SUMMARY.md created | README update, screenshots remain |
 
 ## Requirements to Test Mapping
 
@@ -76,7 +76,31 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 | Tests pass (unit, Room, navigation, lint) | Step 7 | NOT STARTED |
 | README updated with actual instructions | Step 11 | NOT STARTED |
 
+## Session Summary
+
+**Commits:** 4 commits pushed to main branch  
+**APK:** 56MB debug build at `app/build/outputs/apk/debug/app-debug.apk`  
+**Lint:** Passed (exit code 0)  
+**Tests:** Not yet implemented  
+
+**Completed:**
+- Gradle 8.9 wrapper with AGP 8.5.2, Kotlin 1.9.24
+- Complete domain models and Room database
+- DataStore for preferences, reading state, entitlement
+- Hilt DI with repository pattern
+- Mock data with 3 stories, 6 sources, multilingual content
+- HomeViewModel and working HomeScreen with story list
+- Custom Material 3 theme with editorial design
+
+**Remaining:**
+- Story, CrossLens, Explore, Settings screens
+- Free/Plus paywall UI and gating
+- Unit/integration/navigation tests
+- Accessibility implementation
+- Quality audits (architecture, design, security, a11y)
+- Device testing and screenshots
+
 ## Missing Prerequisites
 
 - Emulator or physical device for Step 10 (device acceptance checks)
-- Will proceed with all non-device-dependent work
+- Device checks remain BLOCKED until emulator available
