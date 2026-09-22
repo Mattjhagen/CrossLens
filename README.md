@@ -2,25 +2,45 @@
 
 **One event. A world of perspectives.**
 
-CrossLens is an Android news app for understanding how the same event is reported across countries, languages, and institutions. Readers will explore clustered stories, compare source coverage, and read translations while retaining a clear path to the original reporting.
+CrossLens is an Android news app for understanding how the same event is reported across countries, languages, and institutions. Readers explore clustered stories, compare source coverage, and read translations while retaining a clear path to the original reporting.
 
 The goal is informed comparison: show where reporting overlaps, where emphasis differs, and what evidence supports those observations. A source's country is context, not a proxy for its politics or the views of an entire population.
 
-> **Project status:** Planning and build instructions only. The Android app has not been implemented yet. The first milestone is a working, offline, mock-data Android skeleton; live sources, translation services, and automated analysis come later.
+> **Project status:** ✅ **Initial Android skeleton complete.** The app runs offline with mock data, demonstrates all five screens, and implements the Free/Plus access model. Live sources, translation services, and automated analysis are future work.
 
-## Start building
+## Quick Start
 
-Start with [the step-by-step Claude CLI runbook](docs/CLAUDE_BUILD_RUNBOOK.md) to build, verify, audit, fix findings, and prepare the handoff. It includes copy-and-paste prompts, quality gates, a device checklist, and required evidence.
+### Prerequisites
 
-Use [the Claude CLI build guide](docs/ANDROID_BUILD_GUIDE.md) for prerequisites, a copy-and-paste kickoff prompt, implementation phases, and completion checks. [CLAUDE.md](CLAUDE.md) provides the repository instructions for Claude Code.
+- **Android Studio** with SDK Platform 29+ and Build Tools 34.0.0+
+- **JDK 21** (Azul Zulu recommended)
+- **Git**
+
+### Build and Run
 
 ```sh
 git clone https://github.com/Mattjhagen/CrossLens.git
 cd CrossLens
-claude "Read CLAUDE.md, README.md, and docs/ANDROID_BUILD_GUIDE.md. Implement the initial Android skeleton through all build phases and verify the acceptance checklist."
+
+# Build debug APK
+./gradlew :app:assembleDebug
+
+# Run tests and lint
+./gradlew :app:testDebugUnitTest :app:lintDebug
+
+# Install on connected device/emulator
+./gradlew :app:installDebug
+adb shell am start -n com.crosslens.app.debug/.MainActivity
 ```
 
-Claude Code and the Android development tools must be installed first. The guide explains setup. There is no Gradle wrapper or runnable APK in this documentation-only starting point.
+**APK Location:** `app/build/outputs/apk/debug/app-debug.apk` (56MB)
+
+### Build Results
+
+- **Build:** ✅ SUCCESS (Gradle 8.9, AGP 8.5.2, Kotlin 1.9.24)
+- **Unit Tests:** ✅ 5/5 passed
+- **Lint:** ✅ 0 errors, 0 warnings
+- **Quality Audit:** See [QUALITY_REPORT.md](docs/QUALITY_REPORT.md)
 
 ## Product principles
 
@@ -58,19 +78,45 @@ The first Android skeleton contains a clearly labeled local **Preview Plus** ent
 
 Home, Explore, and Settings are top-level destinations. Story and CrossLens are detail destinations addressed by stable story IDs, with predictable back navigation.
 
-## Technical foundation
+## What's Implemented
 
-| Area | Choice |
+### Screens
+- **Home:** Story list with save/unsave, continue reading, mock edition label
+- **Story:** Event summary, attributed claims, sources, comparison action
+- **CrossLens:** Source-by-source comparison with flip animation, paywall gating
+- **Explore:** Region/topic filters with combined AND logic
+- **Settings:** Theme selection, reduced motion, Plus preview/reset
+
+### Features
+- ✅ Offline-first: All data seeded from mock fixtures in Room
+- ✅ Free/Plus access: Free users see first 2 sources, Plus unlocks all
+- ✅ DataStore persistence: Saved stories, last-opened, preferences
+- ✅ Custom Material 3 theme: Editorial design with serif/sans typography
+- ✅ Reduced motion: Animations respect user preference
+- ✅ Multilingual fixtures: English, French, Arabic, Japanese samples
+
+### Mock Data
+- 3 story clusters (climate summit, AI regulation, trade)
+- 6 sources across 4 regions (BBC, Le Monde, Al Jazeera, NYT, Globe and Mail, 読売新聞)
+- Demo Lens Gap assessments clearly labeled
+- Claims with CORROBORATED/DISPUTED status
+- Frame observations with evidence references
+
+## Technical Foundation
+
+| Area | Implementation |
 | --- | --- |
-| Platform | Native Android; Kotlin; minimum Android 10 / API 29 |
+| Platform | Native Android, Kotlin, minimum API 29 (Android 10) |
 | UI | Jetpack Compose, Material 3, Navigation Compose |
-| Presentation | MVVM, immutable UI state, Coroutines/Flow, lifecycle-aware state collection |
-| Dependency injection | Hilt |
-| Networking boundary | Retrofit + OkHttp; defined for a future backend, inactive in mock mode |
-| Local storage | Room for seeded stories and source data; DataStore for user preferences |
-| Build | Gradle Kotlin DSL, version catalog, pinned compatible stable dependencies |
+| Architecture | MVVM with immutable StateFlow UI state |
+| DI | Hilt with repository interfaces |
+| Database | Room 2.6.1 with idempotent seeding |
+| Preferences | DataStore 1.1.1 |
+| Networking | Retrofit/OkHttp defined but inactive in mock mode |
+| Build | Gradle 8.9, AGP 8.5.2, Kotlin 1.9.24, KSP |
+| Testing | JUnit 4, Mockito-Kotlin, Coroutines Test, Turbine |
 
-Start with one `app` module and clear package boundaries. Select and document a compatible JDK, Gradle, Android Gradle Plugin, Kotlin, Compose, Hilt, and KSP toolchain during implementation. Set compile/target SDK to a stable supported API appropriate to that toolchain; do not confuse these values with the minimum API.
+**Documented Toolchain:** See [BUILD_STATUS.md](docs/BUILD_STATUS.md) for complete version matrix
 
 ```text
 Compose screen → ViewModel → repository interface
@@ -124,6 +170,73 @@ Before real ranking ships, evaluate translation artifacts, duplicate/syndicated 
 
 Accounts, real subscriptions/billing, scraping, production backend deployment, live translation, and automated political labels are outside the initial build.
 
-## Development references
+## Project Structure
 
-The implementation should follow [Android architecture recommendations](https://developer.android.com/topic/architecture/recommendations) for observable UI state and unidirectional data flow. See the [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference) for starting and continuing a build session.
+```
+app/src/main/java/com/crosslens/app/
+├── CrossLensApplication.kt         # Hilt app, initializes data seeding
+├── MainActivity.kt                 # Edge-to-edge Compose host
+├── core/
+│   ├── model/                      # Domain models (Story, Article, Claim, etc.)
+│   └── ui/
+│       ├── theme/                  # Material 3 custom theme
+│       └── PaywallSheet.kt        # Reusable Plus paywall
+├── data/
+│   ├── local/
+│   │   ├── entity/                # Room entities
+│   │   ├── dao/                   # Room DAOs
+│   │   ├── CrossLensDatabase.kt   # Database definition
+│   │   ├── Converters.kt          # Type converters
+│   │   └── Mappers.kt             # Entity → Domain
+│   ├── mock/
+│   │   ├── MockFixtures.kt        # Fixture data
+│   │   └── Mock*Repository.kt     # Mock implementations
+│   ├── preferences/               # DataStore repositories
+│   └── repository/                # Repository interfaces
+├── di/                            # Hilt modules
+├── feature/
+│   ├── home/                      # HomeScreen + ViewModel
+│   ├── story/                     # StoryScreen + ViewModel
+│   ├── comparison/                # CrossLensScreen + ViewModel
+│   ├── explore/                   # ExploreScreen + ViewModel
+│   └── settings/                  # SettingsScreen + ViewModel
+└── navigation/                    # NavHost and destinations
+```
+
+## Known Limitations
+
+### Skeleton Scope
+- **No live backend:** All data is seeded from fixtures
+- **No real translations:** Demo translations are manually created samples
+- **No Lens Gap algorithm:** Scores are fixed demo values
+- **No Google Play Billing:** Plus access is local preview only
+- **No network requests:** Mock mode works offline
+- **No bundled imagery:** Text-only compositions
+
+### Device Testing
+- **Not tested on physical device** (no device available during build)
+- **No emulator screenshots captured**
+- **TalkBack not verified**
+- **Performance not profiled**
+
+See [QUALITY_REPORT.md](docs/QUALITY_REPORT.md) for complete audit results and blocked checks.
+
+## Development References
+
+- [BUILD_STATUS.md](docs/BUILD_STATUS.md) - Build verification and step status
+- [QUALITY_REPORT.md](docs/QUALITY_REPORT.md) - Complete audit with 6 reviews
+- [ANDROID_BUILD_GUIDE.md](docs/ANDROID_BUILD_GUIDE.md) - Implementation phases
+- [DESIGN_DIRECTION.md](docs/DESIGN_DIRECTION.md) - Visual design requirements
+- [MONETIZATION.md](docs/MONETIZATION.md) - Free/Plus access model
+- [Android Architecture Guide](https://developer.android.com/topic/architecture) - MVVM best practices
+
+## Contributing
+
+This is a demonstration project for the CrossLens concept. The skeleton implements:
+1. ✅ Five-screen navigation
+2. ✅ Room database with observable queries
+3. ✅ Free/Plus access model
+4. ✅ Custom editorial design
+5. ✅ Offline-first architecture
+
+Future work includes backend integration, live translations, and Lens Gap analysis algorithm.
