@@ -4,6 +4,7 @@ sealed class CrossLensDestination(val route: String) {
     data object Home : CrossLensDestination("home")
     data object Explore : CrossLensDestination("explore")
     data object Settings : CrossLensDestination("settings")
+    data object EditorialReview : CrossLensDestination("editorial_review")
     data object Story : CrossLensDestination("story/{storyId}") {
         fun createRoute(storyId: String) = "story/$storyId"
     }

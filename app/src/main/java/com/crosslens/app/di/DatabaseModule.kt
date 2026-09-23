@@ -48,4 +48,7 @@ object DatabaseModule {
 
     @Provides
     fun provideEditorialDecisionDao(database: CrossLensDatabase) = database.editorialDecisionDao()
+
+    @Provides
+    fun provideEditorialReviewDao(database: CrossLensDatabase) = database.editorialReviewDao()
 }

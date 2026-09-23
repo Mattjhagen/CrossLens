@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.crosslens.app.feature.comparison.CrossLensScreen
+import com.crosslens.app.feature.editorial.EditorialReviewScreen
 import com.crosslens.app.feature.explore.ExploreScreen
 import com.crosslens.app.feature.home.HomeScreen
 import com.crosslens.app.feature.settings.SettingsScreen
@@ -75,6 +76,15 @@ fun CrossLensNavHost(
 
         composable(CrossLensDestination.Settings.route) {
             SettingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onEditorialReviewClick = {
+                    navController.navigate(CrossLensDestination.EditorialReview.route)
+                }
+            )
+        }
+
+        composable(CrossLensDestination.EditorialReview.route) {
+            EditorialReviewScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }

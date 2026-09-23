@@ -20,6 +20,7 @@ import com.crosslens.app.core.model.Theme
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
+    onEditorialReviewClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
