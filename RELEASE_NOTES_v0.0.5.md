@@ -4,7 +4,7 @@
 
 **Version:** v0.0.5-beta  
 **Date:** 2026-09-23  
-**Commit:** TBD  
+**Commit:** c5c05cd  
 **Build:** Debug APK
 
 ## What's New
