@@ -16,10 +16,11 @@ Added offline editorial review system demonstrating human review of ingestion ca
 **Features Implemented:**
 - **Settings Entry Point:** Clear, accessible navigation from Settings to Editorial Review screen
 - **Review Dashboard:** Statistics showing approved/rejected/deferred review counts
-- **Pending Candidates:** Mock cross-language matches and syndication detection candidates
+- **Pending Candidates:** Three mock candidates (cross-language match, syndication detection, cluster proposal)
 - **Review Dialog:** Full evidence display with sources, languages, shared entities, and uncertainty reasons
 - **Decision Workflow:** Approve/Reject/Defer with optional editorial notes
 - **Audit Trail:** Complete review history showing all decisions with timestamps
+- **Reset Control:** "Reset demo reviews" button restores original candidate set for re-testing all decision types
 - **Accessibility:** All strings externalized to resources with proper content descriptions
 
 **What This Demonstrates:**
@@ -27,7 +28,9 @@ Added offline editorial review system demonstrating human review of ingestion ca
 - Evidence-based decision making with uncertainty disclosure
 - Cross-language event matching requiring human verification
 - Syndication detection requiring editorial confirmation
+- Event clustering proposals requiring validation
 - Audit trail for transparency and accountability
+- Tester-friendly reset to repeat workflow without reinstalling
 
 **Important Boundaries:**
 - ⚠️ **Offline demo only** - Uses mock candidates from test fixtures, not live ingestion
@@ -90,11 +93,15 @@ APK: 57MB at app/build/outputs/apk/debug/app-debug.apk
 Users can now:
 1. **Navigate** from Settings → Access section → "Editorial Review" card
 2. **View** demo review dashboard with approval statistics
-3. **Inspect** pending candidates showing cross-language matches and syndication detection
+3. **Inspect** three pending candidates:
+   - Cross-language event match (Geneva Climate Summit)
+   - Suspected wire service syndication
+   - Event cluster proposal (AI Regulation)
 4. **Review** evidence including sources, languages, shared entities, and uncertainty reasons
 5. **Decide** to approve, reject, or defer with optional editorial notes
 6. **Track** review history showing all past decisions with audit trail
-7. **Understand** this is a fictional demo workflow through visible notices
+7. **Reset** all demo reviews to restore original candidates and re-test the workflow
+8. **Understand** this is a fictional demo workflow through visible notices
 
 **Demo Workflow Notice:**
 > ⚠️ Demo Review Workflow

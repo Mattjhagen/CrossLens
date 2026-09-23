@@ -29,4 +29,7 @@ interface EditorialReviewDao {
 
     @Query("SELECT COUNT(*) FROM editorial_reviews WHERE decision = 'DEFERRED'")
     suspend fun countDeferred(): Int
+
+    @Query("DELETE FROM editorial_reviews")
+    suspend fun deleteAllReviews()
 }

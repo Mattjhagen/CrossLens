@@ -24,6 +24,7 @@ fun EditorialReviewScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedCandidate by remember { mutableStateOf<ReviewCandidate?>(null) }
+    var showResetConfirmation by remember { mutableStateOf(false) }
 
     if (selectedCandidate != null) {
         ReviewDetailDialog(
@@ -32,6 +33,18 @@ fun EditorialReviewScreen(
             onSubmitReview = { decision, note ->
                 viewModel.submitReview(selectedCandidate!!, decision, note)
                 selectedCandidate = null
+            }
+        )
+    }
+
+    if (showResetConfirmation) {
+        ResetConfirmationDialog(
+            onConfirm = {
+                viewModel.resetReviews()
+                showResetConfirmation = false
+            },
+            onDismiss = {
+                showResetConfirmation = false
             }
         )
     }
@@ -124,6 +137,16 @@ fun EditorialReviewScreen(
 
                 items(uiState.reviewHistory) { review ->
                     HistoryCard(review = review)
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedButton(
+                        onClick = { showResetConfirmation = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.editorial_review_reset))
+                    }
                 }
             }
         }
@@ -396,6 +419,33 @@ private fun ReviewDetailDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.editorial_review_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun ResetConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.editorial_review_reset_confirm_title)) },
+        text = { Text(stringResource(R.string.editorial_review_reset_confirm_message)) },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text(stringResource(R.string.editorial_review_reset_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.editorial_review_reset_cancel))
             }
         }
     )

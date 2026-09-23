@@ -244,13 +244,19 @@ After canonical URL deduplication and before entity extraction, the pipeline run
 ✅ **Editorial review screen** (`EditorialReviewScreen.kt`)
 - Accessible from Settings with clear entry point
 - Demo workflow notice explaining fictional prototype nature
+- Three pending candidates (cross-language, syndication, cluster)
 - Pending candidates list with expandable details
 - Review history with audit trail (approved/rejected/deferred)
 - Statistics dashboard showing review counts
 - Full evidence display: sources, languages, shared entities, uncertainty reasons
 - Decision workflow: approve/reject/defer with optional editorial notes
+- **Reset control:** "Reset demo reviews" button with confirmation dialog
+  - Deletes all local demo review decisions and notes
+  - Restores original three candidates for re-testing
+  - Does not affect reader-facing stories, settings, or subscriptions
+  - Persists correctly: candidates remain pending after app restart until reviewed
 - All user-facing strings externalized to string resources
-- Comprehensive ViewModel tests covering state transitions and evidence preservation
+- Comprehensive ViewModel tests covering state transitions, evidence preservation, and reset functionality
 
 ✅ **Offline editorial workflow**
 - Mock candidates generated from demo data (cross-language matches, syndication detection)

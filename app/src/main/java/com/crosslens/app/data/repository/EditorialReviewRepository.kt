@@ -61,6 +61,10 @@ class EditorialReviewRepository @Inject constructor(
             deferred = editorialReviewDao.countDeferred()
         )
     }
+
+    suspend fun resetAllReviews() {
+        editorialReviewDao.deleteAllReviews()
+    }
 }
 
 data class ReviewStats(

@@ -62,6 +62,12 @@ class EditorialReviewViewModel @Inject constructor(
         }
     }
 
+    fun resetReviews() {
+        viewModelScope.launch {
+            reviewRepository.resetAllReviews()
+        }
+    }
+
     private fun createMockCandidates(): Flow<List<ReviewCandidate>> = flow {
         emit(listOf(
             ReviewCandidate(
@@ -89,6 +95,19 @@ class EditorialReviewViewModel @Inject constructor(
                 method = "excerpt-fingerprint-v1",
                 rationale = "High confidence suspected syndication: Exact title match and 95% excerpt overlap.",
                 uncertaintyReasons = listOf("Suspected syndication requires editorial review to confirm wire copy")
+            ),
+            ReviewCandidate(
+                id = "cluster-1",
+                type = CandidateType.CLUSTER,
+                title = "AI Regulation Framework Proposal",
+                articleIds = listOf("article-nyt-ai", "article-ft-ai", "article-wired-ai"),
+                sourceIds = listOf("nyt-demo", "ft-demo", "wired-demo"),
+                languages = listOf("en", "en", "en"),
+                sharedEntities = listOf("org:eu-commission", "org:us-congress", "topic:ai-regulation"),
+                confidence = "MEDIUM",
+                method = "title-similarity-v1",
+                rationale = "Medium confidence cluster: Similar headlines and timing across 3 sources covering AI regulation proposals.",
+                uncertaintyReasons = listOf("Similar timing may be coincidental", "Requires verification that articles cover the same specific proposal")
             )
         ))
     }

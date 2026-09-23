@@ -127,6 +127,11 @@
     <string name="editorial_review_submit">Submit</string>
     <string name="editorial_review_cancel">Cancel</string>
     <string name="editorial_review_entry">Editorial Review</string>
+    <string name="editorial_review_reset">Reset demo reviews</string>
+    <string name="editorial_review_reset_confirm_title">Reset demo reviews?</string>
+    <string name="editorial_review_reset_confirm_message">This will delete all local fictional demo review decisions and notes, restoring the original candidate set.\n\nThis only affects demo editorial review data. Your settings, saved stories, and reading history will not be changed.</string>
+    <string name="editorial_review_reset_confirm">Reset</string>
+    <string name="editorial_review_reset_cancel">Cancel</string>
 
     <!-- Accessibility -->
     <string name="cd_story_image">Story illustration</string>

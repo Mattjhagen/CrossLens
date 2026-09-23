@@ -42,8 +42,8 @@ class EditorialReviewViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        // Two mock candidates in the ViewModel
-        assertEquals(2, state.pendingCandidates.size)
+        // Three mock candidates in the ViewModel
+        assertEquals(3, state.pendingCandidates.size)
         assertEquals(0, state.reviewHistory.size)
         assertEquals(0, state.stats.approved)
         assertEquals(0, state.stats.rejected)
@@ -60,9 +60,10 @@ class EditorialReviewViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        // cross-lang-1 should be filtered out, only syndication-1 remains
-        assertEquals(1, state.pendingCandidates.size)
-        assertEquals("syndication-1", state.pendingCandidates[0].id)
+        // cross-lang-1 should be filtered out, syndication-1 and cluster-1 remain
+        assertEquals(2, state.pendingCandidates.size)
+        assertTrue(state.pendingCandidates.any { it.id == "syndication-1" })
+        assertTrue(state.pendingCandidates.any { it.id == "cluster-1" })
         assertEquals(1, state.reviewHistory.size)
     }
 
@@ -258,6 +259,89 @@ class EditorialReviewViewModelTest {
         assertEquals(2, state.stats.approved)
         assertEquals(1, state.stats.rejected)
         assertEquals(3, state.stats.deferred)
+    }
+
+    @Test
+    fun `resetReviews calls repository resetAllReviews`() = runTest {
+        whenever(reviewRepository.observeAllReviews()).thenReturn(flowOf(emptyList()))
+        whenever(reviewRepository.getStats()).thenReturn(ReviewStats(0, 0, 0))
+
+        viewModel = EditorialReviewViewModel(reviewRepository)
+        advanceUntilIdle()
+
+        viewModel.resetReviews()
+        advanceUntilIdle()
+
+        verify(reviewRepository).resetAllReviews()
+    }
+
+    @Test
+    fun `reset with two reviewed candidates filters correctly before reset`() = runTest {
+        val review1 = createReviewEntity("cross-lang-1", ReviewDecision.APPROVED)
+        val review2 = createReviewEntity("syndication-1", ReviewDecision.REJECTED)
+
+        whenever(reviewRepository.observeAllReviews()).thenReturn(flowOf(listOf(review1, review2)))
+        whenever(reviewRepository.getStats()).thenReturn(ReviewStats(1, 1, 0))
+
+        viewModel = EditorialReviewViewModel(reviewRepository)
+        advanceUntilIdle()
+
+        // Before reset: only 1 pending candidate (cluster-1)
+        val state = viewModel.uiState.value
+        assertEquals(1, state.pendingCandidates.size)
+        assertEquals("cluster-1", state.pendingCandidates[0].id)
+        assertEquals(2, state.reviewHistory.size)
+
+        // Verify reset is called
+        viewModel.resetReviews()
+        advanceUntilIdle()
+
+        verify(reviewRepository).resetAllReviews()
+    }
+
+    @Test
+    fun `candidates restored after reset in real scenario`() = runTest {
+        // This test simulates what happens after reset in production:
+        // The DAO deleteAllReviews() removes all reviews, causing observeAllReviews()
+        // to emit an empty list, which restores all pending candidates
+
+        // Start with no reviews
+        whenever(reviewRepository.observeAllReviews()).thenReturn(flowOf(emptyList()))
+        whenever(reviewRepository.getStats()).thenReturn(ReviewStats(0, 0, 0))
+
+        viewModel = EditorialReviewViewModel(reviewRepository)
+        advanceUntilIdle()
+
+        // All 3 candidates should be pending
+        val state = viewModel.uiState.value
+        assertEquals(3, state.pendingCandidates.size)
+        assertTrue(state.pendingCandidates.any { it.id == "cross-lang-1" })
+        assertTrue(state.pendingCandidates.any { it.id == "syndication-1" })
+        assertTrue(state.pendingCandidates.any { it.id == "cluster-1" })
+    }
+
+    @Test
+    fun `reset verification confirms repository method called`() = runTest {
+        whenever(reviewRepository.observeAllReviews()).thenReturn(flowOf(
+            listOf(
+                createReviewEntity("cross-lang-1", ReviewDecision.APPROVED),
+                createReviewEntity("syndication-1", ReviewDecision.REJECTED)
+            )
+        ))
+        whenever(reviewRepository.getStats()).thenReturn(ReviewStats(1, 1, 0))
+
+        viewModel = EditorialReviewViewModel(reviewRepository)
+        advanceUntilIdle()
+
+        val initialState = viewModel.uiState.value
+        assertEquals(1, initialState.stats.approved)
+        assertEquals(1, initialState.stats.rejected)
+
+        // Call reset and verify the repository method is invoked
+        viewModel.resetReviews()
+        advanceUntilIdle()
+
+        verify(reviewRepository).resetAllReviews()
     }
 
     private fun createCandidate(
