@@ -1,10 +1,10 @@
 # CrossLens Quality Audit Report
 
 **Date:** 2026-09-22  
-**Revision:** e3716d7  
+**Revision:** f1b25ec+  
 **Environment:** macOS Darwin 25.6.0, Java 21.0.12.1, Gradle 8.9, AGP 8.5.2  
 **Scope:** Complete Android skeleton with 5 screens, mock data, Free/Plus access model  
-**Update:** Fixed release-blocking entitlement persistence bug, added integration tests, captured screenshots
+**Update:** Fixed theme application defect - MainActivity now observes and applies user theme preference
 
 ## Executive Summary
 
@@ -36,21 +36,26 @@ APK: app/build/outputs/apk/debug/app-debug.apk (56MB)
 ### Unit Tests
 ```bash
 ./gradlew :app:testDebugUnitTest
-BUILD SUCCESSFUL in 3s
-Tests: 11 tests, 11 passed, 0 failed, 0 skipped
+BUILD SUCCESSFUL in 14s
+Tests: 15 tests, 15 passed, 0 failed, 0 skipped
 ```
 
 **Tested:**
 - HomeViewModel: empty state, success state
 - ExploreViewModel: filter clearing
 - DataStoreEntitlementRepository: FREE default, FREE/PLUS_DEMO access checks
-- SettingsEntitlementIntegrationTest (NEW): 6 tests covering:
+- SettingsEntitlementIntegrationTest: 6 tests covering:
   - Default FREE entitlement on first launch
   - Settings Preview Plus enables PLUS_DEMO access
   - Entitlement persists across app restart (simulated via new DataStore instance)
   - Reset to Free removes Plus access and persists
   - Plus access unlocks all documented features (ALL_SOURCES, ALL_TRANSLATIONS, FULL_LENS_GAP, ADVANCED_FILTERS)
   - Uses StandardTestDispatcher with proper testScheduler.advanceUntilIdle() for DataStore operations
+- MainViewModel (NEW): 4 tests covering:
+  - Theme SYSTEM emitted from preferences flow
+  - Theme LIGHT emitted from preferences flow
+  - Theme DARK emitted from preferences flow
+  - Theme updates when preference changes
 
 ### Lint
 ```bash
@@ -94,6 +99,13 @@ Issues: 0 errors, 0 warnings
 - DataStore operations use suspend functions
 - Repository refresh operations use viewModelScope
 - Evidence: StoryDao.kt:10-15, StoryViewModel.kt:28-42
+
+✅ **PASS - Theme preference observed and applied (FIXED)**
+- MainViewModel observes UserPreferencesRepository.preferencesFlow
+- MainActivity collects theme state with lifecycle awareness
+- Theme resolved correctly: SYSTEM → isSystemInDarkTheme(), LIGHT → false, DARK → true
+- Theme persists across app restart via DataStore
+- Evidence: MainViewModel.kt:13-15, MainActivity.kt:21-34, MainViewModelTest.kt
 
 ### No findings requiring fixes
 

@@ -1,7 +1,7 @@
 # CrossLens Build Status
 
-**Working Revision:** e3716d7 (fix: enable Plus access from both Settings and paywall with proper persistence)  
-**Working Tree:** Clean  
+**Working Revision:** f1b25ec+ (uncommitted: fix theme application - MainActivity observes user preference)  
+**Working Tree:** Modified  
 **Last Updated:** 2026-09-22
 
 ## Environment
