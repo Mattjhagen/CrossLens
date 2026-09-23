@@ -20,27 +20,27 @@
     </header>
 
     <div class="hero">
-        <h1 class="massive-text apple-reveal fallback-reveal">
+        <h1 class="massive-text scroll-3d-text">
             <span class="line-1">One event.</span>
             <span class="line-2">A world of perspectives.</span>
         </h1>
-        <p class="apple-reveal fallback-reveal">Events should behave like shared context, not isolated silos. CrossLens is the platform for authoritative news synchronization and comparison across borders.</p>
+        <p class="scroll-3d-text" style="--delay: 1;">Events should behave like shared context, not isolated silos. CrossLens is the platform for authoritative news synchronization and comparison across borders.</p>
     </div>
 
     <section id="stories">
-        <h2 class="section-title apple-reveal fallback-reveal">Trending Now.</h2>
-        <div class="stories-grid">
-            <div class="story-card apple-reveal fallback-reveal">
+        <h2 class="section-title scroll-3d-text">Trending Now.</h2>
+        <div class="stories-grid perspective-container">
+            <div class="story-card scroll-3d-card" style="--card-index: 0;">
                 <span class="story-badge">Climate</span>
                 <h3>Global Summit Reaches Historic Agreement</h3>
                 <p>Compare how 6 global sources framed the commitments made at the 2026 climate summit.</p>
             </div>
-            <div class="story-card apple-reveal fallback-reveal">
+            <div class="story-card scroll-3d-card" style="--card-index: 1;">
                 <span class="story-badge">Technology</span>
                 <h3>AI Regulation Debate Intensifies</h3>
                 <p>Read the original and translated coverage from US, EU, and Japanese publications.</p>
             </div>
-            <div class="story-card apple-reveal fallback-reveal">
+            <div class="story-card scroll-3d-card" style="--card-index: 2;">
                 <span class="story-badge">Economy</span>
                 <h3>Global Trade Shifts in 2026</h3>
                 <p>See the Lens Gap on the economic impact of the new trade policies.</p>
@@ -49,32 +49,32 @@
     </section>
 
     <section id="features">
-        <h2 class="section-title apple-reveal fallback-reveal">Core Features.</h2>
-        <div class="features-grid">
-            <div class="feature-card apple-reveal fallback-reveal">
+        <h2 class="section-title scroll-3d-text">Core Features.</h2>
+        <div class="features-grid perspective-container">
+            <div class="feature-card scroll-3d-card" style="--card-index: 0;">
                 <h3>Global by Design</h3>
                 <p>Organize coverage by source, country, region, language, topic, and institutional context. Geographic and political context coexist without universal classifications.</p>
             </div>
-            <div class="feature-card apple-reveal fallback-reveal">
+            <div class="feature-card scroll-3d-card" style="--card-index: 1;">
                 <h3>Evidence Stays Visible</h3>
                 <p>Link summaries and comparison observations directly to the articles supporting them. Distinctly separate reported claims from established facts.</p>
             </div>
-            <div class="feature-card apple-reveal fallback-reveal">
+            <div class="feature-card scroll-3d-card" style="--card-index: 2;">
                 <h3>Translation with Provenance</h3>
                 <p>Preserve original text alongside labeled translations. We disclose translation availability and methods, ensuring you have a clear path to the source material.</p>
             </div>
         </div>
     </section>
 
-    <section id="lens-gap" style="padding-top: 10rem; padding-bottom: 10rem;">
-        <h2 class="lens-gap-oversized apple-reveal fallback-reveal">How differently is this event being covered in the available reporting?</h2>
-        <p class="apple-reveal fallback-reveal" style="color: var(--ink-muted); font-size: 1.5rem; font-weight: 500; max-width: 800px; margin: 4rem auto 0; text-align: center; line-height: 1.4;">Lens Gap evaluates differences in emphasized claims, selected actors, terminology, and the distribution of attention across sources.</p>
+    <section id="lens-gap" style="padding-top: 10rem; padding-bottom: 10rem;" class="perspective-container">
+        <h2 class="lens-gap-oversized scroll-3d-scale">How differently is this event being covered in the available reporting?</h2>
+        <p class="scroll-3d-text" style="color: var(--ink-muted); font-size: 1.5rem; font-weight: 500; max-width: 800px; margin: 4rem auto 0; text-align: center; line-height: 1.4;">Lens Gap evaluates differences in emphasized claims, selected actors, terminology, and the distribution of attention across sources.</p>
     </section>
 
     <section id="pricing">
-        <h2 class="section-title apple-reveal fallback-reveal">Access Tiers.</h2>
-        <div class="pricing-tiers">
-            <div class="tier apple-reveal fallback-reveal">
+        <h2 class="section-title scroll-3d-text">Access Tiers.</h2>
+        <div class="pricing-tiers perspective-container">
+            <div class="tier scroll-3d-card" style="--card-index: 0;">
                 <h3>Free</h3>
                 <p>Essential comparison</p>
                 <ul>
@@ -85,7 +85,7 @@
                 </ul>
             </div>
             
-            <div class="tier plus apple-reveal fallback-reveal">
+            <div class="tier plus scroll-3d-card" style="--card-index: 1;">
                 <h3>CrossLens Plus</h3>
                 <p>The full perspective</p>
                 <ul>
@@ -108,22 +108,68 @@
     </footer>
 
     <script>
-        // Fallback for Intersection Observer if Scroll-driven animations are not supported
-        if (!CSS.supports('(animation-timeline: view()) and (animation-range: entry)')) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
-                });
-            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+        // High-performance vanilla JS scroll scrubber for Apple-like 3D animations
+        const updateScrollAnimations = () => {
+            const wh = window.innerHeight;
             
-            document.querySelectorAll('.fallback-reveal').forEach(el => {
-                // Ensure they start hidden in browsers without view() timeline
-                el.style.opacity = '0'; 
-                observer.observe(el);
+            // 3D Flipping Cards
+            document.querySelectorAll('.scroll-3d-card').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                // Progress from 0 (just entering bottom) to 1 (fully entered by 20% of screen height)
+                const entryPoint = wh - (rect.top + rect.height * 0.2);
+                const progress = Math.max(0, Math.min(1, entryPoint / (wh * 0.3)));
+                
+                // When progress is 0: rotateX(45deg), scale(0.8), opacity(0), translateY(100px)
+                // When progress is 1: rotateX(0deg), scale(1), opacity(1), translateY(0)
+                const rotate = 60 * (1 - progress);
+                const scale = 0.8 + (0.2 * progress);
+                const y = 150 * (1 - progress);
+                const opacity = progress;
+                
+                el.style.transform = `translateY(${y}px) scale(${scale}) rotateX(${rotate}deg)`;
+                el.style.opacity = opacity;
             });
-        }
+
+            // 3D Text Fade and Slide
+            document.querySelectorAll('.scroll-3d-text').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const delay = parseFloat(el.style.getPropertyValue('--delay') || 0) * 100;
+                const entryPoint = wh - rect.top - delay;
+                const progress = Math.max(0, Math.min(1, entryPoint / (wh * 0.2)));
+                
+                const y = 60 * (1 - progress);
+                const opacity = progress;
+                
+                el.style.transform = `translateY(${y}px)`;
+                el.style.opacity = opacity;
+            });
+            
+            // Scale and tighten Lens Gap text
+            document.querySelectorAll('.scroll-3d-scale').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                // Center of element relative to center of screen
+                const elCenter = rect.top + rect.height / 2;
+                const screenCenter = wh / 2;
+                // Distance from center (0 to 1)
+                const dist = Math.abs(elCenter - screenCenter) / (wh * 0.7);
+                const progress = Math.max(0, 1 - dist); // 1 at center, 0 at edges
+                
+                const scale = 0.8 + (0.2 * progress);
+                const opacity = 0.2 + (0.8 * progress);
+                const letterSpacing = -0.05 + (0.02 * (1-progress)); // Expands slightly at edges
+                
+                el.style.transform = `scale(${scale})`;
+                el.style.opacity = opacity;
+                el.style.letterSpacing = `${letterSpacing}em`;
+            });
+        };
+
+        window.addEventListener('scroll', () => {
+            requestAnimationFrame(updateScrollAnimations);
+        }, { passive: true });
+        
+        // Initial trigger
+        updateScrollAnimations();
     </script>
 </body>
 </html>

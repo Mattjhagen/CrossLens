@@ -291,3 +291,34 @@ footer {
   margin-top: 6rem;
   border-top: 1px solid var(--line);
 }
+
+/* 3D Perspective Containers */
+.perspective-container {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+}
+
+/* Base styles for JS driven elements */
+.scroll-3d-card {
+    will-change: transform, opacity;
+    transform-origin: center bottom;
+    opacity: 0; 
+}
+
+.scroll-3d-text {
+    will-change: transform, opacity;
+    opacity: 0;
+}
+
+.scroll-3d-scale {
+    will-change: transform, opacity, letter-spacing;
+    transform-origin: center center;
+}
+
+/* Remove CSS @supports view() to rely entirely on the JS scrubber */
+.apple-reveal, .fallback-reveal {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1; /* Reset */
+    transform: none;
+}
