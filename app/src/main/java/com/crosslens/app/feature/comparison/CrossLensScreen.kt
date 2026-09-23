@@ -19,8 +19,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.crosslens.app.R
 import com.crosslens.app.core.model.FrameObservation
 import com.crosslens.app.core.ui.PaywallSheet
-import com.crosslens.app.data.preferences.EntitlementRepository
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +28,6 @@ fun CrossLensScreen(
     modifier: Modifier = Modifier,
     viewModel: CrossLensViewModel = hiltViewModel()
 ) {
-    val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedIndex by viewModel.selectedArticleIndex.collectAsStateWithLifecycle()
     val hasAllAccess by viewModel.hasAllSourcesAccess.collectAsStateWithLifecycle()
@@ -182,11 +179,8 @@ fun CrossLensScreen(
             PaywallSheet(
                 onDismiss = { showPaywall = false },
                 onPreviewPlus = {
-                    scope.launch {
-                        // In a real app, would handle billing here
-                        // For demo, navigate to settings or dismiss
-                        showPaywall = false
-                    }
+                    viewModel.enablePlusPreview()
+                    showPaywall = false
                 }
             )
         }
@@ -199,18 +193,15 @@ private fun SourcePane(
     reducedMotion: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val scope = rememberCoroutineScope()
     val animatedRotation = remember { Animatable(0f) }
 
     LaunchedEffect(articleWithSource.article.id) {
         if (!reducedMotion) {
-            scope.launch {
-                animatedRotation.snapTo(-5f)
-                animatedRotation.animateTo(
-                    0f,
-                    animationSpec = tween(250, easing = FastOutSlowInEasing)
-                )
-            }
+            animatedRotation.snapTo(-5f)
+            animatedRotation.animateTo(
+                0f,
+                animationSpec = tween(250, easing = FastOutSlowInEasing)
+            )
         }
     }
 

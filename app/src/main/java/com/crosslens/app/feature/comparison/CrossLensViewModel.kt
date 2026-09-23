@@ -103,6 +103,12 @@ class CrossLensViewModel @Inject constructor(
     suspend fun getTranslation(articleId: String, targetLanguage: String): Translation? {
         return translationRepository.getTranslation(articleId, targetLanguage)
     }
+
+    fun enablePlusPreview() {
+        viewModelScope.launch {
+            entitlementRepository.setAccessTier(AccessTier.PLUS_DEMO)
+        }
+    }
 }
 
 data class ArticleWithSource(
