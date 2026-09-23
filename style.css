@@ -1,0 +1,262 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #0C0C0C;
+  --ink: #FFFFFF;
+  --ink-muted: #888888;
+  --accent: #4A90E2; /* Clean blue for news */
+  --line: rgba(255, 255, 255, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-top: 0;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+
+/* Header & Nav */
+header {
+  padding: 4rem 5% 2rem;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+
+header h1 {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.04em;
+}
+
+header p {
+  color: var(--ink-muted);
+  font-size: 1.2rem;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1.5rem 5%;
+  border-bottom: 1px solid var(--line);
+}
+
+nav a {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+nav a:hover {
+  color: var(--accent);
+}
+
+/* Containers */
+.container, section, .hero, .lens-gap-section {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 4rem 5%;
+}
+
+.hero {
+  text-align: center;
+  padding: 6rem 5%;
+}
+
+.hero h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.hero p {
+  color: var(--ink-muted);
+  font-size: 1.1rem;
+  max-width: 700px;
+  margin: 0 auto 2.5rem;
+}
+
+.cta-button {
+  display: inline-block;
+  background-color: var(--ink);
+  color: var(--bg);
+  padding: 0.8rem 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+  opacity: 1;
+}
+
+/* Grid & Cards */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+
+.feature-card, .tier {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  padding: 2rem;
+  border-radius: 8px;
+  backdrop-filter: blur(12px);
+  transition: border-color 0.2s;
+}
+
+.feature-card:hover, .tier:hover {
+  border-color: rgba(255,255,255,0.3);
+}
+
+.feature-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.feature-card p, .tier p {
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Pricing */
+.pricing-tiers {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+}
+
+.tier {
+  flex: 1;
+  min-width: 280px;
+  max-width: 400px;
+}
+
+.tier h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tier.plus {
+  border-color: var(--accent);
+}
+
+.tier.plus h3 {
+  color: var(--accent);
+}
+
+.tier ul {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0 0;
+}
+
+.tier ul li {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.tier ul li::before {
+  content: '→';
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+/* Section Headings */
+section h2, .lens-gap-section h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+section > p.subtitle, .lens-gap-section > p.subtitle {
+  text-align: center;
+  color: var(--ink-muted);
+  max-width: 600px;
+  margin: 0 auto 3rem;
+}
+
+/* Legal Pages */
+.container p {
+  color: var(--ink-muted);
+  margin-bottom: 1.5rem;
+}
+
+.container h2 {
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.5rem;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 3rem 5%;
+  border-top: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  margin-top: 4rem;
+}
+
+footer p {
+  margin: 0.5rem 0;
+}
+
+footer a {
+  color: var(--ink);
+}
+
+@media (max-width: 768px) {
+  header h1 { font-size: 2.2rem; }
+  .hero h2 { font-size: 1.8rem; }
+  .tier.plus { transform: none; }
+}
