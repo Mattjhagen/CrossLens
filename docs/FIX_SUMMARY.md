@@ -195,13 +195,27 @@ See `docs/screenshots/README.md` for details.
 
 ## Next Steps
 
-1. **Required:** Perform manual device acceptance tests from checklist above
-2. **Recommended:** Test on physical device in addition to emulator
-3. **Optional:** Test TalkBack, large text, RTL layout (requires manual setup)
-4. **For App Store:** Use screenshots in `docs/screenshots/` for store listing
+**Required for Production:**
+1. ❌ TalkBack screen reader testing (accessibility requirement)
+2. ❌ Large font scaling verification (accessibility requirement)
+3. ❌ RTL layout testing with Arabic locale (internationalization requirement)
+4. ❌ Physical device testing (emulator testing only so far)
+
+**Recommended:**
+5. Test on multiple device form factors
+6. Performance profiling with Android Studio tools
+
+**For App Store Submission:**
+7. Use screenshots in `docs/screenshots/` for store listing
 
 ## Conclusion
 
-The release-blocking Settings Plus access bug has been fixed. Both the Settings and Paywall "Preview Plus" buttons now properly enable Plus demo access via `EntitlementRepository.setAccessTier()`. Persistence has been verified via integration tests that simulate app restarts. Manual device acceptance testing is recommended to verify the fix in the running app.
+The release-blocking Settings Plus access bug has been fixed. Both the Settings and Paywall "Preview Plus" buttons now properly enable Plus demo access via `EntitlementRepository.setAccessTier()`. Persistence has been verified via integration tests that simulate app restarts.
 
-**Status:** ✅ Ready for production skeleton review
+**Status:** ✅ Ready for skeleton review
+
+Manual accessibility and physical-device checks remain incomplete:
+- ❌ TalkBack screen reader testing
+- ❌ Large font scaling
+- ❌ RTL layout in Arabic locale
+- ❌ Physical device testing
