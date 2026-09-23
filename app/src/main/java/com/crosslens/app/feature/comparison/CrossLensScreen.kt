@@ -19,6 +19,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.crosslens.app.R
 import com.crosslens.app.core.model.FrameObservation
 import com.crosslens.app.core.ui.PaywallSheet
+import com.crosslens.app.core.ui.components.CrossLensSignature
+import com.crosslens.app.core.ui.components.CrossLensWordmark
+import com.crosslens.app.core.ui.components.SignatureSize
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +58,13 @@ fun CrossLensScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        CrossLensSignature(size = SignatureSize.Medium)
+                        CircularProgressIndicator()
+                    }
                 }
             }
             is CrossLensUiState.NotFound -> {
@@ -65,10 +74,18 @@ fun CrossLensScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = stringResource(R.string.story_not_found),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                        modifier = Modifier.padding(32.dp)
+                    ) {
+                        CrossLensSignature(size = SignatureSize.Medium)
+                        Text(
+                            text = stringResource(R.string.story_not_found),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             is CrossLensUiState.InsufficientSources -> {
@@ -78,10 +95,18 @@ fun CrossLensScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Not enough sources to compare",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                        modifier = Modifier.padding(32.dp)
+                    ) {
+                        CrossLensSignature(size = SignatureSize.Medium)
+                        Text(
+                            text = "Not enough sources to compare",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             is CrossLensUiState.Error -> {
@@ -161,10 +186,16 @@ fun CrossLensScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             item {
-                                Text(
-                                    text = stringResource(R.string.framing_observations),
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    CrossLensWordmark(size = SignatureSize.Small)
+                                    Text(
+                                        text = stringResource(R.string.framing_observations),
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                }
                             }
                             items(state.frameObservations) { observation ->
                                 FramingCard(observation)

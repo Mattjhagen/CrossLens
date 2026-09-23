@@ -17,6 +17,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.crosslens.app.R
 import com.crosslens.app.core.model.Story
+import com.crosslens.app.core.ui.components.CrossLensSignature
+import com.crosslens.app.core.ui.components.SignatureSize
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -133,12 +135,15 @@ fun ExploreScreen(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            CrossLensSignature(size = SignatureSize.Small)
                             Text(
                                 text = stringResource(R.string.no_results),
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = stringResource(R.string.adjust_filters),
                                 style = MaterialTheme.typography.bodyMedium,

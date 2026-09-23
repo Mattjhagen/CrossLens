@@ -18,6 +18,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.crosslens.app.R
 import com.crosslens.app.core.model.Story
+import com.crosslens.app.core.ui.components.CrossLensSignature
+import com.crosslens.app.core.ui.components.SignatureSize
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -61,7 +63,13 @@ fun HomeScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        CrossLensSignature(size = SignatureSize.Medium)
+                        CircularProgressIndicator()
+                    }
                 }
             }
             is HomeUiState.Empty -> {
@@ -71,10 +79,18 @@ fun HomeScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = stringResource(R.string.empty_state),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                        modifier = Modifier.padding(32.dp)
+                    ) {
+                        CrossLensSignature(size = SignatureSize.Medium)
+                        Text(
+                            text = stringResource(R.string.empty_state),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             is HomeUiState.Error -> {
@@ -106,12 +122,15 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
-                        Column(modifier = Modifier.padding(vertical = 16.dp)) {
-                            Text(
-                                text = stringResource(R.string.home_title),
-                                style = MaterialTheme.typography.displayMedium
+                        Column(
+                            modifier = Modifier.padding(vertical = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CrossLensSignature(
+                                size = SignatureSize.Large,
+                                modifier = Modifier.padding(vertical = 16.dp)
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = stringResource(R.string.home_subtitle),
                                 style = MaterialTheme.typography.bodyMedium,
