@@ -20,6 +20,8 @@ class IngestionServiceTest {
     private lateinit var storyDao: StoryDao
     private lateinit var articleDao: ArticleDao
     private lateinit var editorialDecisionDao: EditorialDecisionDao
+    private lateinit var registry: InMemorySourceRegistry
+    private lateinit var registryValidator: SourceRegistryValidator
 
     private val baseTime = Instant.parse("2026-09-22T12:00:00Z")
 
@@ -29,11 +31,14 @@ class IngestionServiceTest {
         storyDao = mock()
         articleDao = mock()
         editorialDecisionDao = mock()
-        service = IngestionService(pipeline, storyDao, articleDao, editorialDecisionDao)
+        registry = InMemorySourceRegistry.createMockRegistry(baseTime)
+        registryValidator = SourceRegistryValidator(registry, allowDemoSources = true)
+        service = IngestionService(pipeline, storyDao, articleDao, editorialDecisionDao, registryValidator)
     }
 
     @Test
-    fun `ingests articles from multiple adapters and produces reviewable clusters`() = runTest {
+    fun `ingests articles from registry-approved adapters`() = runTest {
+        // Only BBC and Le Monde are in the registry; Al Jazeera and NYT are not
         val adapters = listOf(
             MockSourceAdapter.createBBC(baseTime),
             MockSourceAdapter.createLeMonde(baseTime),
@@ -43,32 +48,27 @@ class IngestionServiceTest {
 
         val result = service.ingestFromAdapters(adapters)
 
-        assertEquals(4, result.totalArticles)
-        assertEquals(4, result.acceptedArticles.size)
+        // Only BBC and Le Monde should be accepted (both are DEMO_ONLY in registry)
+        assertEquals(2, result.totalArticles)
+        assertEquals(2, result.acceptedArticles.size)
         assertEquals(0, result.duplicates.size)
 
-        // Note: The prototype uses simple headline token overlap, which doesn't cluster
-        // multilingual coverage well. BBC/Le Monde/Al Jazeera are about the same event
-        // but have limited token overlap due to different languages.
-        // This is a known limitation documented in INGESTION_PROTOTYPE.md.
-        assertTrue(result.proposals.size + result.singleSourceClusters.size >= 2)
+        // Al Jazeera and NYT should be blocked as ineligible
+        assertEquals(2, result.ineligibleSources.size)
+        assertTrue(result.ineligibleSources.all { it.reason == IneligibilityReason.NOT_IN_REGISTRY })
 
-        // Verify that proposals and single-source clusters are correctly classified
-        result.proposals.forEach { proposal ->
-            assertEquals(ClusterStatus.REVIEWABLE, proposal.status)
-            assertTrue(proposal.sourceCount >= 2)
-        }
-        result.singleSourceClusters.forEach { cluster ->
-            assertEquals(ClusterStatus.SINGLE_SOURCE, cluster.status)
-        }
+        // Verify accepted sources use registry attribution
+        val acceptedSources = result.acceptedArticles.map { it.sourceName }.toSet()
+        assertTrue(acceptedSources.contains("BBC News Demo"))
+        assertTrue(acceptedSources.contains("Le Monde Demo"))
     }
 
     @Test
     fun `clusters same-language articles with similar headlines`() = runTest {
         // Create adapters with English articles that have high headline overlap
         val bbc = MockSourceAdapter(
-            sourceId = "bbc",
-            sourceName = "BBC",
+            sourceId = "bbc-demo",
+            sourceName = "BBC Demo",
             articles = listOf(
                 SourceArticleRecord(
                     url = "https://bbc.example/climate-geneva",
@@ -79,12 +79,12 @@ class IngestionServiceTest {
                 )
             )
         )
-        val nyt = MockSourceAdapter(
-            sourceId = "nyt",
-            sourceName = "NYT",
+        val lemonde = MockSourceAdapter(
+            sourceId = "lemonde-demo",
+            sourceName = "Le Monde Demo",
             articles = listOf(
                 SourceArticleRecord(
-                    url = "https://nyt.example/climate-geneva",
+                    url = "https://lemonde.example/climate-geneva",
                     publishedAt = baseTime.plusSeconds(1800),
                     languageTag = "en",
                     headline = "Historic agreement reached at Geneva climate summit on emissions",
@@ -93,7 +93,7 @@ class IngestionServiceTest {
             )
         )
 
-        val result = service.ingestFromAdapters(listOf(bbc, nyt))
+        val result = service.ingestFromAdapters(listOf(bbc, lemonde))
 
         assertEquals(2, result.acceptedArticles.size)
         assertEquals(1, result.proposals.size)
@@ -105,22 +105,142 @@ class IngestionServiceTest {
     }
 
     @Test
+    fun `blocks pending review sources`() = runTest {
+        val pendingAdapter = object : SourceAdapter {
+            override val sourceId = "pending-source"
+            override val sourceName = "Pending Source"
+            override suspend fun fetchArticles(): List<SourceArticleRecord> {
+                return listOf(
+                    SourceArticleRecord(
+                        url = "https://pending.example/article",
+                        publishedAt = baseTime,
+                        languageTag = "en",
+                        headline = "Test",
+                        excerpt = "Test"
+                    )
+                )
+            }
+        }
+
+        val result = service.ingestFromAdapters(listOf(pendingAdapter))
+
+        assertEquals(0, result.acceptedArticles.size)
+        assertEquals(1, result.ineligibleSources.size)
+        assertEquals(IneligibilityReason.PENDING_REVIEW, result.ineligibleSources.first().reason)
+    }
+
+    @Test
+    fun `blocks rejected sources`() = runTest {
+        val rejectedAdapter = object : SourceAdapter {
+            override val sourceId = "rejected-source"
+            override val sourceName = "Rejected Source"
+            override suspend fun fetchArticles(): List<SourceArticleRecord> {
+                return listOf(
+                    SourceArticleRecord(
+                        url = "https://rejected.example/article",
+                        publishedAt = baseTime,
+                        languageTag = "en",
+                        headline = "Test",
+                        excerpt = "Test"
+                    )
+                )
+            }
+        }
+
+        val result = service.ingestFromAdapters(listOf(rejectedAdapter))
+
+        assertEquals(0, result.acceptedArticles.size)
+        assertEquals(1, result.ineligibleSources.size)
+        assertEquals(IneligibilityReason.REJECTED, result.ineligibleSources.first().reason)
+        assertTrue(result.ineligibleSources.first().details.contains("Terms of service"))
+    }
+
+    @Test
+    fun `blocks suspended sources`() = runTest {
+        val suspendedAdapter = object : SourceAdapter {
+            override val sourceId = "suspended-source"
+            override val sourceName = "Suspended Source"
+            override suspend fun fetchArticles(): List<SourceArticleRecord> {
+                return listOf(
+                    SourceArticleRecord(
+                        url = "https://suspended.example/article",
+                        publishedAt = baseTime,
+                        languageTag = "en",
+                        headline = "Test",
+                        excerpt = "Test"
+                    )
+                )
+            }
+        }
+
+        val result = service.ingestFromAdapters(listOf(suspendedAdapter))
+
+        assertEquals(0, result.acceptedArticles.size)
+        assertEquals(1, result.ineligibleSources.size)
+        assertEquals(IneligibilityReason.SUSPENDED, result.ineligibleSources.first().reason)
+    }
+
+    @Test
+    fun `blocks expired approval sources`() = runTest {
+        val expiredAdapter = object : SourceAdapter {
+            override val sourceId = "expired-approval"
+            override val sourceName = "Expired Source"
+            override suspend fun fetchArticles(): List<SourceArticleRecord> {
+                return listOf(
+                    SourceArticleRecord(
+                        url = "https://expired.example/article",
+                        publishedAt = baseTime,
+                        languageTag = "en",
+                        headline = "Test",
+                        excerpt = "Test"
+                    )
+                )
+            }
+        }
+
+        val result = service.ingestFromAdapters(listOf(expiredAdapter))
+
+        assertEquals(0, result.acceptedArticles.size)
+        assertEquals(1, result.ineligibleSources.size)
+        assertEquals(IneligibilityReason.APPROVAL_EXPIRED, result.ineligibleSources.first().reason)
+    }
+
+    @Test
     fun `handles adapter errors gracefully`() = runTest {
+        // Create a failing adapter with a valid registry entry
+        val customRegistry = InMemorySourceRegistry(mapOf(
+            "bbc-demo" to InMemorySourceRegistry.createMockRegistry(baseTime).getEntry("bbc-demo")!!,
+            "failing-approved" to SourceRegistryEntry(
+                sourceId = "failing-approved",
+                displayName = "Failing Source",
+                homepage = "https://failing.example",
+                status = SourceStatus.APPROVED_LINK_AND_EXCERPT,
+                permittedIntakeMethod = IntakeMethod.RSS_WITH_EXCERPT, // Non-mock adapters use RSS by default
+                attributionRequirements = AttributionRequirements(sourceName = "Failing Source"),
+                lastReviewedAt = baseTime,
+                reviewedBy = "test",
+                reviewNotes = "Test",
+                eligibleForClustering = true
+            )
+        ))
+        val customValidator = SourceRegistryValidator(customRegistry, allowDemoSources = true)
+        val customService = IngestionService(pipeline, storyDao, articleDao, editorialDecisionDao, customValidator)
+
         val failingAdapter = object : SourceAdapter {
-            override val sourceId = "failing"
+            override val sourceId = "failing-approved"
             override val sourceName = "Failing Source"
             override suspend fun fetchArticles(): List<SourceArticleRecord> {
                 throw RuntimeException("Network error")
             }
         }
 
-        val result = service.ingestFromAdapters(listOf(
+        val result = customService.ingestFromAdapters(listOf(
             failingAdapter,
             MockSourceAdapter.createBBC(baseTime)
         ))
 
         assertEquals(1, result.adapterErrors.size)
-        assertEquals("failing", result.adapterErrors.first().sourceId)
+        assertEquals("failing-approved", result.adapterErrors.first().sourceId)
         assertEquals(1, result.acceptedArticles.size) // BBC still succeeded
     }
 
@@ -241,7 +361,7 @@ class IngestionServiceTest {
     private fun createNormalizedArticle(id: String, sourceId: String) = NormalizedArticle(
         id = id,
         sourceId = sourceId,
-        sourceName = sourceId.uppercase(),
+        sourceName = "$sourceId Demo",
         originalUrl = "https://example.com/$id",
         canonicalUrl = "https://example.com/$id",
         publishedAt = baseTime,

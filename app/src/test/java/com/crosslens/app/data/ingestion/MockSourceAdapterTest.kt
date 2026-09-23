@@ -13,8 +13,8 @@ class MockSourceAdapterTest {
     fun `BBC adapter produces valid climate article`() = runTest {
         val adapter = MockSourceAdapter.createBBC(baseTime)
 
-        assertEquals("bbc", adapter.sourceId)
-        assertEquals("BBC News", adapter.sourceName)
+        assertEquals("bbc-demo", adapter.sourceId)
+        assertEquals("BBC News Demo", adapter.sourceName)
 
         val articles = adapter.fetchArticles()
         assertEquals(1, articles.size)
@@ -34,8 +34,8 @@ class MockSourceAdapterTest {
     fun `Le Monde adapter produces valid French article`() = runTest {
         val adapter = MockSourceAdapter.createLeMonde(baseTime)
 
-        assertEquals("lemonde", adapter.sourceId)
-        assertEquals("Le Monde", adapter.sourceName)
+        assertEquals("lemonde-demo", adapter.sourceId)
+        assertEquals("Le Monde Demo", adapter.sourceName)
 
         val articles = adapter.fetchArticles()
         assertEquals(1, articles.size)
@@ -52,8 +52,8 @@ class MockSourceAdapterTest {
     fun `Al Jazeera adapter produces valid Arabic article`() = runTest {
         val adapter = MockSourceAdapter.createAlJazeera(baseTime)
 
-        assertEquals("aljazeera", adapter.sourceId)
-        assertEquals("Al Jazeera", adapter.sourceName)
+        assertEquals("aljazeera-demo", adapter.sourceId)
+        assertEquals("Al Jazeera Demo", adapter.sourceName)
 
         val articles = adapter.fetchArticles()
         assertEquals(1, articles.size)
@@ -70,8 +70,8 @@ class MockSourceAdapterTest {
     fun `NYT adapter produces unrelated tech article`() = runTest {
         val adapter = MockSourceAdapter.createNYT(baseTime)
 
-        assertEquals("nyt", adapter.sourceId)
-        assertEquals("The New York Times", adapter.sourceName)
+        assertEquals("nyt-demo", adapter.sourceId)
+        assertEquals("NYT Demo", adapter.sourceName)
 
         val articles = adapter.fetchArticles()
         assertEquals(1, articles.size)
@@ -89,7 +89,7 @@ class MockSourceAdapterTest {
         val adapters = MockSourceAdapter.createTestSet(baseTime)
 
         assertEquals(4, adapters.size)
-        assertEquals(setOf("bbc", "lemonde", "aljazeera", "nyt"), adapters.map { it.sourceId }.toSet())
+        assertEquals(setOf("bbc-demo", "lemonde-demo", "aljazeera-demo", "nyt-demo"), adapters.map { it.sourceId }.toSet())
 
         val allArticles = mutableListOf<SourceArticleRecord>()
         adapters.forEach { allArticles += it.fetchArticles() }

@@ -82,10 +82,78 @@ Only approved multi-source clusters enter the database. Every story has a tracea
 - **No source catalog integration**: Adapters reference source IDs but don't validate against a source registry
 - **Manual review only**: No automated quality scoring or suggested approval
 
+## Source registry and content-use policy
+
+✅ **Source registry model** (`SourceRegistry.kt`)
+- Separates policy/eligibility from reader-facing display metadata
+- Required fields: source ID, display name, homepage, status, permitted intake method, attribution requirements, review date, reviewer, and review notes
+- Five statuses: `DEMO_ONLY`, `PENDING_REVIEW`, `APPROVED_LINK_AND_EXCERPT`, `REJECTED`, `SUSPENDED`
+- Four intake methods: `DEMO_FIXTURE`, `RSS_WITH_EXCERPT`, `LICENSED_API`, `FAIR_USE_PREVIEW`
+- Attribution requirements: source name format, link required, custom attribution, branding notes
+- Optional approval expiry for time-limited permissions or trials
+- Eligibility for clustering flag (allows restricting sources from multi-source clusters)
+
+✅ **Policy enforcement** (`SourceRegistryValidator`)
+- Checks eligibility before any adapter can emit articles
+- Validates intake method matches registry entry
+- Validates attribution requirements (HTTPS links, custom attribution)
+- Blocks ineligible sources with clear reasons: not in registry, demo-only in production, pending review, rejected, suspended, approval expired, intake method mismatch
+- Production mode flag to block demo sources
+
+✅ **Mock registry** (`InMemorySourceRegistry.createMockRegistry()`)
+- Example entries covering all statuses:
+  - `bbc-demo`, `lemonde-demo`: DEMO_ONLY with explicit "Fictional demo source" labels
+  - `pending-source`: PENDING_REVIEW awaiting legal review
+  - `rejected-source`: REJECTED due to terms of service prohibition
+  - `suspended-source`: SUSPENDED for attribution violations
+  - `approved-rss`: APPROVED_LINK_AND_EXCERPT with documented RSS permission
+  - `expired-approval`: APPROVED but with expired time-limited trial
+- NO entry represents an actual publisher agreement
+
+✅ **Integration** (`IngestionService`)
+- Registry validation runs before adapter.fetchArticles()
+- Ineligible sources blocked with detailed reasons
+- Attribution from registry, not adapter (ensures consistency)
+- Adapter errors still caught gracefully after eligibility check
+
+✅ **Comprehensive tests** (`SourceRegistryValidatorTest`, updated `IngestionServiceTest`)
+- Eligibility decisions for all statuses
+- Intake method mismatch detection
+- Expired approval blocking
+- Attribution validation (HTTPS requirements)
+- Demo source blocking in production mode
+- Registry query methods (getAllEntries, getEligibleSources)
+- Integration with ingestion pipeline
+- Error handling for approved sources that fail during fetch
+
+## Registry review workflow
+
+Before a source becomes `APPROVED_LINK_AND_EXCERPT`, a human reviewer must verify:
+
+1. **Content-use permission**: RSS terms, API license, or fair use basis documented
+2. **Attribution requirements**: Exact source name format and link requirements
+3. **Intake method**: Which technical method is permitted and matches implementation
+4. **Review notes**: Why this source is approved and any restrictions
+5. **Clustering eligibility**: Whether articles can be combined with other sources
+6. **Expiry date** (if applicable): Time-limited trials or review intervals
+
+**Demo sources** are explicitly labeled as fictional test data. They have `DEMO_ONLY` status and "Demo" in their display name. They never claim to represent real publisher agreements.
+
+**Source inclusion does NOT imply**:
+- Editorial endorsement or quality certification
+- Political classification (left/center/right)
+- Factual accuracy guarantee
+- Agreement with the publisher's views
+- Representation of an entire country's media landscape
+
+The registry documents content-use eligibility only. Display metadata (regions, languages, editorial context) lives in `SourceEntity` so policy changes don't silently alter the reader experience.
+
 ## Next steps
 
-1. Build a source registry with licensing/attribution requirements
+1. ~~Build a source registry with licensing/attribution requirements~~ ✅ Complete
 2. Add wire-copy detection to avoid counting syndicated reports as independent sources
 3. Integrate entity extraction to improve cross-language clustering
 4. Build an editorial review UI (currently tested via service layer only)
 5. Add claims extraction and frame observation generation for approved stories
+6. Build source registry persistence (currently in-memory mock)
+7. Add registry admin UI for managing source approvals and suspensions

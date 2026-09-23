@@ -19,32 +19,60 @@ class IngestionService @Inject constructor(
     private val pipeline: EventClusteringPipeline,
     private val storyDao: StoryDao,
     private val articleDao: ArticleDao,
-    private val editorialDecisionDao: EditorialDecisionDao
+    private val editorialDecisionDao: EditorialDecisionDao,
+    private val registryValidator: SourceRegistryValidator
 ) {
     /**
      * Process articles from source adapters through clustering.
      * Returns proposals that need editorial review.
+     * Validates source eligibility via registry before accepting any records.
      */
     suspend fun ingestFromAdapters(adapters: List<SourceAdapter>): IngestionResult {
         val allRecords = mutableListOf<IngestionArticleInput>()
         val adapterErrors = mutableListOf<AdapterError>()
+        val ineligibleSources = mutableListOf<IneligibleSource>()
 
         for (adapter in adapters) {
             try {
                 SourceAdapterValidator.validate(adapter)
-                val records = adapter.fetchArticles()
-                records.forEach { SourceAdapterValidator.validateRecord(it) }
 
-                allRecords += records.map { record ->
-                    IngestionArticleInput(
-                        sourceId = adapter.sourceId,
-                        sourceName = adapter.sourceName,
-                        url = record.url,
-                        publishedAt = record.publishedAt,
-                        languageTag = record.languageTag,
-                        headline = record.headline,
-                        excerpt = record.excerpt
-                    )
+                // Check source eligibility via registry
+                val intakeMethod = when (adapter.javaClass.simpleName) {
+                    "MockSourceAdapter" -> IntakeMethod.DEMO_FIXTURE
+                    else -> IntakeMethod.RSS_WITH_EXCERPT // Default for real adapters
+                }
+
+                when (val eligibility = registryValidator.checkEligibility(adapter.sourceId, intakeMethod)) {
+                    is SourceEligibilityResult.Ineligible -> {
+                        ineligibleSources += IneligibleSource(
+                            sourceId = adapter.sourceId,
+                            reason = eligibility.reason,
+                            details = eligibility.details
+                        )
+                        continue // Skip this adapter
+                    }
+                    is SourceEligibilityResult.Eligible -> {
+                        val entry = eligibility.entry
+                        val records = adapter.fetchArticles()
+
+                        // Validate each record against attribution requirements
+                        records.forEach { record ->
+                            SourceAdapterValidator.validateRecord(record)
+                            registryValidator.validateAttribution(entry, record).getOrThrow()
+                        }
+
+                        allRecords += records.map { record ->
+                            IngestionArticleInput(
+                                sourceId = adapter.sourceId,
+                                sourceName = entry.attributionRequirements.sourceName,
+                                url = record.url,
+                                publishedAt = record.publishedAt,
+                                languageTag = record.languageTag,
+                                headline = record.headline,
+                                excerpt = record.excerpt
+                            )
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 adapterErrors += AdapterError(adapter.sourceId, e.message ?: "Unknown error")
@@ -59,7 +87,8 @@ class IngestionService @Inject constructor(
             duplicates = batchResult.duplicates,
             proposals = batchResult.clusters.filter { it.status == ClusterStatus.REVIEWABLE },
             singleSourceClusters = batchResult.clusters.filter { it.status == ClusterStatus.SINGLE_SOURCE },
-            adapterErrors = adapterErrors
+            adapterErrors = adapterErrors,
+            ineligibleSources = ineligibleSources
         )
     }
 
@@ -169,12 +198,19 @@ data class IngestionResult(
     val duplicates: List<DuplicateArticle>,
     val proposals: List<EventClusterProposal>,
     val singleSourceClusters: List<EventClusterProposal>,
-    val adapterErrors: List<AdapterError>
+    val adapterErrors: List<AdapterError>,
+    val ineligibleSources: List<IneligibleSource>
 )
 
 data class AdapterError(
     val sourceId: String,
     val error: String
+)
+
+data class IneligibleSource(
+    val sourceId: String,
+    val reason: IneligibilityReason,
+    val details: String
 )
 
 data class DecisionStats(

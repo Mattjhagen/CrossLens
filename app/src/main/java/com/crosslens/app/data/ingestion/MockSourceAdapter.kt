@@ -16,11 +16,12 @@ class MockSourceAdapter(
     companion object {
         /**
          * Creates a BBC mock adapter with fictional climate coverage.
+         * Uses registry ID "bbc-demo" to indicate demo status.
          */
         fun createBBC(baseTime: Instant): MockSourceAdapter {
             return MockSourceAdapter(
-                sourceId = "bbc",
-                sourceName = "BBC News",
+                sourceId = "bbc-demo",
+                sourceName = "BBC News Demo",
                 articles = listOf(
                     SourceArticleRecord(
                         url = "https://bbc.example/climate-summit-breakthrough",
@@ -36,11 +37,12 @@ class MockSourceAdapter(
 
         /**
          * Creates a Le Monde mock adapter with fictional climate coverage in French.
+         * Uses registry ID "lemonde-demo" to indicate demo status.
          */
         fun createLeMonde(baseTime: Instant): MockSourceAdapter {
             return MockSourceAdapter(
-                sourceId = "lemonde",
-                sourceName = "Le Monde",
+                sourceId = "lemonde-demo",
+                sourceName = "Le Monde Demo",
                 articles = listOf(
                     SourceArticleRecord(
                         url = "https://lemonde.example/sommet-climat-geneve",
@@ -56,11 +58,12 @@ class MockSourceAdapter(
 
         /**
          * Creates an Al Jazeera mock adapter with fictional climate coverage in Arabic.
+         * Note: Not in registry by default, used to test ineligible sources.
          */
         fun createAlJazeera(baseTime: Instant): MockSourceAdapter {
             return MockSourceAdapter(
-                sourceId = "aljazeera",
-                sourceName = "Al Jazeera",
+                sourceId = "aljazeera-demo",
+                sourceName = "Al Jazeera Demo",
                 articles = listOf(
                     SourceArticleRecord(
                         url = "https://aljazeera.example/geneva-climate-agreement",
@@ -76,11 +79,12 @@ class MockSourceAdapter(
 
         /**
          * Creates a New York Times mock adapter with unrelated tech coverage.
+         * Note: Not in registry by default, used to test ineligible sources.
          */
         fun createNYT(baseTime: Instant): MockSourceAdapter {
             return MockSourceAdapter(
-                sourceId = "nyt",
-                sourceName = "The New York Times",
+                sourceId = "nyt-demo",
+                sourceName = "NYT Demo",
                 articles = listOf(
                     SourceArticleRecord(
                         url = "https://nytimes.example/ai-regulation-debate",
