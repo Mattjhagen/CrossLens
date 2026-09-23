@@ -102,6 +102,32 @@
     <string name="retry">Retry</string>
     <string name="empty_state">Nothing to show</string>
 
+    <!-- Editorial Review -->
+    <string name="editorial_review_title">Editorial Review (Demo)</string>
+    <string name="editorial_review_demo_notice">⚠️ Demo Review Workflow\n\nThis is a fictional prototype for reviewing mock ingestion candidates. All data is demo-only and does not represent real news content.</string>
+    <string name="editorial_review_pending">Pending Review (%d)</string>
+    <string name="editorial_review_no_candidates">No pending candidates</string>
+    <string name="editorial_review_history">Review History (%d)</string>
+    <string name="editorial_review_stat_approved">Approved</string>
+    <string name="editorial_review_stat_rejected">Rejected</string>
+    <string name="editorial_review_stat_deferred">Deferred</string>
+    <string name="editorial_review_sources_languages" formatted="false">%d sources • %d languages</string>
+    <string name="editorial_review_type_method" formatted="false">Type: %s • Method: %s</string>
+    <string name="editorial_review_dialog_title">Review: %s</string>
+    <string name="editorial_review_evidence">Evidence:</string>
+    <string name="editorial_review_sources">Sources: %s</string>
+    <string name="editorial_review_languages">Languages: %s</string>
+    <string name="editorial_review_shared_entities">Shared entities: %d</string>
+    <string name="editorial_review_uncertainty">Uncertainty:</string>
+    <string name="editorial_review_note_label">Editorial note (optional)</string>
+    <string name="editorial_review_decision">Decision:</string>
+    <string name="editorial_review_approve">Approve</string>
+    <string name="editorial_review_reject">Reject</string>
+    <string name="editorial_review_defer">Defer</string>
+    <string name="editorial_review_submit">Submit</string>
+    <string name="editorial_review_cancel">Cancel</string>
+    <string name="editorial_review_entry">Editorial Review</string>
+
     <!-- Accessibility -->
     <string name="cd_story_image">Story illustration</string>
     <string name="cd_source_flag">Source country</string>
@@ -111,4 +137,5 @@
     <string name="cd_settings_button">Open settings</string>
     <string name="cd_close">Close</string>
     <string name="cd_back">Back</string>
+    <string name="cd_editorial_review">Open editorial review</string>
 </resources>

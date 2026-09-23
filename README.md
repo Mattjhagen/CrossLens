@@ -85,7 +85,8 @@ Home, Explore, and Settings are top-level destinations. Story and CrossLens are 
 - **Story:** Event summary, attributed claims, sources, comparison action
 - **CrossLens:** Source-by-source comparison with flip animation, paywall gating
 - **Explore:** Region/topic filters with combined AND logic
-- **Settings:** Theme selection, reduced motion, Plus preview/reset
+- **Settings:** Theme selection, reduced motion, Plus preview/reset, editorial review access
+- **Editorial Review (Demo):** Offline workflow prototype for reviewing mock ingestion candidates
 
 ### Features
 - ✅ Offline-first: All data seeded from mock fixtures in Room
@@ -94,6 +95,7 @@ Home, Explore, and Settings are top-level destinations. Story and CrossLens are 
 - ✅ Custom Material 3 theme: Editorial design with serif/sans typography
 - ✅ Reduced motion: Animations respect user preference
 - ✅ Multilingual fixtures: English, French, Arabic, Japanese samples
+- ✅ Editorial review workflow: Offline demo for reviewing cross-language matches and syndication candidates
 
 ### Mock Data
 - 3 story clusters (climate summit, AI regulation, trade)
@@ -101,6 +103,7 @@ Home, Explore, and Settings are top-level destinations. Story and CrossLens are 
 - Demo Lens Gap assessments clearly labeled
 - Claims with CORROBORATED/DISPUTED status
 - Frame observations with evidence references
+- Editorial review candidates (cross-language matches, syndication detection)
 
 ## Technical Foundation
 
@@ -162,11 +165,12 @@ Before real ranking ships, evaluate translation artifacts, duplicate/syndicated 
 
 ## Roadmap
 
-1. **Android skeleton:** five screens, local fixtures, offline persistence, preferences, navigation, meaningful tests, and a mock free/Plus access experience.
-2. **Source ingestion:** backend API, source catalog, attribution/content permissions, article normalization, event clustering, and deduplication.
-3. **Translations:** provider abstraction, cache/version handling, original-text access, explicit failure states, and multilingual/RTL validation.
-4. **Explainable comparisons:** evidence-backed frame observations and a human-reviewed Lens Gap evaluation set before production scoring.
-5. **Discovery experiments:** evaluate coverage breadth, cross-country differences, and “outside my usual sources” sorting with transparent controls.
+1. ✅ **Android skeleton:** Five screens, local fixtures, offline persistence, preferences, navigation, meaningful tests, and a mock free/Plus access experience. *(Complete)*
+2. ✅ **Editorial review prototype:** Offline workflow demonstrating human review of ingestion candidates (cross-language matches, syndication detection). *(Complete - demo only)*
+3. **Source ingestion:** Backend API, source catalog, attribution/content permissions, article normalization, event clustering, and deduplication. Connect editorial review to live ingestion pipeline.
+4. **Translations:** Provider abstraction, cache/version handling, original-text access, explicit failure states, and multilingual/RTL validation.
+5. **Explainable comparisons:** Evidence-backed frame observations and a human-reviewed Lens Gap evaluation set before production scoring.
+6. **Discovery experiments:** Evaluate coverage breadth, cross-country differences, and “outside my usual sources” sorting with transparent controls.
 
 Accounts, real subscriptions/billing, scraping, production backend deployment, live translation, and automated political labels are outside the initial build.
 

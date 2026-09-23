@@ -239,19 +239,54 @@ After canonical URL deduplication and before entity extraction, the pipeline run
 
 **Important**: Syndication detection labels matches as SUSPECTED until editorial review. It does NOT automatically reduce a cluster's independent-source count or remove articles from clustering. Event clusters count all contributing sources; approved clusters may have a separate editorial-verified independent-source count if syndication is confirmed.
 
+## Editorial Review UI
+
+✅ **Editorial review screen** (`EditorialReviewScreen.kt`)
+- Accessible from Settings with clear entry point
+- Demo workflow notice explaining fictional prototype nature
+- Pending candidates list with expandable details
+- Review history with audit trail (approved/rejected/deferred)
+- Statistics dashboard showing review counts
+- Full evidence display: sources, languages, shared entities, uncertainty reasons
+- Decision workflow: approve/reject/defer with optional editorial notes
+- All user-facing strings externalized to string resources
+- Comprehensive ViewModel tests covering state transitions and evidence preservation
+
+✅ **Offline editorial workflow**
+- Mock candidates generated from demo data (cross-language matches, syndication detection)
+- All reviews persisted to Room database for audit trail
+- Review decisions affect which candidates appear as pending
+- Stats updated in real-time as reviews are submitted
+- Complete separation from live ingestion (no network calls)
+
+**Important boundaries:**
+- This is a **fictional offline prototype** demonstrating the editorial review workflow
+- All candidates are mock data from test fixtures, not real ingestion results
+- Reviews are stored locally and do not affect production systems
+- No automated approval or live data ingestion
+- Production implementation requires:
+  - Live ingestion pipeline connected to source adapters
+  - Real-time candidate generation from actual article ingestion
+  - Authenticated reviewer identity and permissions system
+  - Review queue management and assignment
+  - Integration with story publication workflow
+  - Audit logging with timestamps and reviewer attribution
+
 ## Next steps
 
 1. ~~Build a source registry with licensing/attribution requirements~~ ✅ Complete
-2. ~~Add wire-copy detection to avoid counting syndicated reports as independent sources~~ ✅ Complete (detection only; editorial review integration pending)
+2. ~~Add wire-copy detection to avoid counting syndicated reports as independent sources~~ ✅ Complete
 3. ~~Integrate entity extraction to improve cross-language clustering~~ ✅ Complete (mock-only prototype; production NLP integration pending)
-4. Integrate licensed or self-hosted NLP for automated entity extraction from article text
-5. Add entity resolution system for handling name variations and transliterations
-6. Build editorial review UI for:
-   - Reviewing and confirming/rejecting syndication groups
-   - Reviewing and confirming/rejecting cross-language candidate matches
-   - Determining independent-source counts when syndication + entity match overlap
-7. Add explicit wire attribution parsing from article metadata (AP, Reuters, AFP tags)
-8. Add claims extraction and frame observation generation for approved stories
-9. Build source registry persistence (currently in-memory mock)
-10. Add registry admin UI for managing source approvals and suspensions
-11. Add entity/syndication interaction tests showing combined decision workflows
+4. ~~Build editorial review UI for reviewing candidates~~ ✅ Complete (offline demo workflow; production integration pending)
+5. Integrate licensed or self-hosted NLP for automated entity extraction from article text
+6. Add entity resolution system for handling name variations and transliterations
+7. Connect editorial review UI to live ingestion pipeline:
+   - Real-time candidate generation from source adapters
+   - Review queue with assignment and priority
+   - Authenticated reviewer roles and permissions
+   - Approved cluster publication to story database
+8. Add explicit wire attribution parsing from article metadata (AP, Reuters, AFP tags)
+9. Add claims extraction and frame observation generation for approved stories
+10. Build source registry persistence (currently in-memory mock)
+11. Add registry admin UI for managing source approvals and suspensions
+12. Add entity/syndication interaction tests showing combined decision workflows
