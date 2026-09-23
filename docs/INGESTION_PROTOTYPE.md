@@ -29,7 +29,7 @@ The code is in `app/src/main/java/com/crosslens/app/data/ingestion/EventClusteri
 - Creates audit trail for all decisions
 
 ✅ **Syndication detection** (`SyndicationDetector.kt`)
-- Detects suspected wire-copy and syndicated content after deduplication, before clustering
+- Detects suspected wire-copy and syndicated content after deduplication, before entity extraction
 - Uses normalized title exact match and excerpt fingerprint overlap
 - Conservative confidence bands: HIGH, MEDIUM, LOW, UNCERTAIN
 - Cross-language matches marked UNCERTAIN (may be translation or syndication)
@@ -37,12 +37,30 @@ The code is in `app/src/main/java/com/crosslens/app/data/ingestion/EventClusteri
 - Every syndication group requires editorial review
 - Labeled as SUSPECTED syndication, never confirmed without explicit wire attribution
 
+✅ **Entity extraction** (`EntityExtraction.kt`)
+- Mock-only prototype using explicit entity metadata from test fixtures
+- NO NLP models, external APIs, or automated entity recognition
+- Extracts Person, Organization, Location, Date, and EventIdentifier entities
+- Each entity has stable ID for cross-language matching (e.g., "person:biden", "location:geneva")
+- Entity display names localized per source language
+- Extraction method versioning for auditability (`mock-metadata-v1`)
+
+✅ **Cross-language event matching** (`CrossLanguageEventMatcher.kt`)
+- Finds CANDIDATE event matches across languages using entity overlap
+- Minimum 2 shared entities + 30% overlap score required
+- Confidence bands: HIGH (event identifier + 3+ entities), MEDIUM (2+ diverse entity types), LOW (minimal overlap), UNCERTAIN (insufficient evidence)
+- Same-language articles use existing title similarity clustering (not entity matching)
+- All matches labeled as CANDIDATES requiring editorial review
+- Never claims confirmed same-event without review
+- Transparent uncertainty reasons for each match
+
 ✅ **Ingestion service** (`IngestionService.kt`)
-- Orchestrates: adapters → registry validation → deduplication → syndication detection → clustering → editorial review → persistence
+- Orchestrates: adapters → registry validation → deduplication → syndication detection → entity extraction → cross-language matching → clustering → editorial review → persistence
 - Persists only approved clusters to Room
 - Records all decisions (approved/rejected/deferred) for audit
 - Handles adapter errors gracefully without failing entire batch
 - Maintains decision statistics
+- Passes mock entity map through pipeline for testing
 
 ✅ **Room persistence**
 - `EditorialDecisionEntity` stores audit trail
@@ -85,12 +103,19 @@ Only approved multi-source clusters enter the database. Every story has a tracea
 
 ## Known limitations
 
-- **Multilingual clustering**: Token-based similarity has limited effectiveness across languages. BBC/Le Monde/Al Jazeera articles about the same Geneva climate summit may not cluster due to vocabulary differences. This is a documented prototype limitation.
+- **Mock-only entity extraction**: Entities come from explicit test metadata, not NLP. Production requires licensed entity extraction API or self-hosted model.
+- **No automated entity recognition**: Cannot extract entities from raw article text without NLP integration.
+- **Entity ID stability**: Mock entity IDs (e.g., "person:biden") must be maintained consistently across languages and sources. Production needs entity resolution system.
+- **Generic entity handling**: Common entities (e.g., "location:washington", "location:beijing") may create false positive matches across unrelated events. Detector flags but cannot fully prevent.
+- **Multilingual entity matching**: Uses exact entity ID matches only. Cannot handle alternate transliterations, name variations, or entity disambiguation.
+- **Candidate matches require review**: All cross-language matches are CANDIDATES. Cannot automatically determine same-event vs. different-event.
+- **No semantic understanding**: Uses entity overlap count, not contextual understanding of entity roles or event relationships.
+- **Syndication + entity overlap**: Articles can be BOTH syndicated AND entity-matched. Editorial review must consider both signals for independent-source counting.
+- **Short entity lists**: Articles with <2 entities cannot be cross-language matched, even if same event.
 - **Multilingual syndication detection**: Cross-language matches are marked UNCERTAIN because the detector cannot distinguish between independent translation and wire-service syndication without semantic understanding.
-- **No semantic understanding**: Uses headline token overlap and excerpt fingerprint, not entity recognition or event understanding
 - **Short excerpts**: Brief excerpts (<100 characters) may have coincidental overlap; marked LOW confidence
 - **No explicit wire attribution parsing**: Cannot confirm wire service unless metadata is present
-- **Manual review required**: All syndication groups require editorial review; no automatic independent-source determination
+- **Manual review required**: All syndication groups AND entity matches require editorial review; no automatic independent-source determination
 
 ## Source registry and content-use policy
 
@@ -158,9 +183,49 @@ Before a source becomes `APPROVED_LINK_AND_EXCERPT`, a human reviewer must verif
 
 The registry documents content-use eligibility only. Display metadata (regions, languages, editorial context) lives in `SourceEntity` so policy changes don't silently alter the reader experience.
 
+## Entity extraction and cross-language matching workflow
+
+After syndication detection and before event clustering, the pipeline runs entity extraction and cross-language matching:
+
+1. **Entity extraction**: For each article, extract entities from explicit mock metadata:
+   - Person entities (e.g., "person:biden" → "Joe Biden" / "Joe Biden" / "جو بايدن")
+   - Organization entities (e.g., "org:un" → "United Nations" / "ONU" / "الأمم المتحدة")
+   - Location entities (e.g., "location:geneva" → "Geneva" / "Genève" / "جنيف")
+   - Date entities (e.g., "date:2026-09-22")
+   - EventIdentifier entities (e.g., "event:geneva-climate-summit-2026")
+
+2. **Cross-language matching**: Find articles with shared entity IDs across different languages:
+   - Minimum 2 shared entities required
+   - Minimum 30% overlap score (shared / min(set sizes))
+   - Within 72-hour time window
+   - Only cross-language pairs (same-language uses title similarity)
+
+3. **Confidence bands**:
+   - HIGH: Event identifier + 3+ diverse entities (likely same event)
+   - MEDIUM: 2+ diverse entity types (person + org + location)
+   - LOW: Minimal overlap or generic entities only
+   - UNCERTAIN: Insufficient evidence
+
+4. **Candidate match result**: Each match includes:
+   - Article IDs and source IDs
+   - Shared entity IDs list
+   - Language pair/triple
+   - Confidence band
+   - Matching method version
+   - Editorial review flag (always true)
+   - Rationale explaining the match
+   - Uncertainty reasons (e.g., "Cross-language match requires verification", "Generic entities may appear in unrelated events")
+
+**Editorial review decisions**:
+- **Confirmed same event**: Reviewers can confirm cross-language coverage of the same event and count independent sources.
+- **Different events**: Reviewers can override false positives where shared entities coincidentally appear (e.g., both mention "Washington" and "China" but different topics).
+- **Syndication vs. same event**: Articles can be BOTH syndicated AND entity-matched. Syndicated French translation of English wire = 1 independent source, not 2.
+
+**Important**: Entity matching produces CANDIDATE matches requiring editorial review. It does NOT automatically determine same-event, independent reporting, factuality, political orientation, or Lens Gap.
+
 ## Syndication detection workflow
 
-After canonical URL deduplication and before event clustering, the pipeline runs syndication detection:
+After canonical URL deduplication and before entity extraction, the pipeline runs syndication detection:
 
 1. **Exact title match**: Articles with identical normalized titles (punctuation removed, lowercase) from different sources are grouped as HIGH confidence suspected syndication (same language) or UNCERTAIN (different languages).
 2. **Excerpt fingerprint**: Articles with ≥80% longest-common-substring overlap in excerpts ≥100 characters are grouped as MEDIUM confidence (same language) or UNCERTAIN (different languages).
@@ -178,10 +243,15 @@ After canonical URL deduplication and before event clustering, the pipeline runs
 
 1. ~~Build a source registry with licensing/attribution requirements~~ ✅ Complete
 2. ~~Add wire-copy detection to avoid counting syndicated reports as independent sources~~ ✅ Complete (detection only; editorial review integration pending)
-3. Integrate entity extraction to improve cross-language clustering and syndication detection
-4. Build an editorial review UI (currently tested via service layer only)
-5. Add explicit wire attribution parsing from article metadata (AP, Reuters, AFP tags)
-6. Add claims extraction and frame observation generation for approved stories
-7. Build source registry persistence (currently in-memory mock)
-8. Add registry admin UI for managing source approvals and suspensions
-9. Add editorial UI for reviewing and confirming/rejecting syndication groups
+3. ~~Integrate entity extraction to improve cross-language clustering~~ ✅ Complete (mock-only prototype; production NLP integration pending)
+4. Integrate licensed or self-hosted NLP for automated entity extraction from article text
+5. Add entity resolution system for handling name variations and transliterations
+6. Build editorial review UI for:
+   - Reviewing and confirming/rejecting syndication groups
+   - Reviewing and confirming/rejecting cross-language candidate matches
+   - Determining independent-source counts when syndication + entity match overlap
+7. Add explicit wire attribution parsing from article metadata (AP, Reuters, AFP tags)
+8. Add claims extraction and frame observation generation for approved stories
+9. Build source registry persistence (currently in-memory mock)
+10. Add registry admin UI for managing source approvals and suspensions
+11. Add entity/syndication interaction tests showing combined decision workflows

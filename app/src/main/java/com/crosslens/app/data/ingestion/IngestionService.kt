@@ -26,8 +26,13 @@ class IngestionService @Inject constructor(
      * Process articles from source adapters through clustering.
      * Returns proposals that need editorial review.
      * Validates source eligibility via registry before accepting any records.
+     *
+     * @param mockEntityMap Optional map of article ID to entities for testing/prototyping.
      */
-    suspend fun ingestFromAdapters(adapters: List<SourceAdapter>): IngestionResult {
+    suspend fun ingestFromAdapters(
+        adapters: List<SourceAdapter>,
+        mockEntityMap: Map<String, List<Entity>> = emptyMap()
+    ): IngestionResult {
         val allRecords = mutableListOf<IngestionArticleInput>()
         val adapterErrors = mutableListOf<AdapterError>()
         val ineligibleSources = mutableListOf<IneligibleSource>()
@@ -79,13 +84,15 @@ class IngestionService @Inject constructor(
             }
         }
 
-        val batchResult = pipeline.process(allRecords)
+        val batchResult = pipeline.process(allRecords, mockEntityMap)
 
         return IngestionResult(
             totalArticles = allRecords.size,
             acceptedArticles = batchResult.acceptedArticles,
             duplicates = batchResult.duplicates,
             syndicationAnalysis = batchResult.syndicationAnalysis,
+            entityExtractionResult = batchResult.entityExtractionResult,
+            crossLanguageMatches = batchResult.crossLanguageMatches,
             proposals = batchResult.clusters.filter { it.status == ClusterStatus.REVIEWABLE },
             singleSourceClusters = batchResult.clusters.filter { it.status == ClusterStatus.SINGLE_SOURCE },
             adapterErrors = adapterErrors,
@@ -198,6 +205,8 @@ data class IngestionResult(
     val acceptedArticles: List<NormalizedArticle>,
     val duplicates: List<DuplicateArticle>,
     val syndicationAnalysis: SyndicationAnalysisResult,
+    val entityExtractionResult: EntityExtractionResult,
+    val crossLanguageMatches: CrossLanguageMatchResult,
     val proposals: List<EventClusterProposal>,
     val singleSourceClusters: List<EventClusterProposal>,
     val adapterErrors: List<AdapterError>,

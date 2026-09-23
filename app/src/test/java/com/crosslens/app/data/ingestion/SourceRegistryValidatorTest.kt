@@ -143,7 +143,7 @@ class SourceRegistryValidatorTest {
     @Test
     fun `registry returns all entries`() {
         val entries = registry.getAllEntries()
-        assertEquals(11, entries.size) // Updated to include new syndication test sources
+        assertEquals(12, entries.size) // Updated to include entity extraction test sources
 
         val sourceIds = entries.map { it.sourceId }.toSet()
         assertTrue(sourceIds.contains("bbc-demo"))
@@ -152,6 +152,7 @@ class SourceRegistryValidatorTest {
         assertTrue(sourceIds.contains("reuters-demo"))
         assertTrue(sourceIds.contains("ft-demo"))
         assertTrue(sourceIds.contains("wapo-demo"))
+        assertTrue(sourceIds.contains("aljazeera-demo"))
         assertTrue(sourceIds.contains("pending-source"))
         assertTrue(sourceIds.contains("rejected-source"))
         assertTrue(sourceIds.contains("suspended-source"))
@@ -170,6 +171,7 @@ class SourceRegistryValidatorTest {
         assertTrue(eligible.any { it.sourceId == "reuters-demo" })
         assertTrue(eligible.any { it.sourceId == "ft-demo" })
         assertTrue(eligible.any { it.sourceId == "wapo-demo" })
+        assertTrue(eligible.any { it.sourceId == "aljazeera-demo" })
         assertTrue(eligible.any { it.sourceId == "approved-rss" })
 
         // Should not include pending, rejected, or suspended (even if expired)

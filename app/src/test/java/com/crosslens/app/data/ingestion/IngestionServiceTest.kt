@@ -38,7 +38,7 @@ class IngestionServiceTest {
 
     @Test
     fun `ingests articles from registry-approved adapters`() = runTest {
-        // Only BBC and Le Monde are in the registry; Al Jazeera and NYT are not
+        // BBC, Le Monde, and Al Jazeera are in the registry; NYT is not
         val adapters = listOf(
             MockSourceAdapter.createBBC(baseTime),
             MockSourceAdapter.createLeMonde(baseTime),
@@ -48,22 +48,29 @@ class IngestionServiceTest {
 
         val result = service.ingestFromAdapters(adapters)
 
-        // Only BBC and Le Monde should be accepted (both are DEMO_ONLY in registry)
-        assertEquals(2, result.totalArticles)
-        assertEquals(2, result.acceptedArticles.size)
+        // BBC, Le Monde, and Al Jazeera should be accepted (all DEMO_ONLY in registry)
+        assertEquals(3, result.totalArticles)
+        assertEquals(3, result.acceptedArticles.size)
         assertEquals(0, result.duplicates.size)
 
-        // Al Jazeera and NYT should be blocked as ineligible
-        assertEquals(2, result.ineligibleSources.size)
+        // NYT should be blocked as ineligible
+        assertEquals(1, result.ineligibleSources.size)
         assertTrue(result.ineligibleSources.all { it.reason == IneligibilityReason.NOT_IN_REGISTRY })
 
         // Verify accepted sources use registry attribution
         val acceptedSources = result.acceptedArticles.map { it.sourceName }.toSet()
         assertTrue(acceptedSources.contains("BBC News Demo"))
         assertTrue(acceptedSources.contains("Le Monde Demo"))
+        assertTrue(acceptedSources.contains("Al Jazeera Demo"))
 
         // Verify syndication analysis ran
-        assertEquals(2, result.syndicationAnalysis.analyzedCount)
+        assertEquals(3, result.syndicationAnalysis.analyzedCount)
+
+        // Verify entity extraction ran
+        assertEquals(3, result.entityExtractionResult.articlesWithEntities.size)
+
+        // Verify cross-language matching ran (no matches expected without entity metadata)
+        assertNotNull(result.crossLanguageMatches)
     }
 
     @Test
@@ -108,6 +115,9 @@ class IngestionServiceTest {
 
         // Syndication analysis should run but not necessarily find matches (different excerpts)
         assertEquals(2, result.syndicationAnalysis.analyzedCount)
+
+        // Entity extraction should run
+        assertEquals(2, result.entityExtractionResult.articlesWithEntities.size)
     }
 
     @Test

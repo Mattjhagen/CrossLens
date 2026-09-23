@@ -343,6 +343,22 @@ class InMemorySourceRegistry(
                     reviewNotes = "Fictional demo source for syndication testing",
                     eligibleForClustering = true
                 ),
+                "aljazeera-demo" to SourceRegistryEntry(
+                    sourceId = "aljazeera-demo",
+                    displayName = "Al Jazeera (Demo)",
+                    homepage = "https://aljazeera.example",
+                    status = SourceStatus.DEMO_ONLY,
+                    permittedIntakeMethod = IntakeMethod.DEMO_FIXTURE,
+                    attributionRequirements = AttributionRequirements(
+                        sourceName = "Al Jazeera Demo",
+                        linkRequired = true,
+                        customAttribution = "Demo content for testing only"
+                    ),
+                    lastReviewedAt = now.minus(30, ChronoUnit.DAYS),
+                    reviewedBy = "system",
+                    reviewNotes = "Fictional demo source for entity extraction testing",
+                    eligibleForClustering = true
+                ),
                 "pending-source" to SourceRegistryEntry(
                     sourceId = "pending-source",
                     displayName = "Pending Review Source",

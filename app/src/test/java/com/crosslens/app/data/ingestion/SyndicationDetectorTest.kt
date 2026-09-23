@@ -15,7 +15,11 @@ class SyndicationDetectorTest {
     @Before
     fun setup() {
         detector = SyndicationDetector()
-        pipeline = EventClusteringPipeline(syndicationDetector = detector)
+        pipeline = EventClusteringPipeline(
+            syndicationDetector = detector,
+            entityExtractor = EntityExtractor(),
+            crossLanguageMatcher = CrossLanguageEventMatcher()
+        )
     }
 
     @Test

@@ -15,14 +15,21 @@ import java.util.Locale
  * 1. Normalize articles (URL canonicalization, tokenization)
  * 2. Deduplicate by canonical URL
  * 3. Detect suspected syndication/wire-copy
- * 4. Cluster by title similarity and time window
+ * 4. Extract entities from mock metadata
+ * 5. Cross-language event matching via entity overlap
+ * 6. Cluster by title similarity and time window (same-language)
  */
 class EventClusteringPipeline(
     private val clusterWindow: Duration = Duration.ofHours(72),
     private val minimumTitleSimilarity: Double = 0.25,
-    private val syndicationDetector: SyndicationDetector = SyndicationDetector()
+    private val syndicationDetector: SyndicationDetector = SyndicationDetector(),
+    private val entityExtractor: EntityExtractor = EntityExtractor(),
+    private val crossLanguageMatcher: CrossLanguageEventMatcher = CrossLanguageEventMatcher()
 ) {
-    fun process(inputs: List<IngestionArticleInput>): IngestionBatchResult {
+    fun process(
+        inputs: List<IngestionArticleInput>,
+        mockEntityMap: Map<String, List<Entity>> = emptyMap()
+    ): IngestionBatchResult {
         // Stage 1: Normalize
         val normalized = inputs.map(::normalize).sortedBy { it.publishedAt }
 
@@ -42,7 +49,14 @@ class EventClusteringPipeline(
         // Stage 3: Detect suspected syndication
         val syndicationAnalysis = syndicationDetector.analyze(uniqueArticles)
 
-        // Stage 4: Cluster by similarity
+        // Stage 4: Extract entities from mock metadata
+        val articlesWithEntities = entityExtractor.extractBatch(uniqueArticles, mockEntityMap)
+        val entityExtractionResult = EntityExtractionResult.from(articlesWithEntities)
+
+        // Stage 5: Cross-language event matching
+        val crossLanguageMatches = crossLanguageMatcher.findCandidateMatches(articlesWithEntities)
+
+        // Stage 6: Cluster by title similarity (same-language articles)
         val clusters = mutableListOf<MutableCluster>()
         uniqueArticles.forEach { article ->
             val best = clusters
@@ -61,6 +75,8 @@ class EventClusteringPipeline(
             acceptedArticles = uniqueArticles,
             duplicates = duplicates,
             syndicationAnalysis = syndicationAnalysis,
+            entityExtractionResult = entityExtractionResult,
+            crossLanguageMatches = crossLanguageMatches,
             clusters = clusters.map { it.toProposal() }
         )
     }
@@ -174,6 +190,8 @@ data class IngestionBatchResult(
     val acceptedArticles: List<NormalizedArticle>,
     val duplicates: List<DuplicateArticle>,
     val syndicationAnalysis: SyndicationAnalysisResult,
+    val entityExtractionResult: EntityExtractionResult,
+    val crossLanguageMatches: CrossLanguageMatchResult,
     val clusters: List<EventClusterProposal>
 )
 
