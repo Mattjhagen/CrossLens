@@ -263,9 +263,9 @@ Issues: 0 errors, 0 warnings
 - Swipe gestures not required for any primary action
 
 **Device Checks Completed:**
-- ✅ Large text rendering at 130% font scale (API 36 emulator) - PASS
+- ✅ Large text rendering at 130% font scale (emulator) + largest Pixel Font/Display size (physical Pixel) - PASS
 - ✅ Theme application verified on physical Pixel - PASS
-- ✅ Offline persistence after force-stop (physical Pixel) - PASS
+- ✅ Offline persistence after force-stop (physical Pixel) - PASS with saved/reading state
 - ✅ TalkBack accessibility (physical Pixel) - PASS
 - ✅ RTL layout with Arabic locale (physical Pixel) - PASS
 
@@ -273,12 +273,13 @@ Issues: 0 errors, 0 warnings
 
 ### Findings
 
-✅ **PASS - Large font scaling (130% tested)**
+✅ **PASS - Large font scaling (130% + Physical Pixel maximum)**
 **Test Date:** 2026-09-22
-**Environment:** Android Emulator API 36, font_scale=1.3
-**Screens Tested:** Home, Story, CrossLens comparison, Explore, Settings
-**Result:** All text readable, no clipping, no overlapping controls, all buttons accessible
-**Evidence:** docs/screenshots/device-tests/01-05_large_font.png
+**Environment:** Android Emulator API 36 (font_scale=1.3) + Physical Pixel (largest Font/Display size)
+**Screens Tested:** Home, Story, CrossLens comparison, Explore, Settings, Paywall
+**Result:** All text readable, no clipping, no overlapping controls, all buttons accessible, no horizontal scrolling
+**Physical Pixel Verified:** Largest Font size and Display size settings - all screens remained readable and usable
+**Evidence:** docs/screenshots/device-tests/01-05_large_font.png + physical Pixel confirmation
 
 ✅ **PASS - TalkBack verification (Physical Pixel)**
 **Test Date:** 2026-09-22
@@ -298,8 +299,12 @@ Issues: 0 errors, 0 warnings
 
 ✅ **PASS - Full persistence flow (Physical Pixel)**
 **Test Date:** 2026-09-22
-**Result:** Dark theme and Plus (Demo) access both persisted after force-stop
-**Verified:** App relaunched in airplane mode with Dark theme + Plus access intact
+**Result:** Dark theme, Plus (Demo) access, saved/reading state, and comparison access all persisted after force-stop
+**Verified:** 
+- App relaunched in airplane mode with Dark theme + Plus access intact
+- Saved stories and reading state preserved
+- Full comparison access retained in Plus mode
+- Local stories loaded successfully offline
 **Emulator Note:** Emulator showed reversion (device-specific behavior, not a real issue)
 **Evidence:** User confirmation on physical Pixel
 

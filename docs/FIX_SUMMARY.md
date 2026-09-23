@@ -46,18 +46,21 @@ MainActivity did not observe user theme preference from Settings. Theme selectio
 
 ### Completed Tests ✅
 
-#### 1. Large Font Scaling (130% font scale)
-**Environment:** Android Emulator API 36  
+#### 1. Large Font Scaling
+**Environment:** Android Emulator API 36 (130% scale) + Physical Pixel (largest Font/Display size)  
 **Result:** ✅ **PASS**
 
-Tested all screens at font_scale=1.3:
+Tested all screens at font_scale=1.3 (emulator) and maximum Pixel settings:
 - **Home:** Story titles, summaries, metadata all readable, no clipping
 - **Story:** Headline, summary, "Compare perspectives" button fully visible
 - **CrossLens:** Source tabs, navigation (1/3), article text, framing cards readable
 - **Explore:** Filter chips (Region/Topic) tappable, story cards properly laid out
 - **Settings:** All labels, theme options, toggle switch, buttons accessible
+- **Paywall:** All content readable at maximum font size
 
-**Evidence:** 15 screenshots in `docs/screenshots/device-tests/`
+**Physical Pixel Verified (2026-09-22):** At largest Font size and Display size settings, all screens remained readable and usable. No clipped text, overlap, hidden controls, or horizontal scrolling observed.
+
+**Evidence:** 15 screenshots in `docs/screenshots/device-tests/` + physical Pixel confirmation
 
 **Finding:** No issues. All text uses sp units via MaterialTheme.typography.
 
@@ -81,7 +84,7 @@ User confirmed:
 #### 4. Full Persistence Flow
 **Status:** ✅ **PASS** - Verified on Physical Pixel (2026-09-22)
 
-**Result:** Dark theme and Plus (Demo) access both persisted after force-stop + airplane mode relaunch. Emulator reversion was device-specific behavior, not a real issue.
+**Result:** Dark theme, Plus (Demo) access, saved/reading state, and full comparison access all persisted after force-stop + airplane mode relaunch. In airplane mode, app loaded local stories successfully and preserved all access state. Emulator reversion was device-specific behavior, not a real issue.
 
 #### 5. RTL Layout
 **Status:** ✅ **PASS** - Verified on Physical Pixel (2026-09-22)
@@ -95,17 +98,17 @@ User confirmed:
 ### Ready for Skeleton Review? ✅ YES
 
 **All Device Acceptance Tests Complete:**
-1. ✅ **Large font scaling** - 130% font scale verified on emulator (PASS)
+1. ✅ **Large font scaling** - Verified on emulator (130%) and physical Pixel (maximum Font/Display size) (PASS)
 2. ✅ **Theme application** - Verified on physical Pixel (PASS)
-3. ✅ **Offline persistence** - Verified on physical Pixel (PASS)
+3. ✅ **Offline persistence** - Verified on physical Pixel with saved/reading state (PASS)
 4. ✅ **TalkBack accessibility** - Verified on physical Pixel (PASS)
 5. ✅ **RTL layout** - Verified on physical Pixel (PASS)
 
 ### What's Done ✅
 - Theme application fix implemented, tested, verified on physical Pixel
-- Large font scaling verified on emulator (all screens PASS)
+- Large font scaling verified on emulator and physical Pixel (all screens PASS)
 - TalkBack accessibility verified on physical Pixel (PASS)
-- Offline persistence verified on physical Pixel (PASS)
+- Offline persistence verified on physical Pixel with saved/reading state (PASS)
 - RTL layout verified on physical Pixel (PASS)
 - Unit tests passing (15/15)
 - APK built and tagged (v0.0.2-beta)

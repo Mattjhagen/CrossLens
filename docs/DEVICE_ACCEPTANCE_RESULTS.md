@@ -7,13 +7,13 @@
 
 ## Executive Summary
 
-**Overall Status:** ⚠️ **PARTIAL PASS** - Physical device testing incomplete
+**Overall Status:** ✅ **PASS** - All physical device testing complete
 
-- ✅ **Large font scaling:** PASS - All screens usable at 130% font scale
-- ⚠️ **TalkBack:** NOT TESTED - Requires manual verification
-- ⚠️ **RTL layout:** NOT TESTED - Requires Arabic locale testing  
-- ⚠️ **Offline persistence:** INCONCLUSIVE - Emulator test showed reversion, needs physical device verification
-- ✅ **Theme application:** VERIFIED on physical Pixel (Light/Dark/System all work)
+- ✅ **Large font scaling:** PASS - Verified on emulator (130%) and physical Pixel (largest settings)
+- ✅ **Theme application:** PASS - Verified on physical Pixel (Light/Dark/System all work)
+- ✅ **Offline persistence:** PASS - Verified on physical Pixel (Dark theme + Plus access + saved state persist)
+- ✅ **TalkBack:** PASS - Verified on physical Pixel (all screens accessible)
+- ✅ **RTL layout:** PASS - Verified on physical Pixel (Arabic locale mirrors correctly)
 
 ---
 
@@ -21,7 +21,9 @@
 
 **Objective:** Verify app remains usable at maximum font size without clipping, overlap, or inaccessible controls.
 
-**Test Environment:** Android Emulator API 36, font scale set to 1.3 (130%)
+**Test Environments:** 
+- Android Emulator API 36, font scale 1.3 (130%)
+- Physical Pixel, largest Font size and Display size settings
 
 ### Results: ✅ PASS
 
@@ -61,6 +63,12 @@
 - ✅ "Access tier" label and "Free" status readable
 - ✅ "Preview Plus in this demo" button fully accessible
 - ✅ Disclaimer text readable
+
+**Physical Pixel Verification (2026-09-22):**
+- ✅ Tested at largest Pixel Font size and Display size settings
+- ✅ All screens (Home, Story, CrossLens, Explore, Settings, Paywall) remained readable and usable
+- ✅ No clipped text, overlap, hidden controls, or horizontal scrolling observed
+- ✅ Confirms emulator results on actual hardware
 
 ### Issues Found: None
 
@@ -138,7 +146,10 @@ All text uses sp units via MaterialTheme.typography, allowing proper scaling. No
 - ✅ Theme fix verified: Light/Dark/System themes apply correctly
 - ✅ **Dark theme persisted after force-stop + airplane mode relaunch**
 - ✅ **Plus (Demo) access persisted after force-stop + airplane mode relaunch**
+- ✅ **Saved/reading state persisted across force-stop**
+- ✅ **Full comparison access retained in Plus mode**
 - ✅ App launches and works correctly in airplane mode
+- ✅ **Local stories loaded successfully offline**
 - ✅ No unexpected behavior observed
 
 **Test Procedure (Emulator):**
