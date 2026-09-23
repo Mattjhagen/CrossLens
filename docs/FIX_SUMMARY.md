@@ -73,22 +73,21 @@ User confirmed:
 
 ---
 
+#### 3. TalkBack Accessibility
+**Status:** ✅ **PASS** - Verified on Physical Pixel (2026-09-22)
+
+**Result:** All screens navigable without sight. Labels clear, reading order logical, state announcements working correctly. No unlabeled or confusing elements found.
+
+#### 4. Full Persistence Flow
+**Status:** ✅ **PASS** - Verified on Physical Pixel (2026-09-22)
+
+**Result:** Dark theme and Plus (Demo) access both persisted after force-stop + airplane mode relaunch. Emulator reversion was device-specific behavior, not a real issue.
+
 ### Pending Tests - Physical Device Required ⚠️
 
-#### 3. TalkBack Accessibility
-**Status:** NOT TESTED  
-**Test Time:** ~15 minutes
-
-#### 4. RTL Layout  
+#### 5. RTL Layout  
 **Status:** NOT TESTED  
 **Test Time:** ~10 minutes
-
-#### 5. Full Persistence Flow
-**Status:** INCONCLUSIVE on emulator  
-**Test Time:** ~5 minutes
-
-**Emulator showed:** Theme/Plus reverted after force-stop (may be emulator-specific behavior)  
-**Physical Pixel:** Theme application verified, full persistence flow needs testing
 
 ---
 
@@ -96,14 +95,14 @@ User confirmed:
 
 ### Ready for Production Review? ❌ NO
 
-**Blockers:**
-1. ❌ **TalkBack verification** - Manual test required on physical Pixel
-2. ❌ **RTL layout verification** - Arabic locale test required on physical Pixel
-3. ⚠️ **Full persistence flow** - Physical Pixel test required (emulator inconclusive)
+**Remaining Blocker:**
+1. ❌ **RTL layout verification** - Arabic locale test required on physical Pixel (~10 minutes)
 
 ### What's Done ✅
 - Theme application fix implemented, tested, verified on physical Pixel
 - Large font scaling verified on emulator (all screens PASS)
+- **TalkBack accessibility verified on physical Pixel (PASS)**
+- **Offline persistence verified on physical Pixel (PASS)**
 - Unit tests passing (15/15)
 - APK built and tagged (v0.0.2-beta)
 - Comprehensive test documentation created
@@ -122,8 +121,8 @@ See `docs/DEVICE_ACCEPTANCE_TESTS.md` for detailed procedures.
 
 ## Summary
 
-Theme application defect **FIXED** and verified on physical Pixel. Device acceptance testing **IN PROGRESS** with large font scaling passing. Three tests require physical device verification (TalkBack, RTL, persistence). Estimated 30 minutes of hands-on testing will complete the milestone.
+Theme application defect **FIXED** and verified on physical Pixel. Device acceptance testing **NEARLY COMPLETE**. Large font scaling (PASS), TalkBack accessibility (PASS), and offline persistence (PASS) all verified. One test remains: RTL layout with Arabic locale (~10 minutes).
 
 **Milestone status:** Device acceptance IN PROGRESS  
-**Remaining work:** 30 min physical device testing  
+**Remaining work:** RTL layout test (~10 min)  
 **Code quality:** 15/15 tests passing, build successful

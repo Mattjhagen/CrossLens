@@ -10,7 +10,7 @@
 
 **Status:** DEVICE ACCEPTANCE TESTING IN PROGRESS
 
-Large font scaling verified (PASS). TalkBack, RTL, and full persistence flow require physical device testing.
+Large font scaling, TalkBack accessibility, and offline persistence verified (PASS). RTL layout testing remains.
 
 The CrossLens Android skeleton successfully implements all documented requirements for the initial milestone:
 - ✅ 5 screens with MVVM architecture and immutable UI state
@@ -266,9 +266,9 @@ Issues: 0 errors, 0 warnings
 - ✅ Large text rendering at 130% font scale (API 36 emulator) - PASS
 - ✅ Theme application verified on physical Pixel - PASS
 - ✅ Offline persistence after force-stop (physical Pixel) - PASS
+- ✅ TalkBack accessibility (physical Pixel) - PASS
 
 **Device Checks Remaining:**
-- ⚠️ TalkBack reading order (requires manual testing)
 - ⚠️ RTL layout with Arabic content (requires locale change)
 
 ### Findings
@@ -280,11 +280,13 @@ Issues: 0 errors, 0 warnings
 **Result:** All text readable, no clipping, no overlapping controls, all buttons accessible
 **Evidence:** docs/screenshots/device-tests/01-05_large_font.png
 
-⚠️ **CHECK PENDING - TalkBack verification**
-**Impact:** Screen reader experience not verified
-**Risk:** LOW - Code review shows proper contentDescription usage
-**Required:** Manual test with TalkBack on physical device
-**Status:** PENDING - Physical device testing scheduled
+✅ **PASS - TalkBack verification (Physical Pixel)**
+**Test Date:** 2026-09-22
+**Screens Tested:** Home, Story, CrossLens comparison, Explore, Settings
+**Result:** All screens navigable without sight. Labels clear, reading order logical, state announcements working.
+**Verified:** Explore/Settings buttons labeled, back button labeled, "Compare perspectives" clear, theme selection state announced, "Reduced motion" toggle state changes announced
+**Issues Found:** None
+**Evidence:** User confirmation on physical Pixel
 
 ⚠️ **CHECK PENDING - RTL layout verification**
 **Impact:** Arabic content and layout mirroring not verified
