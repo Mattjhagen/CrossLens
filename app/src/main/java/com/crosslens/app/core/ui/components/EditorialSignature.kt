@@ -44,7 +44,7 @@ fun CrossLensSignature(
             PerspectivePane(
                 width = size.paneWidth,
                 height = size.paneHeight,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
             )
 
             Spacer(modifier = Modifier.height(size.spacing))
@@ -80,7 +80,7 @@ fun CrossLensSignature(
             PerspectivePane(
                 width = size.paneWidth,
                 height = size.paneHeight,
-                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f)
+                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.24f)
             )
         }
     }
@@ -174,7 +174,7 @@ enum class SignatureSize(
         ruleLength = 80.dp,
         ruleStrokeWidth = 1.dp,
         paneWidth = 48.dp,
-        paneHeight = 4.dp,
+        paneHeight = 6.dp,
         spacing = 4.dp
     ),
     Medium(
@@ -182,7 +182,7 @@ enum class SignatureSize(
         ruleLength = 120.dp,
         ruleStrokeWidth = 1.5.dp,
         paneWidth = 72.dp,
-        paneHeight = 6.dp,
+        paneHeight = 8.dp,
         spacing = 8.dp
     ),
     Large(
@@ -190,7 +190,7 @@ enum class SignatureSize(
         ruleLength = 160.dp,
         ruleStrokeWidth = 2.dp,
         paneWidth = 96.dp,
-        paneHeight = 8.dp,
+        paneHeight = 10.dp,
         spacing = 12.dp
     )
 }

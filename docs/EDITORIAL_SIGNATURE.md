@@ -14,12 +14,12 @@ The editorial signature maintains the conceptual DNA of the launcher icon (overl
 Full editorial signature with:
 - **Wordmark**: "CrossLens" in bold serif typography
 - **Crossing rule**: Thin diagonal line that intersects the text
-- **Perspective panes**: Subtle offset rectangles above and below, suggesting the "multiple views" concept
+- **Perspective panes**: Subtle offset rectangles above and below (20-24% opacity), suggesting the "multiple views" concept
 
 Available in three sizes:
-- `Small`: For compact empty states (32dp text height, 80dp rule)
-- `Medium`: For loading states and secondary placements (48dp text height, 120dp rule)
-- `Large`: For home masthead and primary placements (64dp text height, 160dp rule)
+- `Small`: For compact empty states (32dp text height, 80dp rule, 6dp pane height)
+- `Medium`: For loading states and secondary placements (48dp text height, 120dp rule, 8dp pane height)
+- `Large`: For home masthead and primary placements (64dp text height, 160dp rule, 10dp pane height)
 
 ### CrossLensWordmark
 Lightweight variant with just text and crossing rule, for use in:
@@ -31,7 +31,7 @@ Lightweight variant with just text and crossing rule, for use in:
 The signature is fully theme-aware:
 - **Wordmark text**: Uses `onBackground` for maximum readability
 - **Crossing rule**: Uses `primary` color (teal accent in light, lighter teal in dark)
-- **Perspective panes**: Use `primary` and `tertiary` with low alpha (8-12%) for subtle suggestion
+- **Perspective panes**: Use `primary` (20% opacity) and `tertiary` (24% opacity) for subtle but visible suggestion
 - Automatically adapts to Light, Dark, and System themes
 
 ## Usage Locations
