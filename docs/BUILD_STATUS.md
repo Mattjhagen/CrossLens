@@ -1,8 +1,8 @@
 # CrossLens Build Status
 
-**Working Revision:** 815d0a5 (fix: apply user theme preference in MainActivity)  
+**Working Revision:** 0c59430 (fix: increase editorial signature perspective pane visibility)  
 **Working Tree:** Clean  
-**Last Updated:** 2026-09-22
+**Last Updated:** 2026-09-23
 
 ## Environment
 
@@ -76,13 +76,26 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 | Tests pass (unit, Room, navigation, lint) | Step 7 | ✅ PASS |
 | README updated with actual instructions | Step 11 | ✅ PASS |
 
-## Final Session Summary
+## V-0.0.5 Beta Status
 
-**Commits:** 6 commits pushed to main branch  
-**APK:** 56MB debug build at `app/build/outputs/apk/debug/app-debug.apk`  
-**Build:** ✅ SUCCESS (6s)  
-**Lint:** ✅ 0 errors, 0 warnings  
-**Unit Tests:** ✅ 11/11 passed (includes 6 new integration tests)  
+**Current Milestone:** V-0.0.5 - Visual Branding Completion  
+**Commits:** 0c59430 (visibility fix) and predecessors  
+**APK:** 58MB debug build at `app/build/outputs/apk/debug/app-debug.apk`  
+**SHA256:** `17b19d935981e840da72665cb96d4a9b294847936960a885577618128ea6f931`
+
+**Build Verification (2026-09-23):**
+- ✅ **Unit Tests:** All passed - `./gradlew test`
+- ✅ **Lint:** 0 errors, 0 warnings - `./gradlew :app:lintDebug`
+- ✅ **Build:** SUCCESS - `./gradlew assembleDebug`
+
+**V-0.0.5 Branding Work:**
+- ✅ Adaptive launcher icon integrated (verified on Pixel)
+- ✅ Editorial signature component (CrossLensSignature + CrossLensWordmark)
+- ✅ Theme-aware signature (Light/Dark/System theme support)
+- ✅ Perspective pane visibility adjusted (8-12% → 20-24% opacity)
+- ✅ Signature sizes: Small/Medium/Large for different contexts
+- ✅ Documentation: EDITORIAL_SIGNATURE.md, ASSET_CREDITS.md
+- ⏸️ Physical device verification PENDING (user to test on Pixel)  
 
 **Completed (All Phases 1-6):**
 - ✅ Gradle 8.9 wrapper with AGP 8.5.2, Kotlin 1.9.24
@@ -127,8 +140,15 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 3. ✅ **Settings "Preview Plus" button doesn't enable Plus access** - FIXED: Both paywall and Settings now properly call EntitlementRepository.setAccessTier()
 4. ✅ Paywall "Preview Plus" button only dismissed modal - FIXED: Now enables Plus access via CrossLensViewModel.enablePlusPreview()
 
-**Known Issues:**
-- ⏸️ TalkBack not tested (requires manual setup)
-- ⏸️ Large text scaling not tested (requires manual device test)
-- ⏸️ RTL layout not tested (Arabic content present but requires RTL locale configuration)
-- ⏸️ Physical device testing not performed (emulator only)
+**V-0.0.5 Physical Device Verification (PENDING):**
+- ⏸️ Home masthead perspective panes visibility
+- ⏸️ Explore empty state motif and "Clear all" filter recovery
+- ⏸️ Light/Dark theme adaptation of signature colors
+- ⏸️ Persistence after force-close/reopen
+- ⏸️ TalkBack silence verification (signature should be decorative)
+- ⏸️ Reduced motion setting honored
+
+**Earlier Testing Gaps (Non-Blocking):**
+- Large text scaling not tested on device
+- RTL layout not tested (Arabic content present but not tested with RTL locale)
+- Landscape orientation not tested

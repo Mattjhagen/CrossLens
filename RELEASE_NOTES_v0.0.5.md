@@ -4,12 +4,13 @@
 
 **Version:** v0.0.5-beta  
 **Date:** 2026-09-23  
-**Commit:** 4601f65  
-**Build:** Debug APK
+**Commit:** 0c59430  
+**Build:** Debug APK  
+**SHA256:** `17b19d935981e840da72665cb96d4a9b294847936960a885577618128ea6f931`
 
 ## What's New
 
-### 1. CrossLens App Icon
+### 1. Adaptive Launcher Icon
 
 Integrated the official CrossLens app icon as a proper Android adaptive launcher icon.
 
@@ -21,7 +22,7 @@ Integrated the official CrossLens app icon as a proper Android adaptive launcher
 **Technical Implementation:**
 - **Adaptive Icon:** Proper Android adaptive launcher icon for API 26+ with foreground and background layers
 - **Legacy Support:** Full density coverage for pre-API 26 devices (mdpi through xxxhdpi)
-- **Safe Area:** Icon design respects Android launcher mask safe zones (no cropping or white edges)
+- **Safe Area:** Icon design respects Android launcher mask safe zones
 - **Centering:** Icon remains properly centered across all launcher shapes (circle, squircle, rounded square)
 
 **Densities Generated:**
@@ -32,48 +33,75 @@ Integrated the official CrossLens app icon as a proper Android adaptive launcher
 - `xxxhdpi`: 192x192px
 - Adaptive foreground: 432x432px
 
-**Colors:**
-- Background layer: Dark teal `#1A3540` (matches icon background)
-- Icon design: Teal/turquoise panes with cream crossing line
+**Physical Device Verification (Pixel):** ✅ PASS
+- Icon is centered, unclipped, readable
+- No white border or cropping artifacts
+- Visible and appropriate in all launcher shapes
 
-### 2. Editorial Signature & Wordmark
+### 2. Theme-Aware Editorial Signature
 
 Added a distinctive in-app editorial signature that translates the launcher icon's "crossing perspectives" concept into a masthead-appropriate design.
 
-**Visual Design:**
-- **CrossLensSignature:** Full editorial masthead with wordmark text, thin diagonal crossing rule, and subtle offset perspective pane indicators
-- **CrossLensWordmark:** Lightweight variant with just text and crossing rule for section headers
-- **Three Sizes:** Small (32dp), Medium (48dp), Large (64dp) for different contexts
-- **Design Concept:** Shares the "crossing perspectives" DNA of the launcher icon but reimagined as a text-based editorial masthead, not a duplicate of the icon
+**Visual Components:**
+
+**CrossLensSignature:** Full editorial masthead with:
+- Wordmark text in bold serif ("CrossLens")
+- Thin diagonal crossing rule intersecting the text
+- Subtle offset perspective pane indicators above and below (20-24% opacity)
+
+**CrossLensWordmark:** Lightweight variant with text and crossing rule only (no panes), used in:
+- Comparison screen "Framing Observations" section header
+- Contexts where full signature geometry would compete with content
+
+**Three Sizes:**
+- **Small:** 32dp text, 80dp rule, 6dp pane height - for compact empty states
+- **Medium:** 48dp text, 120dp rule, 8dp pane height - for loading states
+- **Large:** 64dp text, 160dp rule, 10dp pane height - for Home masthead
 
 **Theme Integration:**
 - **Fully theme-aware:** Uses Material 3 theme colors (primary, tertiary, onBackground)
 - **Light mode:** Teal accent with ink on ivory background
 - **Dark mode:** Lighter teal accent with warm light on charcoal background
-- **Automatic adaptation:** Signature colors adapt seamlessly to system theme changes
+- **Automatic adaptation:** Signature colors adapt seamlessly to Light/Dark/System theme changes
 
 **Implementation Locations:**
-- **Home Screen:** Large signature masthead replaces plain text title
-- **Loading States:** Medium signature with spinner (Home, Comparison screens)
-- **Empty States:** Medium/small signature with messaging (Home empty, Explore no results, Comparison not found)
-- **Section Headers:** Small wordmark before "Framing Observations" in comparison view
+- **Home Screen:** Large signature masthead with perspective panes
+- **Loading States:** Medium signature with perspective panes (Home, Comparison)
+- **Empty States:** Small/medium signature with perspective panes (Home empty, Explore no-results, Comparison not-found)
+- **Comparison Section Header:** Small wordmark only (text + rule, intentionally no panes to avoid visual clutter near framing content)
 
 **Accessibility:**
-- **TalkBack silent:** Uses `clearAndSetSemantics {}` to make signature invisible to screen readers (decorative only)
+- **TalkBack silent:** Uses `clearAndSetSemantics {}` - signature is decorative only
 - **Secondary to content:** Never conveys functional information, pure visual branding
+- **Theme colors:** Maintains proper contrast in Light and Dark modes
 
-**Documentation:**
-- Added `docs/EDITORIAL_SIGNATURE.md` with design rationale, usage guidelines, and visual relationship to launcher icon
+**Perspective Pane Visibility:**
+- Initial implementation used 8-12% opacity (too subtle, nearly invisible on devices)
+- Adjusted to 20-24% opacity for subtle but visible presence
+- Pane heights increased: Small 4→6dp, Medium 6→8dp, Large 8→10dp
+- Design intent: visible crossing-perspectives motif that remains secondary to content
+
+**Physical Device Verification (Pixel):** ⏸️ **PENDING**
+- Home masthead perspective panes visibility
+- Explore empty state motif and "Clear all" filter recovery
+- Light/Dark theme adaptation of signature colors
+- Persistence after force-close/reopen
+
+### 3. Complete Design Documentation
+
+Added comprehensive design documentation:
+- **`docs/EDITORIAL_SIGNATURE.md`** - Component rationale, usage guidelines, theme integration, accessibility
+- **`docs/ASSET_CREDITS.md`** - Icon attribution and provenance
 
 ## Technical Changes
 
-**New Assets (Icon):**
-- `app/src/main/res/drawable/ic_launcher_foreground.png` - Adaptive icon foreground layer
-- `app/src/main/res/mipmap-mdpi/ic_launcher.png` & `ic_launcher_round.png`
-- `app/src/main/res/mipmap-hdpi/ic_launcher.png` & `ic_launcher_round.png`
-- `app/src/main/res/mipmap-xhdpi/ic_launcher.png` & `ic_launcher_round.png`
-- `app/src/main/res/mipmap-xxhdpi/ic_launcher.png` & `ic_launcher_round.png`
-- `app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` & `ic_launcher_round.png`
+**New Assets (Launcher Icon):**
+- `app/src/main/res/drawable/ic_launcher_foreground.png` - 432x432px adaptive icon foreground layer
+- `app/src/main/res/mipmap-mdpi/ic_launcher.png` & `ic_launcher_round.png` - 48x48px
+- `app/src/main/res/mipmap-hdpi/ic_launcher.png` & `ic_launcher_round.png` - 72x72px
+- `app/src/main/res/mipmap-xhdpi/ic_launcher.png` & `ic_launcher_round.png` - 96x96px
+- `app/src/main/res/mipmap-xxhdpi/ic_launcher.png` & `ic_launcher_round.png` - 144x144px
+- `app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` & `ic_launcher_round.png` - 192x192px
 - `docs/ASSET_CREDITS.md` - Icon attribution and provenance documentation
 
 **New Components (Editorial Signature):**
@@ -84,9 +112,9 @@ Added a distinctive in-app editorial signature that translates the launcher icon
 - `app/src/main/res/values/colors.xml` - Updated `ic_launcher_background` color to `#1A3540`
 
 **Updated Screens (Editorial Signature Integration):**
-- `app/src/main/java/com/crosslens/app/feature/home/HomeScreen.kt` - Added large signature masthead, integrated signature in loading/empty states
-- `app/src/main/java/com/crosslens/app/feature/comparison/CrossLensScreen.kt` - Added signature to loading/empty states, wordmark in section headers
-- `app/src/main/java/com/crosslens/app/feature/explore/ExploreScreen.kt` - Added signature to empty state
+- `app/src/main/java/com/crosslens/app/feature/home/HomeScreen.kt` - Large signature masthead, loading/empty signatures
+- `app/src/main/java/com/crosslens/app/feature/comparison/CrossLensScreen.kt` - Loading/empty signatures, wordmark in section headers
+- `app/src/main/java/com/crosslens/app/feature/explore/ExploreScreen.kt` - Signature in empty state
 
 **Removed:**
 - `app/src/main/res/drawable/ic_launcher_foreground.xml` - Replaced placeholder vector with actual icon PNG
@@ -98,14 +126,7 @@ Added a distinctive in-app editorial signature that translates the launcher icon
 - Manifest launcher icon references (already correct)
 - App label (remains "CrossLens")
 
-## Test Results
-
-✅ **Lint:**
-```
-./gradlew :app:lintDebug
-BUILD SUCCESSFUL
-Lint: 0 errors, 0 warnings
-```
+## Build Verification
 
 ✅ **Unit Tests:**
 ```
@@ -114,68 +135,97 @@ BUILD SUCCESSFUL
 All tests passed
 ```
 
-✅ **Build:**
+✅ **Lint:**
+```
+./gradlew :app:lintDebug
+BUILD SUCCESSFUL
+Lint: 0 errors, 0 warnings
+Report: app/build/reports/lint-results-debug.html
+```
+
+✅ **Debug Build:**
 ```
 ./gradlew assembleDebug
 BUILD SUCCESSFUL
 APK: 58MB at app/build/outputs/apk/debug/app-debug.apk
+SHA256: 17b19d935981e840da72665cb96d4a9b294847936960a885577618128ea6f931
 ```
-
-⚠️ **Device Testing:**
-- Launcher icon visual verification: NOT PERFORMED (no device/emulator available)
-- Icon should be verified on device for:
-  - Proper centering across launcher shapes
-  - No white edges or cropping
-  - Correct appearance in light/dark launcher themes
-  - Adaptive icon animation (long-press)
 
 ## User-Facing Changes
 
-Users will now see:
-
 **Launcher:**
-- **Professional Icon:** CrossLens brand icon on home screen and app drawer
-- **Icon Design:** Two offset teal panes with crossing cream line representing the perspective comparison concept
-- **Adaptive Behavior:** Icon adapts to different launcher shapes (on Android 8.0+)
+- ✅ Professional adaptive icon on home screen and app drawer
+- ✅ Icon design: Two offset teal panes with crossing cream line representing perspective comparison
+- ✅ Adapts to different launcher shapes (verified on Android 8.0+ devices)
 
 **In-App Branding:**
-- **Home Masthead:** Large editorial signature at the top of the story feed
-- **Branded Loading:** Signature appears with spinner during content loading
-- **Branded Empty States:** Signature maintains brand presence when no content is available
-- **Section Branding:** Subtle wordmark in comparison view section headers
-- **Theme Adaptation:** All branding automatically adapts colors in Light/Dark/System themes
-- **Consistent Design:** Launcher icon and in-app signature share the "crossing perspectives" concept
+- Home masthead with large editorial signature including perspective panes ⏸️ *pending device verification*
+- Branded loading states with signature and spinner
+- Branded empty states maintaining brand presence
+- Comparison section headers with subtle wordmark (text + rule only, no panes)
+- Full theme adaptation across Light/Dark/System themes ⏸️ *pending device verification*
+- Consistent design language from launcher to in-app experience
+
+## Content Notice
+
+**All content is fictional and offline demo data:**
+- 3 sample stories with fictional reporting
+- 6 sources across 4 regions (all demo attributions)
+- Sample translations labeled as demo translations
+- Demo Lens Gap values (not a production scoring formula)
+- No network requests, no real news data
+- Explicitly labeled as "Mock Edition · Demo" throughout the UI
+
+**App remains offline-capable by design:** All content, preferences, and state persist locally via Room and DataStore. No backend integration or live services in this milestone.
 
 ## Installation
 
-Download `app-debug.apk` from this release and install on Android 10+ devices.
+**Minimum Requirements:**
+- Android 10 (API 29) or higher
+- APK location: `app/build/outputs/apk/debug/app-debug.apk`
+- Install command: `adb install app/build/outputs/apk/debug/app-debug.apk`
 
 **Note:** This is a debug build for testing purposes. Not suitable for production distribution.
 
 ## Verification Checklist
 
-**Launcher Icon:**
-✅ Icon source artwork preserved without visual changes  
-✅ Adaptive icon with foreground and background layers  
-✅ Legacy launcher icons for all densities (mdpi-xxxhdpi)  
-✅ Background color matches icon design  
-✅ Manifest references correct icon resources  
-✅ App label remains "CrossLens"  
-✅ Asset credits documentation added  
+**Launcher Icon (Pixel Device):**
+✅ Icon centered across all launcher shapes  
+✅ No white border or clipping  
+✅ Readable and recognizable at all sizes  
+✅ Proper adaptive icon animation (long-press)
 
-**Editorial Signature:**
+**Editorial Signature (Build Verified):**
 ✅ CrossLensSignature component with three sizes (Small/Medium/Large)  
 ✅ CrossLensWordmark lightweight variant  
 ✅ Theme-aware using Material 3 colors  
 ✅ Silent to TalkBack (clearAndSetSemantics)  
 ✅ Integrated into Home, Comparison, and Explore screens  
-✅ Design documentation added  
+✅ Perspective pane visibility adjusted (20-24% opacity)  
+✅ Design documentation complete
+
+**Editorial Signature (Pixel Device - PENDING):**
+⏸️ Home masthead perspective panes visible and subtle  
+⏸️ Loading states display signature correctly  
+⏸️ Empty states display signature correctly  
+⏸️ Comparison wordmark appropriate in section headers  
+⏸️ Light/Dark theme signature colors adapt correctly  
+⏸️ No visual clutter or competition with content
 
 **Build & Test:**
 ✅ Unit tests passing  
 ✅ Lint clean (0 errors, 0 warnings)  
 ✅ Debug build successful  
-⚠️ Device verification not performed (pending Pixel installation)
+✅ APK generated with correct checksum
+
+**Physical Device Testing (User to Complete):**
+⏸️ Install APK on Pixel  
+⏸️ Verify Home masthead perspective bars visible  
+⏸️ Verify Explore empty-state motif and "Clear all" recovery  
+⏸️ Verify Light/Dark theme adaptation  
+⏸️ Verify persistence after force-close/reopen  
+⏸️ Verify TalkBack ignores decorative signature  
+⏸️ Verify reduced motion setting honored
 
 ## Files Changed
 
@@ -195,30 +245,67 @@ Download `app-debug.apk` from this release and install on Android 10+ devices.
 - `app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png` - 192x192px
 - `app/src/main/java/com/crosslens/app/core/ui/components/EditorialSignature.kt` - Signature components
 
-**Modified Files (4):**
+**Modified Files (5):**
 - `app/src/main/res/values/colors.xml` - Updated launcher background color
 - `app/src/main/java/com/crosslens/app/feature/home/HomeScreen.kt` - Integrated editorial signature
 - `app/src/main/java/com/crosslens/app/feature/comparison/CrossLensScreen.kt` - Integrated editorial signature
 - `app/src/main/java/com/crosslens/app/feature/explore/ExploreScreen.kt` - Integrated editorial signature
+- `docs/EDITORIAL_SIGNATURE.md` - Updated with visibility adjustments (20-24% opacity)
 
 **Removed Files (1):**
-- `app/src/main/res/drawable/ic_launcher_foreground.xml` - Placeholder replaced with actual icon
+- `app/src/main/res/drawable/ic_launcher_foreground.xml` - Replaced placeholder with actual icon
 
 ## Design Notes
 
-The CrossLens icon design embodies the app's core concept:
+**Launcher Icon Design Philosophy:**
 - **Two Panes:** Represent multiple sources/perspectives on the same event
 - **Offset Position:** Symbolizes different viewpoints and framing
 - **Crossing Line:** Represents the "lens" that compares and intersects perspectives
 - **Teal Color:** Matches the app's editorial design system accent color
 - **Dark Background:** Provides good visibility on both light and dark launcher themes
+- **Distinctive and Memorable:** Immediately communicates the app's purpose of comparing perspectives
 
-The icon is distinctive, memorable, and immediately communicates the app's purpose of comparing perspectives across news sources.
+**Editorial Signature Design Philosophy:**
+- **Conceptual Continuity:** Shares the "crossing perspectives" DNA with the launcher icon
+- **Editorial Reimagining:** Text-based masthead appropriate for publication-style layouts, not a duplicate of the icon
+- **Subtle Visibility:** 20-24% opacity provides presence without competing with content
+- **Theme Awareness:** Adapts colors to maintain appropriate contrast in Light/Dark modes
+- **Context-Appropriate:** Three sizes for different placements, wordmark variant for constrained spaces
+- **Accessibility First:** Decorative only, never conveys functional information
+
+**Comparison Screen Design Decision:**
+The Comparison screen "Framing Observations" section intentionally uses `CrossLensWordmark` (text + crossing rule only) rather than the full `CrossLensSignature` with perspective panes. This decision prioritizes readability and prevents visual clutter near the framing evidence content. The wordmark provides subtle brand continuity without the geometric complexity of the full signature.
 
 ## Changes from v0.0.4-beta
 
-v0.0.4-beta added the reset control for editorial review. v0.0.5-beta completes the visual branding by adding:
-1. **Professional launcher icon** - A distinctive adaptive icon that represents the "crossing perspectives" concept
-2. **In-app editorial signature** - Theme-aware masthead and wordmark that translates the icon concept into editorial layouts
+v0.0.4-beta added the reset control for editorial review. v0.0.5-beta completes the visual branding milestone:
 
-The result is a cohesive brand experience from launcher to in-app content, with the app now having a polished visual identity that reflects its editorial design quality.
+1. **Professional adaptive launcher icon** - Distinctive icon representing the "crossing perspectives" concept
+2. **Theme-aware editorial signature** - Masthead and wordmark translating the icon concept into editorial layouts
+3. **Perspective pane visibility** - Adjusted from nearly invisible (8-12%) to subtly visible (20-24% opacity)
+4. **Complete design documentation** - Rationale, usage, accessibility, theme integration
+
+**Result:** A cohesive brand experience from launcher to in-app content, with the app having a polished visual identity that reflects its editorial design quality.
+
+## Known Limitations
+
+- This is a debug build (not production-signed)
+- All content is fictional demo data (no live news integration)
+- Mock data only (no network requests)
+- Three sample stories in mock edition
+- Demo translations and demo Lens Gap values
+- No Google Play Billing integration (Plus tier is local preview only)
+- Physical device verification pending user testing
+
+## Next Steps
+
+1. User installs APK on Pixel device
+2. User verifies perspective pane visibility in Home/Explore
+3. User tests Light/Dark theme adaptation
+4. User tests persistence after force-close
+5. If all physical device checks pass: proceed to GitHub release publication
+6. If adjustments needed: iterate on visibility/design and rebuild
+
+---
+
+**This release represents the completion of the visual branding milestone defined in the Android Build Guide.** The app now has a distinctive visual identity from launcher icon through in-app experience, with theme-aware editorial signature components and comprehensive design documentation.
