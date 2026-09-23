@@ -1,221 +1,129 @@
-# CrossLens Settings Plus Access Fix Summary
+# CrossLens Theme Fix & Device Acceptance Testing Summary
 
 **Date:** 2026-09-22  
-**Commits:** e3716d7, dbf5766  
-**Status:** ✅ RELEASE BLOCKER RESOLVED
+**Revision:** eb9b128  
+**APK Version:** v0.0.2-beta
 
-## Problem
+## Theme Application Fix - COMPLETED ✅
 
-Device acceptance testing found that Settings → "Preview Plus" button did not enable Plus access to view all sources in CrossLens. This was a release-blocking defect.
+### Issue
+MainActivity did not observe user theme preference from Settings. Theme selection in Settings had no effect—app always followed system theme.
 
-## Root Cause
+### Root Cause
+- `SettingsViewModel` correctly persisted theme selection to DataStore
+- `MainActivity` called `CrossLensTheme()` without reading the persisted preference
+- No lifecycle-aware observation of `UserPreferencesRepository.preferencesFlow`
 
-1. **Paywall implementation incomplete:** The `PaywallSheet` "Preview Plus" button callback in `CrossLensScreen` only dismissed the modal - it did not call `EntitlementRepository.setAccessTier()` to persist the Plus demo entitlement.
+### Solution Implemented
+**Files Changed:**
+1. **Created `MainViewModel.kt`**
+   - Observes `UserPreferencesRepository.preferencesFlow`
+   - Exposes theme state as `StateFlow<UserPreferences?>`
 
-2. **Settings implementation was actually correct:** `SettingsViewModel.previewPlus()` properly called `entitlementRepository.setAccessTier(AccessTier.PLUS_DEMO)`, but testing may have been performed before this fix was applied to the paywall.
+2. **Updated `MainActivity.kt`**
+   - Injects `MainViewModel` via `by viewModels()`
+   - Collects theme state with `collectAsStateWithLifecycle()`
+   - Resolves `darkTheme` boolean: `SYSTEM` → `isSystemInDarkTheme()`, `LIGHT` → `false`, `DARK` → `true`
+   - Passes resolved value to `CrossLensTheme(darkTheme = ...)`
 
-## Fix Implementation
+3. **Created `MainViewModelTest.kt`**
+   - 4 unit tests verifying theme resolution logic
+   - Tests SYSTEM, LIGHT, DARK emission
+   - Tests theme updates on preference change
 
-### 1. CrossLensViewModel Enhancement
-**File:** `app/src/main/java/com/crosslens/app/feature/comparison/CrossLensViewModel.kt`
+### Verification
+- ✅ Unit tests: 15/15 passing (4 new MainViewModel tests)
+- ✅ Build: Clean build successful
+- ✅ APK: v0.0.2-beta installed on emulator
+- ✅ **Physical Pixel:** User confirmed Light/Dark/System themes work correctly
 
-```kotlin
-fun enablePlusPreview() {
-    viewModelScope.launch {
-        entitlementRepository.setAccessTier(AccessTier.PLUS_DEMO)
-    }
-}
-```
+**Commit:** 815d0a5 - `fix: apply user theme preference in MainActivity`  
+**Tag:** v0.0.2-beta
 
-**Purpose:** Provides a method that screens can call to enable Plus demo access via the injected `EntitlementRepository`.
+---
 
-### 2. CrossLensScreen Paywall Wiring
-**File:** `app/src/main/java/com/crosslens/app/feature/comparison/CrossLensScreen.kt`
+## Device Acceptance Testing - PARTIAL COMPLETION ⚠️
 
-**Before:**
-```kotlin
-PaywallSheet(
-    onDismiss = { showPaywall = false },
-    onPreviewPlus = {
-        scope.launch {
-            // In a real app, would handle billing here
-            // For demo, navigate to settings or dismiss
-            showPaywall = false
-        }
-    }
-)
-```
+### Completed Tests ✅
 
-**After:**
-```kotlin
-PaywallSheet(
-    onDismiss = { showPaywall = false },
-    onPreviewPlus = {
-        viewModel.enablePlusPreview()
-        showPaywall = false
-    }
-)
-```
+#### 1. Large Font Scaling (130% font scale)
+**Environment:** Android Emulator API 36  
+**Result:** ✅ **PASS**
 
-**Change:** Paywall "Preview Plus" button now calls `viewModel.enablePlusPreview()` to persist the entitlement change before dismissing.
+Tested all screens at font_scale=1.3:
+- **Home:** Story titles, summaries, metadata all readable, no clipping
+- **Story:** Headline, summary, "Compare perspectives" button fully visible
+- **CrossLens:** Source tabs, navigation (1/3), article text, framing cards readable
+- **Explore:** Filter chips (Region/Topic) tappable, story cards properly laid out
+- **Settings:** All labels, theme options, toggle switch, buttons accessible
 
-### 3. Settings Implementation (Already Correct)
-**File:** `app/src/main/java/com/crosslens/app/feature/settings/SettingsViewModel.kt`
+**Evidence:** 15 screenshots in `docs/screenshots/device-tests/`
 
-```kotlin
-fun previewPlus() {
-    viewModelScope.launch {
-        entitlementRepository.setAccessTier(AccessTier.PLUS_DEMO)
-    }
-}
-```
+**Finding:** No issues. All text uses sp units via MaterialTheme.typography.
 
-**Status:** Was already correct. Settings screen properly wires the button to `viewModel.previewPlus()`.
+#### 2. Theme Application
+**Environment:** Physical Pixel  
+**Result:** ✅ **PASS**
 
-## Test Coverage
+User confirmed:
+- Settings → Light theme → App switches to ivory/light immediately
+- Settings → Dark theme → App switches to charcoal/dark immediately
+- Settings → System theme → App follows device theme
+- Theme applies consistently across all screens
 
-### New Integration Tests
-**File:** `app/src/test/java/com/crosslens/app/feature/settings/SettingsEntitlementIntegrationTest.kt`
+---
 
-**6 tests added:**
-1. `entitlement defaults to FREE on first launch` - Verifies initial state
-2. `Settings Preview Plus enables PLUS_DEMO access` - Core fix verification
-3. `entitlement persists across app restart` - Simulates restart by creating new DataStore instance
-4. `Reset to Free removes Plus access and persists` - Verifies round-trip FREE → PLUS → FREE
-5. `Plus access unlocks documented features` - Verifies all 4 PlusFeatures unlock
-6. Uses `StandardTestDispatcher` with `testScheduler.advanceUntilIdle()` for proper DataStore async testing
+### Pending Tests - Physical Device Required ⚠️
 
-**Test Results:** ✅ 11/11 tests passing (6 new + 5 existing)
+#### 3. TalkBack Accessibility
+**Status:** NOT TESTED  
+**Test Time:** ~15 minutes
 
-## Verification Steps
+#### 4. RTL Layout  
+**Status:** NOT TESTED  
+**Test Time:** ~10 minutes
 
-### Automated Verification ✅
-- [x] Code compiles without errors
-- [x] All 11 unit tests pass
-- [x] Lint passes with 0 errors, 0 warnings
-- [x] APK builds successfully (56MB)
-- [x] Integration tests prove persistence across "restarts"
+#### 5. Full Persistence Flow
+**Status:** INCONCLUSIVE on emulator  
+**Test Time:** ~5 minutes
 
-### Device Verification (Manual) ⏸️
+**Emulator showed:** Theme/Plus reverted after force-stop (may be emulator-specific behavior)  
+**Physical Pixel:** Theme application verified, full persistence flow needs testing
 
-The following acceptance tests should be performed on a physical device or emulator:
+---
 
-#### Critical Path Tests (PRIMARY FIX)
-1. **Settings → Preview Plus**
-   - [ ] Open app, navigate to Settings
-   - [ ] Verify "Access Tier" shows "Free" with "Preview Plus" button
-   - [ ] Press "Preview Plus"
-   - [ ] Verify Settings now shows "Plus (Demo)" with "Reset to Free" button
-   - [ ] Navigate to any story → CrossLens
-   - [ ] Verify can access all 3 sources without paywall
-   
-2. **Paywall → Preview Plus**
-   - [ ] Reset to Free in Settings
-   - [ ] Navigate to any story → CrossLens
-   - [ ] View source 1 and 2 successfully
-   - [ ] Attempt to view source 3 - paywall appears
-   - [ ] Press "Preview Plus" in paywall
-   - [ ] Verify paywall dismisses and source 3 is now accessible
-   - [ ] Return to Settings
-   - [ ] Verify Settings shows "Plus (Demo)"
+## Current Status
 
-3. **Persistence Across Restart**
-   - [ ] Ensure Plus is active (Settings shows "Plus (Demo)")
-   - [ ] Force-stop app: `adb shell am force-stop com.crosslens.app`
-   - [ ] Relaunch app
-   - [ ] Open Settings
-   - [ ] Verify still shows "Plus (Demo)" (NOT reset to Free)
-   - [ ] Open CrossLens
-   - [ ] Verify can access all sources without paywall
-   
-4. **Reset to Free Works**
-   - [ ] In Settings, press "Reset to Free"
-   - [ ] Verify Settings shows "Free" with "Preview Plus" button
-   - [ ] Navigate to CrossLens
-   - [ ] Verify paywall appears when attempting to view 3rd source
-   - [ ] Force-stop and relaunch
-   - [ ] Verify Settings still shows "Free" (persisted)
+### Ready for Production Review? ❌ NO
 
-#### Recommended Additional Tests
-See `docs/DEVICE_ACCEPTANCE_CHECKLIST.md` for comprehensive test plan including:
-- Large font scaling
-- RTL layout with Arabic content
-- TalkBack screen reader
-- Theme persistence
-- Saved stories persistence
-- Explore filters
-- Reduced motion
+**Blockers:**
+1. ❌ **TalkBack verification** - Manual test required on physical Pixel
+2. ❌ **RTL layout verification** - Arabic locale test required on physical Pixel
+3. ⚠️ **Full persistence flow** - Physical Pixel test required (emulator inconclusive)
 
-## Files Changed
+### What's Done ✅
+- Theme application fix implemented, tested, verified on physical Pixel
+- Large font scaling verified on emulator (all screens PASS)
+- Unit tests passing (15/15)
+- APK built and tagged (v0.0.2-beta)
+- Comprehensive test documentation created
 
-**Source Code:**
-- `app/src/main/java/com/crosslens/app/feature/comparison/CrossLensViewModel.kt`
-- `app/src/main/java/com/crosslens/app/feature/comparison/CrossLensScreen.kt`
+### Next Actions
+**On Physical Pixel (estimated 30 minutes total):**
 
-**Tests:**
-- `app/src/test/java/com/crosslens/app/feature/settings/SettingsEntitlementIntegrationTest.kt` (NEW)
+See `docs/DEVICE_ACCEPTANCE_TESTS.md` for detailed procedures.
 
-**Documentation:**
-- `docs/BUILD_STATUS.md`
-- `docs/QUALITY_REPORT.md`
-- `docs/DEVICE_ACCEPTANCE_CHECKLIST.md` (NEW)
-- `docs/screenshots/README.md` (NEW)
-- `docs/screenshots/*.png` (10 screenshots)
+**After completing physical device tests:**
+1. Update `docs/DEVICE_ACCEPTANCE_RESULTS.md` with results
+2. If all PASS → Update status to "Ready for production review"
+3. If any FAIL → Document, fix, retest, update docs
 
-## Build Artifacts
+---
 
-**APK Location:** `app/build/outputs/apk/debug/app-debug.apk`  
-**APK Size:** 56MB  
-**Min SDK:** 29 (Android 10)  
-**Target SDK:** 34
+## Summary
 
-## Installation
+Theme application defect **FIXED** and verified on physical Pixel. Device acceptance testing **IN PROGRESS** with large font scaling passing. Three tests require physical device verification (TalkBack, RTL, persistence). Estimated 30 minutes of hands-on testing will complete the milestone.
 
-```bash
-# Uninstall old version (optional, clears app data)
-adb uninstall com.crosslens.app
-
-# Install fixed APK
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-
-# Launch app
-adb shell am start -n com.crosslens.app/.MainActivity
-```
-
-## Screenshots
-
-10 screenshots captured and organized in `docs/screenshots/`:
-- All 5 screens (Home, Story, CrossLens, Explore, Settings)
-- Light and dark themes
-- Free and Plus states
-- Paywall modal
-- Filters and navigation
-
-See `docs/screenshots/README.md` for details.
-
-## Next Steps
-
-**Required for Production:**
-1. ❌ TalkBack screen reader testing (accessibility requirement)
-2. ❌ Large font scaling verification (accessibility requirement)
-3. ❌ RTL layout testing with Arabic locale (internationalization requirement)
-4. ❌ Physical device testing (emulator testing only so far)
-
-**Recommended:**
-5. Test on multiple device form factors
-6. Performance profiling with Android Studio tools
-
-**For App Store Submission:**
-7. Use screenshots in `docs/screenshots/` for store listing
-
-## Conclusion
-
-The release-blocking Settings Plus access bug has been fixed. Both the Settings and Paywall "Preview Plus" buttons now properly enable Plus demo access via `EntitlementRepository.setAccessTier()`. Persistence has been verified via integration tests that simulate app restarts.
-
-**Status:** ✅ Ready for skeleton review
-
-Manual accessibility and physical-device checks remain incomplete:
-- ❌ TalkBack screen reader testing
-- ❌ Large font scaling
-- ❌ RTL layout in Arabic locale
-- ❌ Physical device testing
+**Milestone status:** Device acceptance IN PROGRESS  
+**Remaining work:** 30 min physical device testing  
+**Code quality:** 15/15 tests passing, build successful
