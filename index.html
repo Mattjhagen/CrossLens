@@ -10,56 +10,71 @@
 <body>
 
     <header>
-        <div class="logo">CROSSLENS</div>
+        <div class="logo">CrossLens</div>
         <nav>
+            <a href="#stories">Stories</a>
             <a href="#features">Features</a>
             <a href="#lens-gap">Lens Gap</a>
             <a href="#pricing">Access</a>
-            <a href="https://github.com/Mattjhagen/CrossLens" target="_blank">GitHub</a>
         </nav>
     </header>
 
     <div class="hero">
-        <div class="mono-badge scroll-reveal">The CrossLens App V1.0</div>
-        <h1 class="massive-text scroll-reveal" style="transition-delay: 0.1s;">
+        <h1 class="massive-text apple-reveal fallback-reveal">
             <span class="line-1">One event.</span>
             <span class="line-2">A world of perspectives.</span>
         </h1>
-        <p class="scroll-reveal" style="transition-delay: 0.2s;">Events should behave like shared context, not isolated silos. CrossLens is the platform for authoritative news synchronization and comparison across borders.</p>
-        <div class="scroll-reveal" style="transition-delay: 0.3s;">
-            <a href="https://github.com/Mattjhagen/CrossLens" class="cta-button">View Source</a>
-        </div>
+        <p class="apple-reveal fallback-reveal">Events should behave like shared context, not isolated silos. CrossLens is the platform for authoritative news synchronization and comparison across borders.</p>
     </div>
 
-    <section id="features">
-        <div class="features-grid">
-            <div class="feature-card scroll-reveal">
-                <h3>Global by Design</h3>
-                <p>Organize coverage by source, country, region, language, topic, and institutional context. Geographic and political context coexist without universal left/center/right classifications.</p>
+    <section id="stories">
+        <h2 class="section-title apple-reveal fallback-reveal">Trending Now.</h2>
+        <div class="stories-grid">
+            <div class="story-card apple-reveal fallback-reveal">
+                <span class="story-badge">Climate</span>
+                <h3>Global Summit Reaches Historic Agreement</h3>
+                <p>Compare how 6 global sources framed the commitments made at the 2026 climate summit.</p>
             </div>
-            <div class="feature-card scroll-reveal" style="transition-delay: 0.1s;">
-                <h3>Evidence Stays Visible</h3>
-                <p>Link summaries and comparison observations directly to the articles supporting them. Distinctly separate reported claims from established facts so you can verify everything.</p>
+            <div class="story-card apple-reveal fallback-reveal">
+                <span class="story-badge">Technology</span>
+                <h3>AI Regulation Debate Intensifies</h3>
+                <p>Read the original and translated coverage from US, EU, and Japanese publications.</p>
             </div>
-            <div class="feature-card scroll-reveal" style="transition-delay: 0.2s;">
-                <h3>Translation with Provenance</h3>
-                <p>Preserve original text alongside labeled translations. We disclose translation availability and methods, ensuring you always have a clear path to the source material.</p>
-            </div>
-            <div class="feature-card scroll-reveal" style="transition-delay: 0.3s;">
-                <h3>Gorgeous & Editorial</h3>
-                <p>Inspired by tactile browsing and editorial magazine design. A custom Material 3 visual system with expressive typography and restrained perspective-switch motion.</p>
+            <div class="story-card apple-reveal fallback-reveal">
+                <span class="story-badge">Economy</span>
+                <h3>Global Trade Shifts in 2026</h3>
+                <p>See the Lens Gap on the economic impact of the new trade policies.</p>
             </div>
         </div>
     </section>
 
-    <div id="lens-gap" class="lens-gap-section" style="padding-top: 4rem; padding-bottom: 4rem;">
-        <h2 class="lens-gap-oversized scroll-reveal">How differently is this event being covered in the available reporting?</h2>
-        <p class="scroll-reveal" style="color: var(--ink-dim); font-size: 1.2rem; max-width: 800px; margin: 3rem auto 0; text-align: center;">Lens Gap evaluates differences in emphasized claims, selected actors, terminology, and the distribution of attention across sources. Each result reveals its sampled articles, geographic/language coverage, time window, explanatory components, and concrete evidence.</p>
-    </div>
+    <section id="features">
+        <h2 class="section-title apple-reveal fallback-reveal">Core Features.</h2>
+        <div class="features-grid">
+            <div class="feature-card apple-reveal fallback-reveal">
+                <h3>Global by Design</h3>
+                <p>Organize coverage by source, country, region, language, topic, and institutional context. Geographic and political context coexist without universal classifications.</p>
+            </div>
+            <div class="feature-card apple-reveal fallback-reveal">
+                <h3>Evidence Stays Visible</h3>
+                <p>Link summaries and comparison observations directly to the articles supporting them. Distinctly separate reported claims from established facts.</p>
+            </div>
+            <div class="feature-card apple-reveal fallback-reveal">
+                <h3>Translation with Provenance</h3>
+                <p>Preserve original text alongside labeled translations. We disclose translation availability and methods, ensuring you have a clear path to the source material.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="lens-gap" style="padding-top: 10rem; padding-bottom: 10rem;">
+        <h2 class="lens-gap-oversized apple-reveal fallback-reveal">How differently is this event being covered in the available reporting?</h2>
+        <p class="apple-reveal fallback-reveal" style="color: var(--ink-muted); font-size: 1.5rem; font-weight: 500; max-width: 800px; margin: 4rem auto 0; text-align: center; line-height: 1.4;">Lens Gap evaluates differences in emphasized claims, selected actors, terminology, and the distribution of attention across sources.</p>
+    </section>
 
     <section id="pricing">
+        <h2 class="section-title apple-reveal fallback-reveal">Access Tiers.</h2>
         <div class="pricing-tiers">
-            <div class="tier scroll-reveal">
+            <div class="tier apple-reveal fallback-reveal">
                 <h3>Free</h3>
                 <p>Essential comparison</p>
                 <ul>
@@ -70,7 +85,7 @@
                 </ul>
             </div>
             
-            <div class="tier plus scroll-reveal" style="transition-delay: 0.15s;">
+            <div class="tier plus apple-reveal fallback-reveal">
                 <h3>CrossLens Plus</h3>
                 <p>The full perspective</p>
                 <ul>
@@ -85,23 +100,30 @@
 
     <footer>
         <p>&copy; 2026 CrossLens.</p>
-        <div style="display: flex; gap: 2rem; margin-top: 1rem;">
-            <a href="https://github.com/Mattjhagen/CrossLens" target="_blank">GitHub</a>
-            <a href="privacy-policy.html">Privacy Policy</a>
-            <a href="terms.html">Terms</a>
+        <div style="display: flex; gap: 2rem; justify-content: center; margin-top: 2rem;">
+            <a href="https://github.com/Mattjhagen/CrossLens" target="_blank" style="color: var(--ink); font-weight: 500;">GitHub</a>
+            <a href="privacy-policy.html" style="color: var(--ink); font-weight: 500;">Privacy Policy</a>
+            <a href="terms.html" style="color: var(--ink); font-weight: 500;">Terms</a>
         </div>
     </footer>
 
     <script>
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
+        // Fallback for Intersection Observer if Scroll-driven animations are not supported
+        if (!CSS.supports('(animation-timeline: view()) and (animation-range: entry)')) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+            
+            document.querySelectorAll('.fallback-reveal').forEach(el => {
+                // Ensure they start hidden in browsers without view() timeline
+                el.style.opacity = '0'; 
+                observer.observe(el);
             });
-        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
-        
-        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+        }
     </script>
 </body>
 </html>
