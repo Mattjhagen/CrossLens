@@ -13,9 +13,10 @@ import com.crosslens.app.data.local.entity.*
         ArticleEntity::class,
         TranslationEntity::class,
         ClaimEntity::class,
-        FrameObservationEntity::class
+        FrameObservationEntity::class,
+        EditorialDecisionEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -26,4 +27,5 @@ abstract class CrossLensDatabase : RoomDatabase() {
     abstract fun translationDao(): TranslationDao
     abstract fun claimDao(): ClaimDao
     abstract fun frameObservationDao(): FrameObservationDao
+    abstract fun editorialDecisionDao(): EditorialDecisionDao
 }

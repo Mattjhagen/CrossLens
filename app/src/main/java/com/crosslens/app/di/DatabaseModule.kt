@@ -23,7 +23,9 @@ object DatabaseModule {
             context,
             CrossLensDatabase::class.java,
             "crosslens_database"
-        ).build()
+        )
+            .fallbackToDestructiveMigration() // Prototype mode: recreate on schema change
+            .build()
     }
 
     @Provides
@@ -43,4 +45,7 @@ object DatabaseModule {
 
     @Provides
     fun provideFrameObservationDao(database: CrossLensDatabase) = database.frameObservationDao()
+
+    @Provides
+    fun provideEditorialDecisionDao(database: CrossLensDatabase) = database.editorialDecisionDao()
 }
