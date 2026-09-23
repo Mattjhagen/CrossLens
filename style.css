@@ -1,14 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,900;1,500&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-  --bg: #F5F5F7; /* Apple light gray */
-  --ink: #1D1D1F; /* Apple dark text */
+  /* Default Dark Mode */
+  --bg: #000000;
+  --ink: #FFFFFF;
   --ink-muted: #86868B;
-  --accent: #0066CC; /* Apple blue */
-  --card-bg: #FFFFFF;
-  --line: #E5E5EA;
+  --accent: #2997FF;
+  --card-bg: #1D1D1F;
+  --line: rgba(255, 255, 255, 0.15);
+  --header-bg: rgba(0, 0, 0, 0.8);
+  --hero-gradient-1: #FFFFFF;
+  --hero-gradient-2: #86868B;
+  --plus-bg: #FFFFFF;
+  --plus-ink: #1D1D1F;
+  
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+}
+
+[data-theme="light"] {
+  --bg: #F5F5F7;
+  --ink: #1D1D1F;
+  --ink-muted: #86868B;
+  --accent: #0066CC;
+  --card-bg: #FFFFFF;
+  --line: #E5E5EA;
+  --header-bg: rgba(245, 245, 247, 0.8);
+  --hero-gradient-1: #1D1D1F;
+  --hero-gradient-2: #434345;
+  --plus-bg: #1D1D1F;
+  --plus-ink: #FFFFFF;
 }
 
 body {
@@ -44,7 +65,7 @@ header {
   top: 0;
   width: 100%;
   box-sizing: border-box;
-  background: rgba(245, 245, 247, 0.8);
+  background: var(--header-bg);
   backdrop-filter: saturate(180%) blur(20px);
   z-index: 100;
   border-bottom: 1px solid rgba(0,0,0,0.05);
@@ -90,7 +111,7 @@ nav a:hover {
 
 .massive-text .line-1 {
   display: block;
-  background: linear-gradient(135deg, #1D1D1F 0%, #434345 100%);
+  background: linear-gradient(135deg, var(--hero-gradient-1) 0%, var(--hero-gradient-2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -241,13 +262,11 @@ section {
 }
 
 .tier.plus {
-  background: #1D1D1F;
-  color: #F5F5F7;
+  background: var(--plus-bg);
+  color: var(--bg);
 }
 
-.tier.plus h3 {
-  color: #FFFFFF;
-}
+.tier.plus h3 { color: var(--plus-ink); }
 
 .tier.plus p {
   color: #86868B;
@@ -322,3 +341,28 @@ footer {
     opacity: 1; /* Reset */
     transform: none;
 }
+
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+.theme-toggle:hover {
+  background: var(--line);
+}
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+[data-theme="light"] .icon-moon { display: block; }
+[data-theme="light"] .icon-sun { display: none; }
+:root:not([data-theme="light"]) .icon-moon { display: none; }
+:root:not([data-theme="light"]) .icon-sun { display: block; }
