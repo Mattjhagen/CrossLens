@@ -279,6 +279,70 @@ class InMemorySourceRegistry(
                     reviewNotes = "Fictional demo source for prototype testing",
                     eligibleForClustering = true
                 ),
+                "guardian-demo" to SourceRegistryEntry(
+                    sourceId = "guardian-demo",
+                    displayName = "The Guardian (Demo)",
+                    homepage = "https://guardian.example",
+                    status = SourceStatus.DEMO_ONLY,
+                    permittedIntakeMethod = IntakeMethod.DEMO_FIXTURE,
+                    attributionRequirements = AttributionRequirements(
+                        sourceName = "The Guardian Demo",
+                        linkRequired = true,
+                        customAttribution = "Demo content for testing only"
+                    ),
+                    lastReviewedAt = now.minus(30, ChronoUnit.DAYS),
+                    reviewedBy = "system",
+                    reviewNotes = "Fictional demo source for syndication testing",
+                    eligibleForClustering = true
+                ),
+                "reuters-demo" to SourceRegistryEntry(
+                    sourceId = "reuters-demo",
+                    displayName = "Reuters (Demo)",
+                    homepage = "https://reuters.example",
+                    status = SourceStatus.DEMO_ONLY,
+                    permittedIntakeMethod = IntakeMethod.DEMO_FIXTURE,
+                    attributionRequirements = AttributionRequirements(
+                        sourceName = "Reuters Demo",
+                        linkRequired = true,
+                        customAttribution = "Demo content for testing only"
+                    ),
+                    lastReviewedAt = now.minus(30, ChronoUnit.DAYS),
+                    reviewedBy = "system",
+                    reviewNotes = "Fictional demo source for syndication testing",
+                    eligibleForClustering = true
+                ),
+                "ft-demo" to SourceRegistryEntry(
+                    sourceId = "ft-demo",
+                    displayName = "Financial Times (Demo)",
+                    homepage = "https://ft.example",
+                    status = SourceStatus.DEMO_ONLY,
+                    permittedIntakeMethod = IntakeMethod.DEMO_FIXTURE,
+                    attributionRequirements = AttributionRequirements(
+                        sourceName = "Financial Times Demo",
+                        linkRequired = true,
+                        customAttribution = "Demo content for testing only"
+                    ),
+                    lastReviewedAt = now.minus(30, ChronoUnit.DAYS),
+                    reviewedBy = "system",
+                    reviewNotes = "Fictional demo source for syndication testing",
+                    eligibleForClustering = true
+                ),
+                "wapo-demo" to SourceRegistryEntry(
+                    sourceId = "wapo-demo",
+                    displayName = "Washington Post (Demo)",
+                    homepage = "https://washingtonpost.example",
+                    status = SourceStatus.DEMO_ONLY,
+                    permittedIntakeMethod = IntakeMethod.DEMO_FIXTURE,
+                    attributionRequirements = AttributionRequirements(
+                        sourceName = "Washington Post Demo",
+                        linkRequired = true,
+                        customAttribution = "Demo content for testing only"
+                    ),
+                    lastReviewedAt = now.minus(30, ChronoUnit.DAYS),
+                    reviewedBy = "system",
+                    reviewNotes = "Fictional demo source for syndication testing",
+                    eligibleForClustering = true
+                ),
                 "pending-source" to SourceRegistryEntry(
                     sourceId = "pending-source",
                     displayName = "Pending Review Source",

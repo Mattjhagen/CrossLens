@@ -10,13 +10,23 @@ import java.util.Locale
  * Offline prototype for turning source-supplied link-and-excerpt records into
  * reviewable event proposals. It deliberately does not fetch, scrape, translate,
  * infer editorial labels, or calculate Lens Gap.
+ *
+ * Pipeline stages:
+ * 1. Normalize articles (URL canonicalization, tokenization)
+ * 2. Deduplicate by canonical URL
+ * 3. Detect suspected syndication/wire-copy
+ * 4. Cluster by title similarity and time window
  */
 class EventClusteringPipeline(
     private val clusterWindow: Duration = Duration.ofHours(72),
-    private val minimumTitleSimilarity: Double = 0.25
+    private val minimumTitleSimilarity: Double = 0.25,
+    private val syndicationDetector: SyndicationDetector = SyndicationDetector()
 ) {
     fun process(inputs: List<IngestionArticleInput>): IngestionBatchResult {
+        // Stage 1: Normalize
         val normalized = inputs.map(::normalize).sortedBy { it.publishedAt }
+
+        // Stage 2: Deduplicate by canonical URL
         val uniqueByUrl = linkedMapOf<String, NormalizedArticle>()
         val duplicates = mutableListOf<DuplicateArticle>()
 
@@ -27,8 +37,14 @@ class EventClusteringPipeline(
             }
         }
 
+        val uniqueArticles = uniqueByUrl.values.toList()
+
+        // Stage 3: Detect suspected syndication
+        val syndicationAnalysis = syndicationDetector.analyze(uniqueArticles)
+
+        // Stage 4: Cluster by similarity
         val clusters = mutableListOf<MutableCluster>()
-        uniqueByUrl.values.forEach { article ->
+        uniqueArticles.forEach { article ->
             val best = clusters
                 .map { cluster -> cluster to cluster.similarityTo(article) }
                 .filter { (cluster, similarity) ->
@@ -42,8 +58,9 @@ class EventClusteringPipeline(
         }
 
         return IngestionBatchResult(
-            acceptedArticles = uniqueByUrl.values.toList(),
+            acceptedArticles = uniqueArticles,
             duplicates = duplicates,
+            syndicationAnalysis = syndicationAnalysis,
             clusters = clusters.map { it.toProposal() }
         )
     }
@@ -156,6 +173,7 @@ data class NormalizedArticle(
 data class IngestionBatchResult(
     val acceptedArticles: List<NormalizedArticle>,
     val duplicates: List<DuplicateArticle>,
+    val syndicationAnalysis: SyndicationAnalysisResult,
     val clusters: List<EventClusterProposal>
 )
 

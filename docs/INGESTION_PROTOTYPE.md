@@ -28,8 +28,17 @@ The code is in `app/src/main/java/com/crosslens/app/data/ingestion/EventClusteri
 - Validates multi-source requirement for approved clusters
 - Creates audit trail for all decisions
 
+✅ **Syndication detection** (`SyndicationDetector.kt`)
+- Detects suspected wire-copy and syndicated content after deduplication, before clustering
+- Uses normalized title exact match and excerpt fingerprint overlap
+- Conservative confidence bands: HIGH, MEDIUM, LOW, UNCERTAIN
+- Cross-language matches marked UNCERTAIN (may be translation or syndication)
+- All articles and source attributions preserved; detection is transparent evidence
+- Every syndication group requires editorial review
+- Labeled as SUSPECTED syndication, never confirmed without explicit wire attribution
+
 ✅ **Ingestion service** (`IngestionService.kt`)
-- Orchestrates: adapters → clustering → editorial review → persistence
+- Orchestrates: adapters → registry validation → deduplication → syndication detection → clustering → editorial review → persistence
 - Persists only approved clusters to Room
 - Records all decisions (approved/rejected/deferred) for audit
 - Handles adapter errors gracefully without failing entire batch
@@ -77,10 +86,11 @@ Only approved multi-source clusters enter the database. Every story has a tracea
 ## Known limitations
 
 - **Multilingual clustering**: Token-based similarity has limited effectiveness across languages. BBC/Le Monde/Al Jazeera articles about the same Geneva climate summit may not cluster due to vocabulary differences. This is a documented prototype limitation.
-- **No semantic understanding**: Uses headline token overlap, not entity recognition or event understanding
-- **No wire-copy detection**: Syndicated articles from the same source are not identified
-- **No source catalog integration**: Adapters reference source IDs but don't validate against a source registry
-- **Manual review only**: No automated quality scoring or suggested approval
+- **Multilingual syndication detection**: Cross-language matches are marked UNCERTAIN because the detector cannot distinguish between independent translation and wire-service syndication without semantic understanding.
+- **No semantic understanding**: Uses headline token overlap and excerpt fingerprint, not entity recognition or event understanding
+- **Short excerpts**: Brief excerpts (<100 characters) may have coincidental overlap; marked LOW confidence
+- **No explicit wire attribution parsing**: Cannot confirm wire service unless metadata is present
+- **Manual review required**: All syndication groups require editorial review; no automatic independent-source determination
 
 ## Source registry and content-use policy
 
@@ -148,12 +158,30 @@ Before a source becomes `APPROVED_LINK_AND_EXCERPT`, a human reviewer must verif
 
 The registry documents content-use eligibility only. Display metadata (regions, languages, editorial context) lives in `SourceEntity` so policy changes don't silently alter the reader experience.
 
+## Syndication detection workflow
+
+After canonical URL deduplication and before event clustering, the pipeline runs syndication detection:
+
+1. **Exact title match**: Articles with identical normalized titles (punctuation removed, lowercase) from different sources are grouped as HIGH confidence suspected syndication (same language) or UNCERTAIN (different languages).
+2. **Excerpt fingerprint**: Articles with ≥80% longest-common-substring overlap in excerpts ≥100 characters are grouped as MEDIUM confidence (same language) or UNCERTAIN (different languages).
+3. **Transparent evidence**: Each group records detection method, confidence band, article IDs, source IDs, and rationale for editorial review.
+4. **Preserved attribution**: All articles remain in the pipeline with their source attributions intact; syndication detection is evidence, not a filter.
+
+**Editorial review decisions**:
+- **Confirmed syndication**: Reviewers can confirm wire-copy or AP/Reuters syndication and adjust independent-source count for the cluster.
+- **Independent reporting**: Reviewers can override false positives where articles are independent despite text similarity (e.g., press release quotes).
+- **Uncertain translation**: Cross-language matches require reviewer judgment about whether it's syndication or independent translation.
+
+**Important**: Syndication detection labels matches as SUSPECTED until editorial review. It does NOT automatically reduce a cluster's independent-source count or remove articles from clustering. Event clusters count all contributing sources; approved clusters may have a separate editorial-verified independent-source count if syndication is confirmed.
+
 ## Next steps
 
 1. ~~Build a source registry with licensing/attribution requirements~~ ✅ Complete
-2. Add wire-copy detection to avoid counting syndicated reports as independent sources
-3. Integrate entity extraction to improve cross-language clustering
+2. ~~Add wire-copy detection to avoid counting syndicated reports as independent sources~~ ✅ Complete (detection only; editorial review integration pending)
+3. Integrate entity extraction to improve cross-language clustering and syndication detection
 4. Build an editorial review UI (currently tested via service layer only)
-5. Add claims extraction and frame observation generation for approved stories
-6. Build source registry persistence (currently in-memory mock)
-7. Add registry admin UI for managing source approvals and suspensions
+5. Add explicit wire attribution parsing from article metadata (AP, Reuters, AFP tags)
+6. Add claims extraction and frame observation generation for approved stories
+7. Build source registry persistence (currently in-memory mock)
+8. Add registry admin UI for managing source approvals and suspensions
+9. Add editorial UI for reviewing and confirming/rejecting syndication groups

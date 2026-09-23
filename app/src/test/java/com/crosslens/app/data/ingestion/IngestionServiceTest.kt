@@ -61,6 +61,9 @@ class IngestionServiceTest {
         val acceptedSources = result.acceptedArticles.map { it.sourceName }.toSet()
         assertTrue(acceptedSources.contains("BBC News Demo"))
         assertTrue(acceptedSources.contains("Le Monde Demo"))
+
+        // Verify syndication analysis ran
+        assertEquals(2, result.syndicationAnalysis.analyzedCount)
     }
 
     @Test
@@ -75,7 +78,7 @@ class IngestionServiceTest {
                     publishedAt = baseTime,
                     languageTag = "en",
                     headline = "Geneva climate summit reaches historic agreement on emissions",
-                    excerpt = "Test"
+                    excerpt = "Test excerpt for BBC"
                 )
             )
         )
@@ -88,7 +91,7 @@ class IngestionServiceTest {
                     publishedAt = baseTime.plusSeconds(1800),
                     languageTag = "en",
                     headline = "Historic agreement reached at Geneva climate summit on emissions",
-                    excerpt = "Test"
+                    excerpt = "Test excerpt for Le Monde"
                 )
             )
         )
@@ -102,6 +105,9 @@ class IngestionServiceTest {
         val cluster = result.proposals.first()
         assertEquals(2, cluster.sourceCount)
         assertEquals(ClusterStatus.REVIEWABLE, cluster.status)
+
+        // Syndication analysis should run but not necessarily find matches (different excerpts)
+        assertEquals(2, result.syndicationAnalysis.analyzedCount)
     }
 
     @Test
