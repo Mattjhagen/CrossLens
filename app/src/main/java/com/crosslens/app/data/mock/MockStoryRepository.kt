@@ -5,6 +5,7 @@ import com.crosslens.app.data.local.*
 import com.crosslens.app.data.local.dao.*
 import com.crosslens.app.data.repository.StoryRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -51,13 +52,9 @@ class MockStoryRepository @Inject constructor(
     }
 
     override suspend fun getArticlesForStory(storyId: String): List<Article> {
-        return articleDao.observeArticlesByStory(storyId).map { entities ->
-            entities.map { it.toDomain() }
-        }.let { flow ->
-            var result = emptyList<Article>()
-            flow.collect { result = it }
-            result
-        }
+        return articleDao.observeArticlesByStory(storyId)
+            .map { entities -> entities.map { it.toDomain() } }
+            .first()
     }
 
     override suspend fun getClaimsForStory(storyId: String): List<Claim> {
