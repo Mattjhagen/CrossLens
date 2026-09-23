@@ -76,11 +76,12 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 | Tests pass (unit, Room, navigation, lint) | Step 7 | ✅ PASS |
 | README updated with actual instructions | Step 11 | ✅ PASS |
 
-## V-0.0.5 Beta Status
+## v0.0.6-beta Status (Visual Branding Complete)
 
-**Current Milestone:** V-0.0.5 - Visual Branding Completion  
+**Published Release:** v0.0.6-beta  
+**Release URL:** https://github.com/Mattjhagen/CrossLens/releases/tag/v0.0.6-beta  
 **Commits:** 0c59430 (visibility fix) and predecessors  
-**APK:** 58MB debug build at `app/build/outputs/apk/debug/app-debug.apk`  
+**APK:** 58MB debug build  
 **SHA256:** `17b19d935981e840da72665cb96d4a9b294847936960a885577618128ea6f931`
 
 **Build Verification (2026-09-23):**
@@ -88,14 +89,14 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 - ✅ **Lint:** 0 errors, 0 warnings - `./gradlew :app:lintDebug`
 - ✅ **Build:** SUCCESS - `./gradlew assembleDebug`
 
-**V-0.0.5 Branding Work:**
-- ✅ Adaptive launcher icon integrated (verified on Pixel)
+**v0.0.6-beta Branding Work:**
+- ✅ Adaptive launcher icon integrated (verified on Pixel 11)
 - ✅ Editorial signature component (CrossLensSignature + CrossLensWordmark)
 - ✅ Theme-aware signature (Light/Dark/System theme support)
 - ✅ Perspective pane visibility adjusted (8-12% → 20-24% opacity)
 - ✅ Signature sizes: Small/Medium/Large for different contexts
 - ✅ Documentation: EDITORIAL_SIGNATURE.md, ASSET_CREDITS.md
-- ⏸️ Physical device verification PENDING (user to test on Pixel)  
+- ✅ Physical device verification COMPLETE (all 6 checks passed on Pixel 11)  
 
 **Completed (All Phases 1-6):**
 - ✅ Gradle 8.9 wrapper with AGP 8.5.2, Kotlin 1.9.24
@@ -140,7 +141,7 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 3. ✅ **Settings "Preview Plus" button doesn't enable Plus access** - FIXED: Both paywall and Settings now properly call EntitlementRepository.setAccessTier()
 4. ✅ Paywall "Preview Plus" button only dismissed modal - FIXED: Now enables Plus access via CrossLensViewModel.enablePlusPreview()
 
-**V-0.0.5 Physical Device Verification (Pixel 11 - PASS):**
+**v0.0.6-beta Physical Device Verification (Pixel 11 - PASS):**
 - ✅ Home masthead perspective panes visibility
 - ✅ Explore empty state motif and "Clear all" filter recovery
 - ✅ Light/Dark theme adaptation of signature colors

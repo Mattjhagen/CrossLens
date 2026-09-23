@@ -27,7 +27,7 @@
 - Corresponding `ic_launcher_round.png` variants for each density
 
 **Integration Date:** September 23, 2026  
-**Version:** v0.0.5-beta
+**Version:** v0.0.6-beta
 
 **Design Notes:**
 The icon design aligns with CrossLens's editorial design system:

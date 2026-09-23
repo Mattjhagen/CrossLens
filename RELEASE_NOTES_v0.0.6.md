@@ -1,12 +1,14 @@
-# CrossLens v0.0.5 Beta Release
+# CrossLens v0.0.6 Beta Release
 
 ## Release Information
 
-**Version:** v0.0.5-beta  
+**Version:** v0.0.6-beta  
+**Tag:** `v0.0.6-beta`  
 **Date:** 2026-09-23  
 **Commit:** 0c59430  
 **Build:** Debug APK  
-**SHA256:** `17b19d935981e840da72665cb96d4a9b294847936960a885577618128ea6f931`
+**SHA256:** `17b19d935981e840da72665cb96d4a9b294847936960a885577618128ea6f931`  
+**Release URL:** https://github.com/Mattjhagen/CrossLens/releases/tag/v0.0.6-beta
 
 ## What's New
 
