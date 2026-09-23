@@ -4,22 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terms and Conditions - CrossLens</title>
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <header>
-        <h1>CrossLens</h1>
-        <p>Terms and Conditions</p>
+        <a href="index.html" class="logo" style="color: var(--ink);">CROSSLENS</a>
+        <nav>
+            <a href="index.html">Home</a>
+        </nav>
     </header>
 
-    <nav>
-        <a href="index.html">Home</a>
-        <a href="privacy-policy.html">Privacy Policy</a>
-    </nav>
-
-    <div class="container">
+    <div class="legal-container scroll-reveal">
+        <h1>Terms and Conditions</h1>
+        
         <p><strong>Last Updated:</strong> September 23, 2026</p>
 
         <h2>1. Agreement to Terms</h2>
@@ -51,11 +48,26 @@
 
         <h2>8. Contact</h2>
         <p class="subtitle">If you have any questions about these Terms, please contact us via our <a href="https://github.com/Mattjhagen/CrossLens" target="_blank">GitHub repository</a>.</p>
+    
     </div>
 
     <footer>
         <p>&copy; 2026 CrossLens.</p>
+        <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+            <a href="privacy-policy.html">Privacy Policy</a>
+            <a href="terms.html">Terms</a>
+        </div>
     </footer>
 
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        });
+        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+    </script>
 </body>
 </html>

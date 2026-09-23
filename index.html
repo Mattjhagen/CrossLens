@@ -3,90 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="CrossLens is an Android news app that helps you understand how the same event is reported across countries, languages, and institutions. Explore clustered stories and discover the Lens Gap.">
-    <meta name="keywords" content="CrossLens, news comparison app, global news, Lens Gap, translation, media perspectives, Android news app">
-    <meta name="author" content="CrossLens Team">
-    
-    <!-- Open Graph for Social Sharing -->
-    <meta property="og:title" content="CrossLens - See the World's Perspectives">
-    <meta property="og:description" content="An Android app for comparing global news coverage, translations, and institutional contexts side-by-side.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://mattjhagen.github.io/CrossLens/">
-    <meta property="og:image" content="https://mattjhagen.github.io/CrossLens/og-image.jpg">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="CrossLens - Global News Perspectives">
-    <meta name="twitter:description" content="Compare news from around the world. Discover the Lens Gap with CrossLens on Android.">
-
-    <title>CrossLens - Global News Comparison & Translation App</title>
-    
-    
-    
-    
-    
+    <meta name="description" content="CrossLens is an Android news app for understanding global reporting.">
+    <title>CrossLens - Global News Perspectives</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header>
-        <h1>CrossLens</h1>
-        <p>One event. A world of perspectives.</p>
+        <div class="logo">CROSSLENS</div>
+        <nav>
+            <a href="#features">Features</a>
+            <a href="#lens-gap">Lens Gap</a>
+            <a href="#pricing">Access</a>
+            <a href="https://github.com/Mattjhagen/CrossLens" target="_blank">GitHub</a>
+        </nav>
     </header>
 
-    <nav>
-        <a href="#features">Features</a>
-        <a href="#lens-gap">Lens Gap</a>
-        <a href="#pricing">Access</a>
-        <a href="https://github.com/Mattjhagen/CrossLens" target="_blank" rel="noopener">GitHub</a>
-    </nav>
-
     <div class="hero">
-        <h2>Understand the Global Narrative</h2>
-        <p class="subtitle">CrossLens is an Android news app designed for informed comparison. See how the same event is reported across countries, languages, and institutions. Explore clustered stories, compare source coverage, and read translations while retaining a clear path to the original reporting.</p>
-        <a href="https://github.com/Mattjhagen/CrossLens" class="cta-button">View on GitHub</a>
+        <div class="mono-badge scroll-reveal">The CrossLens App V1.0</div>
+        <h1 class="massive-text scroll-reveal" style="transition-delay: 0.1s;">
+            <span class="line-1">One event.</span>
+            <span class="line-2">A world of perspectives.</span>
+        </h1>
+        <p class="scroll-reveal" style="transition-delay: 0.2s;">Events should behave like shared context, not isolated silos. CrossLens is the platform for authoritative news synchronization and comparison across borders.</p>
+        <div class="scroll-reveal" style="transition-delay: 0.3s;">
+            <a href="https://github.com/Mattjhagen/CrossLens" class="cta-button">View Source</a>
+        </div>
     </div>
 
     <section id="features">
-        <h2 >Core Features</h2>
-        <p >We built CrossLens with product principles that put evidence and perspective first.</p>
-        
         <div class="features-grid">
-            <div class="feature-card">
+            <div class="feature-card scroll-reveal">
                 <h3>Global by Design</h3>
-                <p>Organize coverage by source, country, region, language, topic, and institutional context. Geographic, political, and institutional context coexist without universal left/center/right classifications.</p>
+                <p>Organize coverage by source, country, region, language, topic, and institutional context. Geographic and political context coexist without universal left/center/right classifications.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card scroll-reveal" style="transition-delay: 0.1s;">
                 <h3>Evidence Stays Visible</h3>
                 <p>Link summaries and comparison observations directly to the articles supporting them. Distinctly separate reported claims from established facts so you can verify everything.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card scroll-reveal" style="transition-delay: 0.2s;">
                 <h3>Translation with Provenance</h3>
                 <p>Preserve original text alongside labeled translations. We disclose translation availability and methods, ensuring you always have a clear path to the source material.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card scroll-reveal" style="transition-delay: 0.3s;">
                 <h3>Gorgeous & Editorial</h3>
-                <p>Inspired by tactile browsing and editorial magazine design. A custom Material 3 visual system with expressive typography, generous imagery, and restrained perspective-switch motion.</p>
+                <p>Inspired by tactile browsing and editorial magazine design. A custom Material 3 visual system with expressive typography and restrained perspective-switch motion.</p>
             </div>
         </div>
     </section>
 
-    <div id="lens-gap" class="lens-gap-section">
-        <h2>The Lens Gap</h2>
-        <p >How differently is this event being covered in the available reporting?</p>
-        <p>Lens Gap evaluates differences in emphasized claims, selected actors, terminology, and the distribution of attention across sources. Each result reveals its sampled articles, geographic/language coverage, time window, explanatory components, and concrete evidence.</p>
-        <br>
-        <p><em>Example: "Lens Gap: 72/100 — divergent emphasis."</em> Not a factuality score, but a measure of reporting divergence.</p>
+    <div id="lens-gap" class="lens-gap-section" style="padding-top: 4rem; padding-bottom: 4rem;">
+        <h2 class="lens-gap-oversized scroll-reveal">How differently is this event being covered in the available reporting?</h2>
+        <p class="scroll-reveal" style="color: var(--ink-dim); font-size: 1.2rem; max-width: 800px; margin: 3rem auto 0; text-align: center;">Lens Gap evaluates differences in emphasized claims, selected actors, terminology, and the distribution of attention across sources. Each result reveals its sampled articles, geographic/language coverage, time window, explanatory components, and concrete evidence.</p>
     </div>
 
-    <section id="pricing" class="pricing">
-        <h2 >Access Tiers</h2>
-        <p >CrossLens offers a useful free experience and an optional premium upgrade.</p>
-        
+    <section id="pricing">
         <div class="pricing-tiers">
-            <div class="tier">
+            <div class="tier scroll-reveal">
                 <h3>Free</h3>
-                <p >Essential comparison</p>
+                <p>Essential comparison</p>
                 <ul>
                     <li>Discover global stories</li>
                     <li>Read event context and claims</li>
@@ -95,9 +70,9 @@
                 </ul>
             </div>
             
-            <div class="tier plus">
-                <h3 >CrossLens Plus</h3>
-                <p >The full perspective</p>
+            <div class="tier plus scroll-reveal" style="transition-delay: 0.15s;">
+                <h3>CrossLens Plus</h3>
+                <p>The full perspective</p>
                 <ul>
                     <li>Unlock all sources for a story</li>
                     <li>Access all available translations</li>
@@ -109,13 +84,24 @@
     </section>
 
     <footer>
-        <p>&copy; 2026 CrossLens. An Android News Application.</p>
-        <p>View the source code and documentation on <a href="https://github.com/Mattjhagen/CrossLens" target="_blank" rel="noopener">GitHub</a>.</p>
-        <p >
-            <a href="privacy-policy.html">Privacy Policy</a> | 
-            <a href="terms.html">Terms and Conditions</a>
-        </p>
+        <p>&copy; 2026 CrossLens.</p>
+        <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+            <a href="https://github.com/Mattjhagen/CrossLens" target="_blank">GitHub</a>
+            <a href="privacy-policy.html">Privacy Policy</a>
+            <a href="terms.html">Terms</a>
+        </div>
     </footer>
 
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+        
+        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+    </script>
 </body>
 </html>
