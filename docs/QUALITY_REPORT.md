@@ -265,11 +265,11 @@ Issues: 0 errors, 0 warnings
 **Device Checks Completed:**
 - ✅ Large text rendering at 130% font scale (API 36 emulator) - PASS
 - ✅ Theme application verified on physical Pixel - PASS
+- ✅ Offline persistence after force-stop (physical Pixel) - PASS
 
 **Device Checks Remaining:**
 - ⚠️ TalkBack reading order (requires manual testing)
 - ⚠️ RTL layout with Arabic content (requires locale change)
-- ⚠️ Persistence after force-stop (emulator inconclusive, needs physical Pixel)
 
 ### Findings
 
@@ -292,11 +292,12 @@ Issues: 0 errors, 0 warnings
 **Required:** Test with device set to Arabic locale
 **Status:** PENDING - Physical device testing scheduled
 
-⚠️ **CHECK PENDING - Full persistence flow**
-**Emulator Result:** Theme and Plus access reverted after force-stop
-**Physical Device:** Theme application verified working, full flow needs testing
-**Required:** Test Dark theme + Plus access → force-stop → verify persisted
-**Status:** PENDING - Physical device testing scheduled
+✅ **PASS - Full persistence flow (Physical Pixel)**
+**Test Date:** 2026-09-22
+**Result:** Dark theme and Plus (Demo) access both persisted after force-stop
+**Verified:** App relaunched in airplane mode with Dark theme + Plus access intact
+**Emulator Note:** Emulator showed reversion (device-specific behavior, not a real issue)
+**Evidence:** User confirmation on physical Pixel
 
 ## Security and Privacy Audit
 

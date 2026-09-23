@@ -122,18 +122,21 @@ All text uses sp units via MaterialTheme.typography, allowing proper scaling. No
 
 ## Test 4: Offline Persistence
 
-**Status:** ⚠️ **INCONCLUSIVE - Needs Physical Device Verification**
+**Status:** ✅ **PASS** - Verified on Physical Pixel
 
 **Emulator Test Results:**
 - ✅ App launches offline successfully
 - ✅ Stories load from Room database
 - ✅ Explore filters work offline
-- ⚠️ Theme preference reverted to System after force-stop (expected Dark)
-- ⚠️ Plus access reverted to Free after force-stop (expected PLUS_DEMO)
+- ⚠️ Theme preference reverted to System after force-stop (emulator-specific behavior)
+- ⚠️ Plus access reverted to Free after force-stop (emulator-specific behavior)
 
-**Physical Pixel Results (User Confirmed):**
+**Physical Pixel Results (User Confirmed - 2026-09-22):**
 - ✅ Theme fix verified: Light/Dark/System themes apply correctly
-- ⚠️ Full persistence flow (theme + Plus + force-stop) not yet tested on physical device
+- ✅ **Dark theme persisted after force-stop + airplane mode relaunch**
+- ✅ **Plus (Demo) access persisted after force-stop + airplane mode relaunch**
+- ✅ App launches and works correctly in airplane mode
+- ✅ No unexpected behavior observed
 
 **Test Procedure (Emulator):**
 1. Set theme to Dark in Settings
@@ -196,11 +199,11 @@ The emulator test suggests settings are not persisting across force-stop. Howeve
 ### Completed ✅
 1. **Large Font Scaling** - All screens pass at 130% scale, no clipping or overlap
 2. **Theme Application** - Verified working on physical Pixel (v0.0.2-beta)
+3. **Offline Persistence** - Dark theme + Plus access persist after force-stop, airplane mode works
 
 ### Requires Physical Device Testing ⚠️
-3. **TalkBack Accessibility** - Manual verification needed for reading order and labels
-4. **RTL Layout** - Arabic locale testing needed for layout mirroring
-5. **Persistence After Force-Stop** - Emulator showed reversion, needs physical device confirmation
+4. **TalkBack Accessibility** - Manual verification needed for reading order and labels
+5. **RTL Layout** - Arabic locale testing needed for layout mirroring
 
 ### Test Instructions for Physical Pixel
 
@@ -247,7 +250,6 @@ The emulator test suggests settings are not persisting across force-stop. Howeve
 **Blockers:**
 1. ❌ TalkBack verification not performed
 2. ❌ RTL layout not tested
-3. ⚠️ Full persistence flow needs physical device confirmation (emulator test inconclusive)
 
 **Once Blockers Resolved:**
 Update `docs/QUALITY_REPORT.md` and `docs/BUILD_STATUS.md` with:
