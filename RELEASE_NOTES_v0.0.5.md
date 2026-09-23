@@ -4,12 +4,12 @@
 
 **Version:** v0.0.5-beta  
 **Date:** 2026-09-23  
-**Commit:** c5c05cd  
+**Commit:** 4601f65  
 **Build:** Debug APK
 
 ## What's New
 
-### CrossLens App Icon
+### 1. CrossLens App Icon
 
 Integrated the official CrossLens app icon as a proper Android adaptive launcher icon.
 
@@ -36,9 +36,38 @@ Integrated the official CrossLens app icon as a proper Android adaptive launcher
 - Background layer: Dark teal `#1A3540` (matches icon background)
 - Icon design: Teal/turquoise panes with cream crossing line
 
+### 2. Editorial Signature & Wordmark
+
+Added a distinctive in-app editorial signature that translates the launcher icon's "crossing perspectives" concept into a masthead-appropriate design.
+
+**Visual Design:**
+- **CrossLensSignature:** Full editorial masthead with wordmark text, thin diagonal crossing rule, and subtle offset perspective pane indicators
+- **CrossLensWordmark:** Lightweight variant with just text and crossing rule for section headers
+- **Three Sizes:** Small (32dp), Medium (48dp), Large (64dp) for different contexts
+- **Design Concept:** Shares the "crossing perspectives" DNA of the launcher icon but reimagined as a text-based editorial masthead, not a duplicate of the icon
+
+**Theme Integration:**
+- **Fully theme-aware:** Uses Material 3 theme colors (primary, tertiary, onBackground)
+- **Light mode:** Teal accent with ink on ivory background
+- **Dark mode:** Lighter teal accent with warm light on charcoal background
+- **Automatic adaptation:** Signature colors adapt seamlessly to system theme changes
+
+**Implementation Locations:**
+- **Home Screen:** Large signature masthead replaces plain text title
+- **Loading States:** Medium signature with spinner (Home, Comparison screens)
+- **Empty States:** Medium/small signature with messaging (Home empty, Explore no results, Comparison not found)
+- **Section Headers:** Small wordmark before "Framing Observations" in comparison view
+
+**Accessibility:**
+- **TalkBack silent:** Uses `clearAndSetSemantics {}` to make signature invisible to screen readers (decorative only)
+- **Secondary to content:** Never conveys functional information, pure visual branding
+
+**Documentation:**
+- Added `docs/EDITORIAL_SIGNATURE.md` with design rationale, usage guidelines, and visual relationship to launcher icon
+
 ## Technical Changes
 
-**New Assets:**
+**New Assets (Icon):**
 - `app/src/main/res/drawable/ic_launcher_foreground.png` - Adaptive icon foreground layer
 - `app/src/main/res/mipmap-mdpi/ic_launcher.png` & `ic_launcher_round.png`
 - `app/src/main/res/mipmap-hdpi/ic_launcher.png` & `ic_launcher_round.png`
@@ -47,8 +76,17 @@ Integrated the official CrossLens app icon as a proper Android adaptive launcher
 - `app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` & `ic_launcher_round.png`
 - `docs/ASSET_CREDITS.md` - Icon attribution and provenance documentation
 
+**New Components (Editorial Signature):**
+- `app/src/main/java/com/crosslens/app/core/ui/components/EditorialSignature.kt` - Signature and wordmark components
+- `docs/EDITORIAL_SIGNATURE.md` - Design documentation and usage guidelines
+
 **Updated Resources:**
 - `app/src/main/res/values/colors.xml` - Updated `ic_launcher_background` color to `#1A3540`
+
+**Updated Screens (Editorial Signature Integration):**
+- `app/src/main/java/com/crosslens/app/feature/home/HomeScreen.kt` - Added large signature masthead, integrated signature in loading/empty states
+- `app/src/main/java/com/crosslens/app/feature/comparison/CrossLensScreen.kt` - Added signature to loading/empty states, wordmark in section headers
+- `app/src/main/java/com/crosslens/app/feature/explore/ExploreScreen.kt` - Added signature to empty state
 
 **Removed:**
 - `app/src/main/res/drawable/ic_launcher_foreground.xml` - Replaced placeholder vector with actual icon PNG
@@ -69,11 +107,18 @@ BUILD SUCCESSFUL
 Lint: 0 errors, 0 warnings
 ```
 
+✅ **Unit Tests:**
+```
+./gradlew test
+BUILD SUCCESSFUL
+All tests passed
+```
+
 ✅ **Build:**
 ```
-./gradlew :app:assembleDebug
+./gradlew assembleDebug
 BUILD SUCCESSFUL
-APK: 57MB at app/build/outputs/apk/debug/app-debug.apk
+APK: 58MB at app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ⚠️ **Device Testing:**
@@ -87,10 +132,19 @@ APK: 57MB at app/build/outputs/apk/debug/app-debug.apk
 ## User-Facing Changes
 
 Users will now see:
-- **Launcher Icon:** Professional CrossLens brand icon on home screen and app drawer
-- **Icon Design:** Two offset teal panes with crossing cream line representing the CrossLens perspective comparison concept
+
+**Launcher:**
+- **Professional Icon:** CrossLens brand icon on home screen and app drawer
+- **Icon Design:** Two offset teal panes with crossing cream line representing the perspective comparison concept
 - **Adaptive Behavior:** Icon adapts to different launcher shapes (on Android 8.0+)
-- **Consistent Branding:** Icon design consistent with in-app editorial design system
+
+**In-App Branding:**
+- **Home Masthead:** Large editorial signature at the top of the story feed
+- **Branded Loading:** Signature appears with spinner during content loading
+- **Branded Empty States:** Signature maintains brand presence when no content is available
+- **Section Branding:** Subtle wordmark in comparison view section headers
+- **Theme Adaptation:** All branding automatically adapts colors in Light/Dark/System themes
+- **Consistent Design:** Launcher icon and in-app signature share the "crossing perspectives" concept
 
 ## Installation
 
@@ -100,6 +154,7 @@ Download `app-debug.apk` from this release and install on Android 10+ devices.
 
 ## Verification Checklist
 
+**Launcher Icon:**
 ✅ Icon source artwork preserved without visual changes  
 ✅ Adaptive icon with foreground and background layers  
 ✅ Legacy launcher icons for all densities (mdpi-xxxhdpi)  
@@ -107,14 +162,26 @@ Download `app-debug.apk` from this release and install on Android 10+ devices.
 ✅ Manifest references correct icon resources  
 ✅ App label remains "CrossLens"  
 ✅ Asset credits documentation added  
+
+**Editorial Signature:**
+✅ CrossLensSignature component with three sizes (Small/Medium/Large)  
+✅ CrossLensWordmark lightweight variant  
+✅ Theme-aware using Material 3 colors  
+✅ Silent to TalkBack (clearAndSetSemantics)  
+✅ Integrated into Home, Comparison, and Explore screens  
+✅ Design documentation added  
+
+**Build & Test:**
+✅ Unit tests passing  
 ✅ Lint clean (0 errors, 0 warnings)  
 ✅ Debug build successful  
-⚠️ Device launcher verification not performed (no device available)
+⚠️ Device verification not performed (pending Pixel installation)
 
 ## Files Changed
 
-**New Files (12):**
+**New Files (15):**
 - `docs/ASSET_CREDITS.md` - Icon attribution and specifications
+- `docs/EDITORIAL_SIGNATURE.md` - Signature design documentation
 - `app/src/main/res/drawable/ic_launcher_foreground.png` - 432x432px adaptive foreground
 - `app/src/main/res/mipmap-mdpi/ic_launcher.png` - 48x48px
 - `app/src/main/res/mipmap-mdpi/ic_launcher_round.png` - 48x48px
@@ -126,9 +193,13 @@ Download `app-debug.apk` from this release and install on Android 10+ devices.
 - `app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png` - 144x144px
 - `app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` - 192x192px
 - `app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png` - 192x192px
+- `app/src/main/java/com/crosslens/app/core/ui/components/EditorialSignature.kt` - Signature components
 
-**Modified Files (1):**
+**Modified Files (4):**
 - `app/src/main/res/values/colors.xml` - Updated launcher background color
+- `app/src/main/java/com/crosslens/app/feature/home/HomeScreen.kt` - Integrated editorial signature
+- `app/src/main/java/com/crosslens/app/feature/comparison/CrossLensScreen.kt` - Integrated editorial signature
+- `app/src/main/java/com/crosslens/app/feature/explore/ExploreScreen.kt` - Integrated editorial signature
 
 **Removed Files (1):**
 - `app/src/main/res/drawable/ic_launcher_foreground.xml` - Placeholder replaced with actual icon
@@ -146,4 +217,8 @@ The icon is distinctive, memorable, and immediately communicates the app's purpo
 
 ## Changes from v0.0.4-beta
 
-v0.0.4-beta added the reset control for editorial review. v0.0.5-beta adds the professional CrossLens brand icon, giving the app a polished launcher presence that reflects its editorial design quality.
+v0.0.4-beta added the reset control for editorial review. v0.0.5-beta completes the visual branding by adding:
+1. **Professional launcher icon** - A distinctive adaptive icon that represents the "crossing perspectives" concept
+2. **In-app editorial signature** - Theme-aware masthead and wordmark that translates the icon concept into editorial layouts
+
+The result is a cohesive brand experience from launcher to in-app content, with the app now having a polished visual identity that reflects its editorial design quality.
