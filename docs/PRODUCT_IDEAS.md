@@ -60,6 +60,49 @@ Add permissioned local sources alongside national and global coverage.
   source.
 - A source's geography provides context; it is not a political label.
 
+## Reading and source access
+
+### Full source articles
+
+Let readers open the original source article from its attribution card. When
+appropriate, offer an in-app browser so the reader can return to CrossLens
+without losing their place in an event comparison.
+
+- Preserve the original publisher, URL, headline, language, and attribution.
+- Before opening a source likely to have a paywall or subscription requirement,
+  show a brief notice that access may be limited by the publisher.
+- Do not bypass publisher access controls, subscription requirements, or source
+  terms of use.
+- Always provide a clear way to open the article in the reader's preferred
+  external browser.
+
+### AI source digest
+
+Explore an AI-generated summary that compares the available sources for one
+event. The digest should link each observation to its supporting source
+articles and make the difference between reporting, interpretation, and an
+unknown clear.
+
+- Show the source sample, coverage window, original-language availability, and
+  important gaps.
+- Label it as an AI-generated draft or summary with method/version and
+  uncertainty information.
+- Never substitute the digest for the original source articles or present it as
+  a factual verdict.
+- Production work requires permission-aware content handling, evaluation for
+  hallucinations and translation errors, and editorial governance.
+
+### Pull to refresh
+
+Add pull to refresh to supported reading and discovery feeds.
+
+- In the current offline demo, refresh should explain that it restores or
+  reloads the bundled fictional edition without making a network request.
+- In a future live product, display the last-updated time and a useful loading,
+  success, empty, and error state.
+- Do not imply that a refresh fetched live reporting until live ingestion is
+  actually connected and authorized.
+
 ## Future AI-assisted review
 
 AI may eventually triage ingestion candidates and recommend an editorial
