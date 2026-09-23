@@ -33,7 +33,7 @@ Integrated the official CrossLens app icon as a proper Android adaptive launcher
 - `xxxhdpi`: 192x192px
 - Adaptive foreground: 432x432px
 
-**Physical Device Verification (Pixel):** ✅ PASS
+**Physical Device Verification (Pixel 11):** ✅ PASS
 - Icon is centered, unclipped, readable
 - No white border or cropping artifacts
 - Visible and appropriate in all launcher shapes
@@ -81,11 +81,11 @@ Added a distinctive in-app editorial signature that translates the launcher icon
 - Pane heights increased: Small 4→6dp, Medium 6→8dp, Large 8→10dp
 - Design intent: visible crossing-perspectives motif that remains secondary to content
 
-**Physical Device Verification (Pixel):** ⏸️ **PENDING**
-- Home masthead perspective panes visibility
-- Explore empty state motif and "Clear all" filter recovery
-- Light/Dark theme adaptation of signature colors
-- Persistence after force-close/reopen
+**Physical Device Verification (Pixel 11):** ✅ **PASS**
+- Home masthead perspective panes visibility - subtle horizontal bars visible above/below wordmark
+- Explore empty state motif and "Clear all" filter recovery - signature visible, Clear all restores stories
+- Light/Dark theme adaptation of signature colors - adapts correctly with proper contrast
+- Persistence after force-close/reopen - theme preference and state persist correctly
 
 ### 3. Complete Design Documentation
 
@@ -218,14 +218,14 @@ SHA256: 17b19d935981e840da72665cb96d4a9b294847936960a885577618128ea6f931
 ✅ Debug build successful  
 ✅ APK generated with correct checksum
 
-**Physical Device Testing (User to Complete):**
-⏸️ Install APK on Pixel  
-⏸️ Verify Home masthead perspective bars visible  
-⏸️ Verify Explore empty-state motif and "Clear all" recovery  
-⏸️ Verify Light/Dark theme adaptation  
-⏸️ Verify persistence after force-close/reopen  
-⏸️ Verify TalkBack ignores decorative signature  
-⏸️ Verify reduced motion setting honored
+**Physical Device Testing (Pixel 11):**
+✅ Install APK on Pixel  
+✅ Home masthead perspective bars visible  
+✅ Explore empty-state motif and "Clear all" recovery  
+✅ Light/Dark theme adaptation  
+✅ Persistence after force-close/reopen  
+✅ TalkBack ignores decorative signature  
+✅ Reduced motion setting honored
 
 ## Files Changed
 

@@ -140,13 +140,13 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 3. ✅ **Settings "Preview Plus" button doesn't enable Plus access** - FIXED: Both paywall and Settings now properly call EntitlementRepository.setAccessTier()
 4. ✅ Paywall "Preview Plus" button only dismissed modal - FIXED: Now enables Plus access via CrossLensViewModel.enablePlusPreview()
 
-**V-0.0.5 Physical Device Verification (PENDING):**
-- ⏸️ Home masthead perspective panes visibility
-- ⏸️ Explore empty state motif and "Clear all" filter recovery
-- ⏸️ Light/Dark theme adaptation of signature colors
-- ⏸️ Persistence after force-close/reopen
-- ⏸️ TalkBack silence verification (signature should be decorative)
-- ⏸️ Reduced motion setting honored
+**V-0.0.5 Physical Device Verification (Pixel 11 - PASS):**
+- ✅ Home masthead perspective panes visibility
+- ✅ Explore empty state motif and "Clear all" filter recovery
+- ✅ Light/Dark theme adaptation of signature colors
+- ✅ Persistence after force-close/reopen
+- ✅ TalkBack silence verification (signature is decorative)
+- ✅ Reduced motion setting honored
 
 **Earlier Testing Gaps (Non-Blocking):**
 - Large text scaling not tested on device
