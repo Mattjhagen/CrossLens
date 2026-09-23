@@ -11,8 +11,10 @@ data class Article(
     val originalLanguage: String, // BCP 47 language tag
     val originalHeadline: String,
     val originalExcerpt: String,
+    val originalContent: String, // Full article content
     val attribution: String,
-    val contentUseMetadata: ContentUseMetadata
+    val contentUseMetadata: ContentUseMetadata,
+    val requiresSubscription: Boolean = false // Whether source likely has paywall
 )
 
 data class ContentUseMetadata(

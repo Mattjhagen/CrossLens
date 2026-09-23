@@ -23,4 +23,8 @@ class MockSourceRepository @Inject constructor(
     override suspend fun getSourcesByIds(sourceIds: List<String>): List<Source> {
         return sourceDao.getSourcesByIds(sourceIds).map { it.toDomain() }
     }
+
+    override suspend fun getSource(sourceId: String): Source? {
+        return getSourcesByIds(listOf(sourceId)).firstOrNull()
+    }
 }

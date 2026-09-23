@@ -10,5 +10,7 @@ interface StoryRepository {
     suspend fun getArticlesForStory(storyId: String): List<Article>
     suspend fun getClaimsForStory(storyId: String): List<Claim>
     suspend fun getFrameObservationsForStory(storyId: String): List<FrameObservation>
+    suspend fun getArticle(articleId: String): Article? // Get single article by ID
+    suspend fun getSourceDigest(storyId: String): SourceDigest? // Get AI digest for story
     suspend fun refresh(): Result<Unit>
 }

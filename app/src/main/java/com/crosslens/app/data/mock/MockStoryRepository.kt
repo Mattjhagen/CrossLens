@@ -16,7 +16,8 @@ class MockStoryRepository @Inject constructor(
     private val articleDao: ArticleDao,
     private val claimDao: ClaimDao,
     private val frameObservationDao: FrameObservationDao,
-    private val database: CrossLensDatabase
+    private val database: CrossLensDatabase,
+    private val digestGenerator: com.crosslens.app.data.repository.SourceDigestGenerator
 ) : StoryRepository {
 
     suspend fun seedData() {
@@ -64,6 +65,21 @@ class MockStoryRepository @Inject constructor(
 
     override suspend fun getFrameObservationsForStory(storyId: String): List<FrameObservation> {
         return frameObservationDao.getObservationsByStory(storyId).map { it.toDomain() }
+    }
+
+    override suspend fun getArticle(articleId: String): Article? {
+        return articleDao.getArticlesByIds(listOf(articleId)).firstOrNull()?.toDomain()
+    }
+
+    override suspend fun getSourceDigest(storyId: String): SourceDigest? {
+        val articles = getArticlesForStory(storyId)
+        if (articles.isEmpty()) return null
+
+        val sourceIds = articles.map { it.sourceId }.distinct()
+        val sources = database.sourceDao().getSourcesByIds(sourceIds)
+            .associate { it.id to it.toDomain() }
+
+        return digestGenerator.generateDigest(storyId, articles, sources)
     }
 
     override suspend fun refresh(): Result<Unit> {

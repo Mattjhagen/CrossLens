@@ -56,11 +56,13 @@ fun ArticleEntity.toDomain() = Article(
     originalLanguage = originalLanguage,
     originalHeadline = originalHeadline,
     originalExcerpt = originalExcerpt,
+    originalContent = originalContent,
     attribution = attribution,
     contentUseMetadata = ContentUseMetadata(
         isDemo = isDemo,
         isDemoPlaceholder = true
-    )
+    ),
+    requiresSubscription = requiresSubscription
 )
 
 fun TranslationEntity.toDomain() = Translation(

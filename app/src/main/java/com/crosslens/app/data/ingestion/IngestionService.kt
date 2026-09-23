@@ -134,8 +134,10 @@ class IngestionService @Inject constructor(
                     originalLanguage = article.languageTag,
                     originalHeadline = article.headline,
                     originalExcerpt = article.excerpt,
+                    originalContent = "Demo content extracted from ${article.sourceName}",
                     attribution = article.sourceName,
-                    isDemo = false
+                    isDemo = false,
+                    requiresSubscription = false
                 )
             }
 

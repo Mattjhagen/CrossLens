@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 interface SourceRepository {
     fun observeSources(): Flow<List<Source>>
     suspend fun getSourcesByIds(sourceIds: List<String>): List<Source>
+    suspend fun getSource(sourceId: String): Source?
 }

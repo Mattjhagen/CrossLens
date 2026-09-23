@@ -13,6 +13,7 @@ import com.crosslens.app.feature.editorial.EditorialReviewScreen
 import com.crosslens.app.feature.explore.ExploreScreen
 import com.crosslens.app.feature.home.HomeScreen
 import com.crosslens.app.feature.settings.SettingsScreen
+import com.crosslens.app.feature.sourcedetail.SourceDetailScreen
 import com.crosslens.app.feature.story.StoryScreen
 
 @Composable
@@ -61,6 +62,20 @@ fun CrossLensNavHost(
             val storyId = backStackEntry.arguments?.getString("storyId") ?: return@composable
             CrossLensScreen(
                 storyId = storyId,
+                onBackClick = { navController.popBackStack() },
+                onOpenSourceDetail = { articleId ->
+                    navController.navigate(CrossLensDestination.SourceDetail.createRoute(articleId))
+                }
+            )
+        }
+
+        composable(
+            route = CrossLensDestination.SourceDetail.route,
+            arguments = listOf(navArgument("articleId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val articleId = backStackEntry.arguments?.getString("articleId") ?: return@composable
+            SourceDetailScreen(
+                articleId = articleId,
                 onBackClick = { navController.popBackStack() }
             )
         }

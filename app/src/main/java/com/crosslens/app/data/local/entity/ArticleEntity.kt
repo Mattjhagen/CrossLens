@@ -14,6 +14,8 @@ data class ArticleEntity(
     val originalLanguage: String,
     val originalHeadline: String,
     val originalExcerpt: String,
+    val originalContent: String, // Full article content
     val attribution: String,
-    val isDemo: Boolean
+    val isDemo: Boolean,
+    val requiresSubscription: Boolean = false // Whether source likely has paywall
 )

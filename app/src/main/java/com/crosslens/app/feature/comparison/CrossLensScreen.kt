@@ -28,6 +28,7 @@ import com.crosslens.app.core.ui.components.SignatureSize
 fun CrossLensScreen(
     storyId: String,
     onBackClick: () -> Unit,
+    onOpenSourceDetail: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: CrossLensViewModel = hiltViewModel()
 ) {
@@ -172,6 +173,7 @@ fun CrossLensScreen(
                         SourcePane(
                             articleWithSource = currentArticleWithSource,
                             reducedMotion = userPrefs.reducedMotion,
+                            onOpenFullArticle = { onOpenSourceDetail(currentArticleWithSource.article.id) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -222,6 +224,7 @@ fun CrossLensScreen(
 private fun SourcePane(
     articleWithSource: ArticleWithSource,
     reducedMotion: Boolean,
+    onOpenFullArticle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val animatedRotation = remember { Animatable(0f) }
@@ -286,6 +289,15 @@ private fun SourcePane(
                     text = articleWithSource.article.originalExcerpt,
                     style = MaterialTheme.typography.bodyMedium
                 )
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = onOpenFullArticle,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Read full article")
+                }
             }
 
             item {
