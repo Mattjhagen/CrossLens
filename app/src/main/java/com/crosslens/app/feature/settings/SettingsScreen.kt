@@ -186,6 +186,25 @@ fun SettingsScreen(
                 }
 
                 item {
+                    Text(
+                        text = "Personal Preferences",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+
+                item {
+                    PersonalPreferencesSection(
+                        personalPreferences = viewModel.personalRelevancePreferences.collectAsStateWithLifecycle().value,
+                        onRemovePreference = viewModel::removePersonalPreference,
+                        onClearAll = viewModel::clearAllPersonalPreferences
+                    )
+                }
+
+                item {
+                    Divider()
+                }
+
+                item {
                     Card(
                         onClick = onEditorialReviewClick,
                         modifier = Modifier.fillMaxWidth()
@@ -242,6 +261,142 @@ private fun SettingItem(
             )
         }
         control()
+    }
+}
+
+@Composable
+private fun PersonalPreferencesSection(
+    personalPreferences: List<com.crosslens.app.core.model.PersonalRelevancePreference>,
+    onRemovePreference: (String) -> Unit,
+    onClearAll: () -> Unit
+) {
+    Card {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Your reading preferences",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = "These choices will shape future recommendations when that feature is introduced. They don't affect which sources or evidence you see in story comparisons.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            if (personalPreferences.isEmpty()) {
+                Text(
+                    text = "No preferences saved yet. Use \"Show more like this\" or \"Show less like this\" when reading source articles.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                // Group by preference type
+                val morePrefs = personalPreferences.filter {
+                    it.preferenceType == com.crosslens.app.core.model.PreferenceType.MORE
+                }
+                val lessPrefs = personalPreferences.filter {
+                    it.preferenceType == com.crosslens.app.core.model.PreferenceType.LESS
+                }
+
+                if (morePrefs.isNotEmpty()) {
+                    Text(
+                        text = "Show more:",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    morePrefs.forEach { pref ->
+                        PreferenceChip(
+                            preference = pref,
+                            onRemove = { onRemovePreference(pref.id) }
+                        )
+                    }
+                }
+
+                if (lessPrefs.isNotEmpty()) {
+                    Text(
+                        text = "Show less:",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    lessPrefs.forEach { pref ->
+                        PreferenceChip(
+                            preference = pref,
+                            onRemove = { onRemovePreference(pref.id) }
+                        )
+                    }
+                }
+
+                HorizontalDivider()
+
+                OutlinedButton(
+                    onClick = onClearAll,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Reset all preferences")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreferenceChip(
+    preference: com.crosslens.app.core.model.PersonalRelevancePreference,
+    onRemove: () -> Unit
+) {
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = formatDimensionValue(preference.dimensionValue, preference.dimensionType),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = when (preference.dimensionType) {
+                        com.crosslens.app.core.model.DimensionType.TOPIC -> "Topic"
+                        com.crosslens.app.core.model.DimensionType.REGION -> "Region"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+                Text("×", style = MaterialTheme.typography.titleLarge)
+            }
+        }
+    }
+}
+
+private fun formatDimensionValue(value: String, type: com.crosslens.app.core.model.DimensionType): String {
+    return when (type) {
+        com.crosslens.app.core.model.DimensionType.TOPIC -> {
+            // Format topic IDs to readable names
+            value.replace("_", " ").split(" ").joinToString(" ") {
+                it.replaceFirstChar { char -> char.uppercase() }
+            }
+        }
+        com.crosslens.app.core.model.DimensionType.REGION -> {
+            // Format region IDs to readable names
+            when (value) {
+                "europe" -> "Europe"
+                "north_america" -> "North America"
+                "middle_east" -> "Middle East"
+                "asia" -> "Asia"
+                "africa" -> "Africa"
+                "south_america" -> "South America"
+                "oceania" -> "Oceania"
+                else -> value.replace("_", " ").split(" ").joinToString(" ") {
+                    it.replaceFirstChar { char -> char.uppercase() }
+                }
+            }
+        }
     }
 }
 

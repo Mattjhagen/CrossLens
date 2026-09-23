@@ -155,6 +155,18 @@ fun SourceDetailScreen(
                         }
                     }
 
+                    // Personal relevance feedback section
+                    item {
+                        Divider()
+                    }
+                    item {
+                        PersonalRelevanceFeedback(
+                            existingPreferences = state.existingPreferences,
+                            onShowMoreLikeThis = viewModel::onShowMoreLikeThis,
+                            onShowLessLikeThis = viewModel::onShowLessLikeThis
+                        )
+                    }
+
                     // Demo AI digest
                     if (state.digest != null) {
                         item {
@@ -362,6 +374,74 @@ private fun PaywallNoticeDialog(
             }
         }
     )
+}
+
+@Composable
+private fun PersonalRelevanceFeedback(
+    existingPreferences: List<com.crosslens.app.core.model.PersonalRelevancePreference>,
+    onShowMoreLikeThis: () -> Unit,
+    onShowLessLikeThis: () -> Unit
+) {
+    Card {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Personal Recommendations",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Help us understand what kinds of stories interest you. Your choices will shape future recommendations when that feature is introduced. This doesn't affect which sources or evidence you see in story comparisons.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            // Show current preference status
+            if (existingPreferences.isNotEmpty()) {
+                val hasMore = existingPreferences.any { it.preferenceType == com.crosslens.app.core.model.PreferenceType.MORE }
+                val hasLess = existingPreferences.any { it.preferenceType == com.crosslens.app.core.model.PreferenceType.LESS }
+
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = when {
+                            hasMore -> "✓ Saved: Show more like this"
+                            hasLess -> "✓ Saved: Show less like this"
+                            else -> "Feedback saved"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = onShowMoreLikeThis,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Show more like this")
+                }
+                OutlinedButton(
+                    onClick = onShowLessLikeThis,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Show less like this")
+                }
+            }
+
+            Text(
+                text = "Based on this article's topics and region",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }
 
 private fun openPublisherPage(context: Context, url: String) {

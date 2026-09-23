@@ -6,7 +6,7 @@ CrossLens is an Android news app for understanding how the same event is reporte
 
 The goal is informed comparison: show where reporting overlaps, where emphasis differs, and what evidence supports those observations. A source's country is context, not a proxy for its politics or the views of an entire population.
 
-> **Project status:** ✅ **Initial Android skeleton complete.** The app runs offline with mock data, demonstrates all five screens, and implements the Free/Plus access model. Live sources, translation services, and automated analysis are future work.
+> **Project status:** ✅ **Personal Relevance Feedback milestone complete (v0.0.8-beta).** The app runs offline with mock data, includes full source article reading with personal feedback controls, and manages preferences locally. Future work includes live sources, recommendation algorithms, translation services, and automated analysis.
 
 ## Quick Start
 
@@ -33,12 +33,12 @@ cd CrossLens
 adb shell am start -n com.crosslens.app.debug/.MainActivity
 ```
 
-**APK Location:** `app/build/outputs/apk/debug/app-debug.apk` (56MB)
+**APK Location:** `app/build/outputs/apk/debug/app-debug.apk`
 
 ### Build Results
 
 - **Build:** ✅ SUCCESS (Gradle 8.9, AGP 8.5.2, Kotlin 1.9.24)
-- **Unit Tests:** ✅ 5/5 passed
+- **Unit Tests:** ✅ 115/115 passed
 - **Lint:** ✅ 0 errors, 0 warnings
 - **Quality Audit:** See [QUALITY_REPORT.md](docs/QUALITY_REPORT.md)
 
@@ -85,17 +85,19 @@ Home, Explore, and Settings are top-level destinations. Story and CrossLens are 
 - **Story:** Event summary, attributed claims, sources, comparison action
 - **CrossLens:** Source-by-source comparison with flip animation, paywall gating
 - **Explore:** Region/topic filters with combined AND logic
-- **Settings:** Theme selection, reduced motion, Plus preview/reset, editorial review access
+- **Settings:** Theme selection, reduced motion, Plus preview/reset, personal preferences management, editorial review access
+- **Source Detail:** Full article reader with publisher page access, demo AI digest, personal relevance feedback
 - **Editorial Review (Demo):** Offline workflow prototype for reviewing mock ingestion candidates
 
 ### Features
 - ✅ Offline-first: All data seeded from mock fixtures in Room
 - ✅ Free/Plus access: Free users see first 2 sources, Plus unlocks all
-- ✅ DataStore persistence: Saved stories, last-opened, preferences
+- ✅ DataStore persistence: Saved stories, last-opened, preferences, personal relevance feedback
 - ✅ Custom Material 3 theme: Editorial design with serif/sans typography
 - ✅ Reduced motion: Animations respect user preference
 - ✅ Multilingual fixtures: English, French, Arabic, Japanese samples
 - ✅ Editorial review workflow: Offline demo for reviewing cross-language matches and syndication candidates
+- ✅ Personal relevance feedback: Transparent "Show more/less like this" controls for future recommendations
 
 ### Mock Data
 - 3 story clusters (climate summit, AI regulation, trade)

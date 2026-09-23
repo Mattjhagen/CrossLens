@@ -42,4 +42,10 @@ abstract class RepositoryModule {
     abstract fun bindEntitlementRepository(
         impl: DataStoreEntitlementRepository
     ): EntitlementRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPersonalRelevanceRepository(
+        impl: DataStorePersonalRelevanceRepository
+    ): PersonalRelevanceRepository
 }
