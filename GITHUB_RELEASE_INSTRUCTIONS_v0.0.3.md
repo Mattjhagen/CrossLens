@@ -1,39 +1,3 @@
-# Instructions: Create GitHub Release v0.0.3-beta
-
-## Prerequisites
-✅ Code committed and pushed to main (commit 8b5ac21)  
-⏳ Git tag `v0.0.3-beta` needs to be created and pushed  
-✅ APK built at `app/build/outputs/apk/debug/app-debug.apk` (57MB)  
-✅ Release notes prepared in `RELEASE_NOTES_v0.0.3.md`
-
-## Step 0: Create and Push Git Tag
-
-```bash
-cd /Users/matt/Documents/R410-Shaggoth-AI-Command-Center/CrossLens/CrossLens
-git tag -a v0.0.3-beta -m "v0.0.3-beta - Editorial Review Workflow"
-git push origin v0.0.3-beta
-```
-
-## Steps to Create Release on GitHub
-
-### 1. Navigate to Releases
-Go to: https://github.com/Mattjhagen/CrossLens/releases
-
-### 2. Click "Draft a new release"
-
-### 3. Configure Release Settings
-
-**Choose a tag:**
-- Select existing tag: `v0.0.3-beta`
-
-**Release title:**
-```
-v0.0.3-beta - Editorial Review Workflow (Demo)
-```
-
-**Description:**
-Copy the contents from `RELEASE_NOTES_v0.0.3.md` or use the following:
-
 ```markdown
 ## What's New
 
