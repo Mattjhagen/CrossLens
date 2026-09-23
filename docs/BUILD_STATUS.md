@@ -51,8 +51,8 @@ Based on [Android Gradle Plugin compatibility](https://developer.android.com/bui
 | 7. Automated verification | ✅ PASS | Build: SUCCESS, Tests: 5/5 pass, Lint: 0 issues | Complete |
 | 8. Audit implementation | ✅ PASS | QUALITY_REPORT.md with all audits | Architecture, design, a11y, security, deps, offline |
 | 9. Fix findings | ✅ PASS | 0 P0/P1 findings, 2 P2 deferred | No blocking issues |
-| 10. Device acceptance | ✅ PASS | Emulator testing complete, screenshots captured | 1 bug fixed, 1 minor issue noted |
-| 11. Handoff documentation | ✅ PASS | README updated, QUALITY_REPORT complete | Screenshots blocked by no device |
+| 10. Device acceptance | ⚠️ IN PROGRESS | Large font scaling PASS, theme fix verified on Pixel | TalkBack, RTL, full persistence pending physical device |
+| 11. Handoff documentation | ⚠️ IN PROGRESS | DEVICE_ACCEPTANCE_RESULTS.md created | Awaiting completion of physical device tests |
 
 ## Requirements to Test Mapping
 
