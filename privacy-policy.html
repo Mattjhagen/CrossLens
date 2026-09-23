@@ -14,10 +14,9 @@
 </head>
 <body>
     <header>
-        <a href="index.html" class="logo" style="color: var(--ink);">CROSSLENS</a>
+        <a href="index.html" class="logo">CrossLens</a>
         <nav>
             <a href="index.html">Home</a>
-        
             <button class="theme-toggle" aria-label="Toggle Theme" onclick="toggleTheme()">
                 <svg class="icon-sun" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41.39.39 1.03.39 1.41 0l1.06-1.06z"/></svg>
                 <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7c.18 0 .35.02.51.05-.72.63-1.28 1.46-1.6 2.41-.12.37-.17.76-.17 1.17 0 2.21 1.79 4 4 4 .41 0 .8-.05 1.17-.17.95-.32 1.78-.88 2.41-1.6.03.16.05.33.05.51 0 3.86-3.14 7-7 7z"/></svg>
@@ -25,65 +24,45 @@
         </nav>
     </header>
 
-    <div class="legal-container scroll-reveal">
-        <h1>Privacy Policy</h1>
+    <div class="legal-container perspective-container">
+        <h1 class="massive-text scroll-3d-text" style="font-size: clamp(3rem, 6vw, 6rem); margin-bottom: 2rem;">Privacy Policy.</h1>
         
-        <p><strong>Last Updated:</strong> September 23, 2026</p>
+        <p class="scroll-3d-text" style="--delay: 1;"><strong>Last Updated:</strong> September 23, 2026</p>
 
-        <h2>1. Introduction</h2>
-        <p class="subtitle">Welcome to CrossLens. We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you use our Android application.</p>
+        <h2 class="scroll-3d-text">1. Introduction</h2>
+        <p class="scroll-3d-text">Welcome to CrossLens. We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you use our Android application.</p>
 
-        <h2>2. Data Collection and Usage</h2>
-        <p class="subtitle"><strong>Local Storage:</strong> Currently, CrossLens is designed with an offline-first architecture. Your reading preferences, saved stories, home region, selected sources, and display preferences are stored locally on your device using Android DataStore and Room database. We do not transmit this personal reading data to our servers.</p>
-        <p><strong>Future Features & Syncing:</strong> As we introduce backend services, features like CrossLens Plus and cross-device syncing may require the collection of basic account information (such as email address) and subscription status. Any data transmitted will be encrypted in transit and handled securely.</p>
+        <h2 class="scroll-3d-text">2. Data Collection and Usage</h2>
+        <p class="scroll-3d-text"><strong>Local Storage:</strong> Currently, CrossLens is designed with an offline-first architecture. Your reading preferences, saved stories, home region, selected sources, and display preferences are stored locally on your device using Android DataStore and Room database. We do not transmit this personal reading data to our servers.</p>
+        <p class="scroll-3d-text"><strong>Future Features & Syncing:</strong> As we introduce backend services, features like CrossLens Plus and cross-device syncing may require the collection of basic account information (such as email address) and subscription status. Any data transmitted will be encrypted in transit and handled securely.</p>
 
-        <h2>3. Third-Party Services</h2>
-        <p class="subtitle">To ensure a reliable experience, we may use third-party services for crash reporting and analytics (such as Google Analytics for Firebase or Crashlytics). These services collect anonymous, non-personally identifiable information (such as device type, OS version, and crash logs) to help us improve the app.</p>
-        <p>In-app purchases and subscriptions for CrossLens Plus are processed entirely by the Google Play Store. We do not collect, process, or store your payment details (such as credit card numbers). Please refer to Google's privacy policy for more information on how they handle payment data.</p>
+        <h2 class="scroll-3d-text">3. Third-Party Services</h2>
+        <p class="scroll-3d-text">To ensure a reliable experience, we may use third-party services for crash reporting and analytics (such as Google Analytics for Firebase or Crashlytics). These services collect anonymous, non-personally identifiable information (such as device type, OS version, and crash logs) to help us improve the app.</p>
+        <p class="scroll-3d-text">In-app purchases and subscriptions for CrossLens Plus are processed entirely by the Google Play Store. We do not collect, process, or store your payment details (such as credit card numbers). Please refer to Google's privacy policy for more information on how they handle payment data.</p>
 
-        <h2>4. Content and Translations</h2>
-        <p class="subtitle">CrossLens aggregates news content from various global publishers. We may use third-party APIs to provide translation services. When a translation is requested, the text of the article is sent to the translation provider. We do not associate these requests with your personal identity.</p>
+        <h2 class="scroll-3d-text">4. Content and Translations</h2>
+        <p class="scroll-3d-text">CrossLens aggregates news content from various global publishers. We may use third-party APIs to provide translation services. When a translation is requested, the text of the article is sent to the translation provider. We do not associate these requests with your personal identity.</p>
 
-        <h2>5. Your Rights</h2>
-        <p class="subtitle">Since your reading history and preferences are stored locally on your device, you have complete control over this data. You can delete this data at any time by clearing the app's storage or uninstalling the application.</p>
+        <h2 class="scroll-3d-text">5. Your Rights</h2>
+        <p class="scroll-3d-text">Since your reading history and preferences are stored locally on your device, you have complete control over this data. You can delete this data at any time by clearing the app's storage or uninstalling the application.</p>
 
-        <h2>6. Changes to This Privacy Policy</h2>
-        <p class="subtitle">We may update this Privacy Policy from time to time as we add new features (such as live backend integration and accounts). We will notify you of any changes by updating the "Last Updated" date at the top of this policy and, if necessary, providing a notice within the app.</p>
+        <h2 class="scroll-3d-text">6. Changes to This Privacy Policy</h2>
+        <p class="scroll-3d-text">We may update this Privacy Policy from time to time as we add new features (such as live backend integration and accounts). We will notify you of any changes by updating the "Last Updated" date at the top of this policy and, if necessary, providing a notice within the app.</p>
 
-        <h2>7. Contact Us</h2>
-        <p class="subtitle">If you have any questions or concerns about this Privacy Policy, please contact us by creating an issue on our <a href="https://github.com/Mattjhagen/CrossLens" target="_blank">GitHub repository</a>.</p>
-    
+        <h2 class="scroll-3d-text">7. Contact Us</h2>
+        <p class="scroll-3d-text">If you have any questions or concerns about this Privacy Policy, please contact us by creating an issue on our <a href="https://github.com/Mattjhagen/CrossLens" target="_blank">GitHub repository</a>.</p>
+
     </div>
 
     <footer>
         <p>&copy; 2026 CrossLens.</p>
-        <div style="display: flex; gap: 2rem; margin-top: 1rem;">
-            <a href="privacy-policy.html">Privacy Policy</a>
-            <a href="terms.html">Terms</a>
+        <div style="display: flex; gap: 2rem; justify-content: center; margin-top: 2rem;">
+            <a href="https://github.com/Mattjhagen/CrossLens" target="_blank" style="color: var(--ink); font-weight: 500;">GitHub</a>
+            <a href="privacy-policy.html" style="color: var(--ink); font-weight: 500;">Privacy Policy</a>
+            <a href="terms.html" style="color: var(--ink); font-weight: 500;">Terms</a>
         </div>
     </footer>
 
-    <script>
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        });
-        document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
-    
-        function toggleTheme() {
-            const html = document.documentElement;
-            if (html.getAttribute('data-theme') === 'light') {
-                html.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                html.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
-        }
-    
-    </script>
+    <script src="main.js"></script>
 </body>
 </html>
