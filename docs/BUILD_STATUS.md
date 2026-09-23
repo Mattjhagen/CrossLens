@@ -1,7 +1,7 @@
 # CrossLens Build Status
 
-**Working Revision:** f1b25ec+ (uncommitted: fix theme application - MainActivity observes user preference)  
-**Working Tree:** Modified  
+**Working Revision:** 815d0a5 (fix: apply user theme preference in MainActivity)  
+**Working Tree:** Clean  
 **Last Updated:** 2026-09-22
 
 ## Environment
