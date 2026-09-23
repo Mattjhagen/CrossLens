@@ -174,6 +174,11 @@ Before real ranking ships, evaluate translation artifacts, duplicate/syndicated 
 
 Accounts, real subscriptions/billing, scraping, production backend deployment, live translation, and automated political labels are outside the initial build.
 
+Future concepts such as reader-controlled personalization, relevant
+notifications, local reporting, and AI-assisted editorial triage are tracked
+in the [product ideas backlog](docs/PRODUCT_IDEAS.md). They are not currently
+implemented.
+
 ## Project Structure
 
 ```
