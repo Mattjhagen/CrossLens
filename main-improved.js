@@ -23,15 +23,15 @@ function easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3);
 }
 
-// Hero 3D Rotation Animation (desktop only, not on mobile or reduced-motion)
+// Hero Device Rotation (desktop only)
 function initHeroAnimation() {
     if (prefersReducedMotion || window.innerWidth < 721) {
-        return; // Skip animation on mobile or if reduced motion preferred
+        return;
     }
 
     const heroWrap = document.querySelector('.hero-sticky-wrap');
     const heroSticky = document.querySelector('.hero-sticky');
-    const heroDevice = document.querySelector('.hero-device-phone');
+    const heroDevice = document.querySelector('.hero-device .android-device');
     const heroText = document.querySelector('.hero-text-col');
 
     if (!heroWrap || !heroSticky || !heroDevice) return;
@@ -41,65 +41,40 @@ function initHeroAnimation() {
         const wrapHeight = heroWrap.offsetHeight;
         const viewportHeight = window.innerHeight;
 
-        // Calculate scroll progress through the hero wrap (0 to 1)
+        // Calculate scroll progress (0 to 1)
         const scrollProgress = clamp(
-            (viewportHeight - wrapRect.top) / (wrapHeight - viewportHeight),
+            (viewportHeight - wrapRect.top) / (wrapHeight + viewportHeight * 0.3),
             0,
             1
         );
 
-        // Phase 1: Initial entrance (0-0.15)
-        // Phase 2: Hold and subtle rotate (0.15-0.6)
-        // Phase 3: Text fade out (0.6-1)
-
-        // Text fade based on scroll
-        if (scrollProgress < 0.6) {
+        // Text fades only after scrolling well past reading area
+        if (scrollProgress < 0.75) {
             heroText.style.opacity = '1';
             heroText.style.transform = 'translateY(0)';
         } else {
-            const fadeProgress = (scrollProgress - 0.6) / 0.4;
+            const fadeProgress = (scrollProgress - 0.75) / 0.25;
             const fadeEased = easeOutCubic(fadeProgress);
-            heroText.style.opacity = String(1 - fadeEased * 0.95);
-            heroText.style.transform = `translateY(${-fadeEased * 20}px)`;
+            heroText.style.opacity = String(1 - fadeEased * 0.92);
+            heroText.style.transform = `translateY(${-fadeEased * 12}px)`;
         }
 
-        // Phone 3D rotation (subtle, editorial)
-        if (scrollProgress > 0.15 && scrollProgress < 0.75) {
-            const rotateProgress = (scrollProgress - 0.15) / 0.6;
-            const rotateEased = Math.sin(rotateProgress * Math.PI); // Peak in middle
+        // Hero device on right: clockwise rotation
+        const rotateZ = scrollProgress * 2.8; // +2.8deg clockwise
+        const rotateY = scrollProgress * -5.2; // -5.2deg Y-axis
+        const rotateX = scrollProgress * 0.8; // +0.8deg X-axis
+        const scale = 1 - scrollProgress * 0.04; // 1.0 → 0.96
 
-            // Subtle rotation: max 8deg Y-axis, 3deg X-axis
-            const rotateY = rotateEased * 8;
-            const rotateX = rotateEased * 3;
-            const scale = 1 + (rotateEased * 0.05); // Slight scale up
-
-            heroDevice.style.transform = `
-                perspective(1200px)
-                rotateY(${rotateY}deg)
-                rotateX(${-rotateX}deg)
-                scale(${scale})
-                translateZ(${rotateEased * 20}px)
-            `;
-        } else if (scrollProgress >= 0.75) {
-            // Return to front-facing as next section arrives
-            const returnProgress = (scrollProgress - 0.75) / 0.25;
-            const returnEased = easeOutCubic(returnProgress);
-            const rotateY = 8 * (1 - returnEased);
-            const rotateX = 3 * (1 - returnEased);
-            const scale = 1.05 - (returnEased * 0.05);
-
-            heroDevice.style.transform = `
-                perspective(1200px)
-                rotateY(${rotateY}deg)
-                rotateX(${-rotateX}deg)
-                scale(${scale})
-            `;
-        } else {
-            heroDevice.style.transform = 'none';
-        }
+        heroDevice.style.transform = `
+            perspective(1500px)
+            rotateZ(${rotateZ}deg)
+            rotateY(${rotateY}deg)
+            rotateX(${rotateX}deg)
+            scale(${scale})
+        `;
 
         // Add 'deep' class when text should fade
-        if (scrollProgress > 0.6) {
+        if (scrollProgress > 0.75) {
             heroSticky.classList.add('deep');
         } else {
             heroSticky.classList.remove('deep');
@@ -114,9 +89,80 @@ function initHeroAnimation() {
     updateHeroAnimation();
 }
 
+// Story Section Device Rotations (desktop only)
+function initStoryDeviceRotations() {
+    if (prefersReducedMotion || window.innerWidth < 721) {
+        return;
+    }
+
+    const devices = document.querySelectorAll('.story-section .android-device[data-position]');
+
+    function updateDeviceRotations() {
+        devices.forEach(device => {
+            const rect = device.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const deviceCenter = rect.top + rect.height / 2;
+
+            // Calculate progress as device moves through viewport
+            // 0 = entering from bottom, 0.5 = centered, 1 = exiting top
+            const viewportProgress = clamp(
+                1 - ((deviceCenter - viewportHeight * 0.2) / (viewportHeight * 0.6)),
+                0,
+                1
+            );
+
+            // Smooth easing for natural feel
+            const eased = Math.sin(viewportProgress * Math.PI * 0.5);
+
+            const position = device.getAttribute('data-position');
+
+            if (position === 'left') {
+                // Left side: counterclockwise rotation
+                const rotateZ = eased * -2.4; // -2.4deg counterclockwise
+                const rotateY = eased * 5.6; // +5.6deg toward viewer
+                const rotateX = eased * -0.6; // -0.6deg X-axis
+                const scale = 0.96 + eased * 0.04; // 0.96 → 1.0
+                const translateY = (1 - eased) * 8; // 8px → 0
+
+                device.style.transform = `
+                    perspective(1500px)
+                    rotateZ(${rotateZ}deg)
+                    rotateY(${rotateY}deg)
+                    rotateX(${rotateX}deg)
+                    scale(${scale})
+                    translateY(${translateY}px)
+                `;
+            } else {
+                // Right side: clockwise rotation
+                const rotateZ = eased * 2.4; // +2.4deg clockwise
+                const rotateY = eased * -5.6; // -5.6deg toward viewer
+                const rotateX = eased * 0.6; // +0.6deg X-axis
+                const scale = 0.96 + eased * 0.04; // 0.96 → 1.0
+                const translateY = (1 - eased) * 8; // 8px → 0
+
+                device.style.transform = `
+                    perspective(1500px)
+                    rotateZ(${rotateZ}deg)
+                    rotateY(${rotateY}deg)
+                    rotateX(${rotateX}deg)
+                    scale(${scale})
+                    translateY(${translateY}px)
+                `;
+            }
+        });
+    }
+
+    window.addEventListener('scroll', () => {
+        requestAnimationFrame(updateDeviceRotations);
+    }, { passive: true });
+
+    // Initial state
+    updateDeviceRotations();
+}
+
 // Scroll-reveal for sections
 function initScrollReveal() {
-    const revealElements = document.querySelectorAll('.reveal, .pop-card, .caption-block');
+    const revealElements = document.querySelectorAll('.reveal, .pop-card');
 
     if (prefersReducedMotion) {
         // Show everything immediately
@@ -143,38 +189,7 @@ function initScrollReveal() {
     revealElements.forEach(el => observer.observe(el));
 }
 
-// Pinned device image swap
-function initPinnedImageSwap() {
-    const pinnedImg = document.getElementById('pinned-img');
-    const captionBlocks = document.querySelectorAll('.caption-block[data-pinned-img]');
-
-    if (!pinnedImg || !captionBlocks.length) return;
-
-    const observerOptions = {
-        root: null,
-        rootMargin: '-40% 0px',
-        threshold: 0
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const newSrc = entry.target.getAttribute('data-pinned-img');
-                if (newSrc && pinnedImg.src !== newSrc) {
-                    pinnedImg.style.opacity = '0.5';
-                    setTimeout(() => {
-                        pinnedImg.src = newSrc;
-                        pinnedImg.style.opacity = '1';
-                    }, 150);
-                }
-            }
-        });
-    }, observerOptions);
-
-    captionBlocks.forEach(block => observer.observe(block));
-}
-
-// Gallery keyboard navigation
+// Gallery horizontal scroll navigation
 function initGalleryNavigation() {
     const scroller = document.querySelector('.gallery-scroller');
     const slides = document.querySelectorAll('.gallery-slide');
@@ -225,8 +240,8 @@ function initHeroEntrance() {
 document.addEventListener('DOMContentLoaded', () => {
     initHeroEntrance();
     initHeroAnimation();
+    initStoryDeviceRotations();
     initScrollReveal();
-    initPinnedImageSwap();
     initGalleryNavigation();
 });
 
@@ -235,7 +250,7 @@ let resizeTimeout;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-        // Re-init only hero animation on resize
         initHeroAnimation();
+        initStoryDeviceRotations();
     }, 250);
 });

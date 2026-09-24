@@ -80,14 +80,14 @@
     .header-logo {
       font-size: 1.1rem; font-weight: 900; letter-spacing: -0.03em;
       color: var(--ink); text-decoration: none;
-      display: flex; align-items: center; gap: 0.5rem;
+      display: flex; align-items: center; gap: 8px;
     }
     .header-logo-icon {
-      width: 24px; height: 24px;
+      width: 22px; height: 22px;
       display: block; flex-shrink: 0;
     }
     @media (max-width: 720px) {
-      .header-logo-icon { width: 22px; height: 22px; }
+      .header-logo-icon { width: 20px; height: 20px; }
     }
     .header-nav { display: flex; align-items: center; gap: 1.5rem; }
     .header-nav a {
@@ -149,18 +149,19 @@
       font-weight: 900; line-height: 0.97;
       letter-spacing: -0.055em;
       text-align: left;
+      color: var(--ink);
       /* Hard cap so it never wraps awkwardly into the device column */
       max-width: 12ch;
       opacity: 0; transform: translateY(24px);
       transition: opacity 0.7s 0.08s var(--ease-out), transform 0.7s 0.08s var(--ease-out);
     }
     .hero-sticky.entered .hero-headline { opacity: 1; transform: none; }
-    .hero-line2 { color: var(--ink-secondary); font-style: italic; }
+    .hero-line2 { color: #b8b8bd; font-style: italic; }
 
     .hero-sub {
       margin-top: 1.6rem;
       font-size: clamp(0.95rem, 1.6vw, 1.2rem);
-      font-weight: 400; color: var(--ink-secondary);
+      font-weight: 400; color: #c1c1c6;
       line-height: 1.55; text-align: left;
       max-width: 42ch;
       opacity: 0; transform: translateY(16px);
@@ -297,6 +298,7 @@
     .reveal[data-delay="1"] { transition-delay: 0.1s; }
     .reveal[data-delay="2"] { transition-delay: 0.2s; }
     .reveal[data-delay="3"] { transition-delay: 0.3s; }
+    .reveal[data-delay="4"] { transition-delay: 0.4s; }
 
     /* Card pop-up with subtle perspective */
     .pop-card {
@@ -312,135 +314,127 @@
     .pop-card.visible { opacity: 1; transform: none; }
 
     /* =====================
-       ANDROID DEVICE FRAMES (reusable component)
+       ANDROID DEVICE (reusable product component)
     ===================== */
-    .device-frame {
+    .android-device {
       position: relative;
-      display: flex; align-items: center; justify-content: center;
-      padding: 14px;
-      background: linear-gradient(135deg, #2a2a2d 0%, #1a1a1d 100%);
-      border-radius: 44px;
-      box-shadow:
-        0 60px 120px rgba(0,0,0,0.5),
-        0 20px 40px rgba(0,0,0,0.3),
-        inset 0 0 0 0.5px rgba(255,255,255,0.08);
-    }
-    [data-theme="light"] .device-frame {
-      background: linear-gradient(135deg, #3a3a3d 0%, #2a2a2d 100%);
-      box-shadow:
-        0 60px 120px rgba(0,0,0,0.15),
-        0 20px 40px rgba(0,0,0,0.1),
-        inset 0 0 0 0.5px rgba(255,255,255,0.12);
+      width: 100%;
+      max-width: 340px;
+      /* Outer case gets scroll-driven transforms */
+      transform-style: preserve-3d;
+      will-change: transform;
     }
 
-    /* Earpiece notch */
-    .device-frame::before {
-      content: '';
-      position: absolute;
-      top: 22px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 3px;
-      background: rgba(0,0,0,0.8);
-      border-radius: 1.5px;
-      z-index: 10;
+    /* Outer case: bezel, shadow, highlight */
+    .device-case {
+      position: relative;
+      padding: 13px;
+      background: linear-gradient(145deg, #2b2b2e 0%, #1b1b1e 100%);
+      border-radius: 42px;
+      box-shadow:
+        0 50px 100px rgba(0,0,0,0.55),
+        0 16px 32px rgba(0,0,0,0.35),
+        inset 0 0 0 0.5px rgba(255,255,255,0.09);
+    }
+    [data-theme="light"] .device-case {
+      background: linear-gradient(145deg, #3b3b3e 0%, #2b2b2e 100%);
+      box-shadow:
+        0 50px 100px rgba(0,0,0,0.18),
+        0 16px 32px rgba(0,0,0,0.12),
+        inset 0 0 0 0.5px rgba(255,255,255,0.14);
     }
 
-    /* Front camera */
-    .device-frame::after {
+    /* Earpiece speaker */
+    .device-case::before {
       content: '';
       position: absolute;
       top: 21px;
       left: 50%;
-      transform: translateX(38px);
-      width: 8px;
-      height: 8px;
-      background: radial-gradient(circle, #1a2a3a 50%, #0a0a0a 100%);
-      border-radius: 50%;
-      z-index: 10;
-      opacity: 0.8;
+      transform: translateX(-50%);
+      width: 72px;
+      height: 2.8px;
+      background: rgba(0,0,0,0.82);
+      border-radius: 1.4px;
+      z-index: 12;
     }
 
-    .device-frame img {
-      border-radius: 32px;
+    /* Front camera */
+    .device-case::after {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(34px);
+      width: 7px;
+      height: 7px;
+      background: radial-gradient(circle, #1a2a3a 40%, #0a0a0a 100%);
+      border-radius: 50%;
+      z-index: 12;
+      opacity: 0.84;
+    }
+
+    /* Inner screen: clipping boundary for screenshot */
+    .device-screen {
+      position: relative;
       width: 100%;
-      display: block;
+      aspect-ratio: 9 / 19.5;
       background: #000;
-      box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.2);
+      border-radius: 30px;
+      overflow: hidden; /* Critical: clips screenshot */
+    }
+
+    /* Screenshot fills screen, never bleeds into bezel */
+    .device-screen img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      object-position: center;
     }
 
     /* Smaller variant for gallery */
-    .device-frame-sm {
-      padding: 12px;
+    .android-device-sm {
+      max-width: 280px;
+    }
+    .android-device-sm .device-case {
+      padding: 11px;
       border-radius: 36px;
     }
-    .device-frame-sm::before {
-      top: 20px;
-      width: 60px;
-      height: 2.5px;
-    }
-    .device-frame-sm::after {
+    .android-device-sm .device-case::before {
       top: 19px;
+      width: 58px;
+      height: 2.4px;
+    }
+    .android-device-sm .device-case::after {
+      top: 18px;
       transform: translateX(28px);
       width: 6px;
       height: 6px;
     }
-    .device-frame-sm img {
+    .android-device-sm .device-screen {
       border-radius: 26px;
     }
 
     /* =====================
-       PREMIUM PHONE FRAME (hero device)
+       HERO DEVICE
     ===================== */
-    .hero-device-phone {
-      position: relative;
-      width: clamp(220px, 38vw, 380px);
-      max-height: calc(100vh - 52px - 4rem);
+    .hero-device {
+      max-width: 320px;
       opacity: 0;
-      transform: translateY(36px) scale(0.96);
-      transition: opacity 0.85s 0.28s var(--ease-out), transform 0.85s 0.28s var(--ease-out);
-      transform-style: preserve-3d;
-      will-change: transform;
+      transform: translateY(20px) scale(0.98);
+      transition: opacity 0.7s 0.3s var(--ease-out), transform 0.7s 0.3s var(--ease-out);
     }
-    .hero-sticky.entered .hero-device-phone { opacity: 1; transform: none; }
-
-    .phone-frame-wrapper {
-      position: relative;
-      width: 100%;
-      /* Android aspect ratio ~2:1 */
-      aspect-ratio: 400 / 820;
-      filter: drop-shadow(0 24px 60px rgba(0,0,0,0.5)) drop-shadow(0 8px 20px rgba(0,0,0,0.3));
-    }
-    [data-theme="light"] .phone-frame-wrapper {
-      filter: drop-shadow(0 24px 60px rgba(0,0,0,0.12)) drop-shadow(0 8px 20px rgba(0,0,0,0.08));
+    .hero-sticky.entered .hero-device {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
 
-    .phone-screen-img {
-      position: absolute;
-      /* Inset to match SVG screen area (10px margins in 400x820 viewBox) */
-      left: 2.5%;
-      top: 1.22%;
-      width: 95%;
-      height: 97.56%;
-      object-fit: cover;
-      border-radius: 8%;
-      z-index: 1;
-      background: #1a1a1d;
-    }
-
-    .phone-frame-svg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    /* Reduced motion: disable 3D transforms */
+    /* Reduced motion: disable all transforms */
     @media (prefers-reduced-motion: reduce) {
-      .hero-device-phone {
+      .android-device {
+        transform: none !important;
+      }
+      .hero-device {
         transform: none !important;
         transition: opacity 0.3s !important;
       }
@@ -722,18 +716,18 @@
   <!-- ====== HEADER ====== -->
   <header>
     <a class="header-logo" href="#top">
-      <svg class="header-logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="header-logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="header-lens-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#2997ff;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#0066cc;stop-opacity:1" />
+            <stop offset="0%" stop-color="#2997ff"/>
+            <stop offset="100%" stop-color="#0066cc"/>
           </linearGradient>
         </defs>
-        <circle cx="50" cy="50" r="50" fill="#1a1a1d"/>
-        <circle cx="38" cy="50" r="22" fill="none" stroke="url(#header-lens-gradient)" stroke-width="3.5" opacity="0.85"/>
-        <circle cx="62" cy="50" r="22" fill="none" stroke="#ffffff" stroke-width="3.5" opacity="0.75"/>
-        <circle cx="50" cy="50" r="8" fill="url(#header-lens-gradient)" opacity="0.9"/>
-        <circle cx="50" cy="50" r="5" fill="#ffffff" opacity="0.95"/>
+        <circle cx="40" cy="40" r="40" fill="#1a1a1d"/>
+        <circle cx="30" cy="40" r="18" fill="none" stroke="url(#header-lens-gradient)" stroke-width="3.2" opacity="0.88"/>
+        <circle cx="50" cy="40" r="18" fill="none" stroke="#ffffff" stroke-width="3.2" opacity="0.78"/>
+        <circle cx="40" cy="40" r="6.5" fill="url(#header-lens-gradient)" opacity="0.92"/>
+        <circle cx="40" cy="40" r="4" fill="#ffffff" opacity="0.96"/>
       </svg>
       CrossLens
     </a>
@@ -764,41 +758,20 @@
         <p class="hero-sub">CrossLens lets you follow the same story across countries, languages, and institutions — side by side, with sources you can inspect.</p>
       </div>
 
-      <!-- Right: device screenshot with premium phone frame -->
+      <!-- Right: device screenshot -->
       <div class="hero-device-col">
-        <div class="hero-device-phone">
-          <div class="phone-frame-wrapper">
-            <svg class="phone-frame-svg" viewBox="0 0 400 820" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <defs>
-                <linearGradient id="frame-edge" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style="stop-color:#2a2a2d;stop-opacity:1" />
-                  <stop offset="100%" style="stop-color:#1a1a1d;stop-opacity:1" />
-                </linearGradient>
-                <filter id="frame-shadow">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-                  <feOffset dx="0" dy="2" result="offsetblur"/>
-                  <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
-                  <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-              </defs>
-              <rect x="0" y="0" width="400" height="820" rx="44" fill="url(#frame-edge)" filter="url(#frame-shadow)"/>
-              <rect x="8" y="8" width="384" height="804" rx="38" fill="#1d1d1f" stroke="#2a2a2d" stroke-width="0.5"/>
-              <rect x="10" y="10" width="380" height="800" rx="32" fill="#000"/>
-              <rect x="150" y="20" width="100" height="3" rx="1.5" fill="#0a0a0a" opacity="0.8"/>
-              <circle cx="270" cy="21.5" r="5" fill="#0a0a0a" opacity="0.8"/>
-              <circle cx="270" cy="21.5" r="2.5" fill="#1a2a3a" opacity="0.6"/>
-              <rect x="8.5" y="8.5" width="383" height="803" rx="37.5" fill="none" stroke="#3a3a3d" stroke-width="0.5" opacity="0.3"/>
-            </svg>
-            <img
-              class="phone-screen-img"
-              src="screenshots/home-dark.png"
-              alt="CrossLens home feed showing clustered global stories"
-              width="380"
-              height="800"
-              loading="eager"
-              fetchpriority="high"
-              onerror="this.style.border='2px solid red'; console.error('Hero screenshot failed to load');"
-            >
+        <div class="android-device hero-device">
+          <div class="device-case">
+            <div class="device-screen">
+              <img
+                src="screenshots/home-dark.png"
+                alt="CrossLens home feed showing clustered global stories"
+                width="1080"
+                height="2400"
+                loading="eager"
+                fetchpriority="high"
+              >
+            </div>
           </div>
         </div>
       </div>
@@ -816,24 +789,34 @@
       <p class="story-body reveal" data-delay="2">Every cluster in CrossLens represents a single real-world event — reported by sources across countries and languages. The Home feed shows you how many sources are covering it, which regions, and how widely perspectives differ.</p>
       <p class="story-body reveal" data-delay="3">Source coverage is grouped, not ranked. A country of origin is context for where a source publishes — it does not imply a single national viewpoint.</p>
     </div>
-    <div class="device-frame reveal" data-delay="1">
-      <img
-        src="screenshots/home-light.png"
-        alt="CrossLens home feed showing story clusters from multiple countries"
-        width="400"
-        loading="lazy"
-      >
+    <div class="android-device reveal" data-delay="1" data-position="right">
+      <div class="device-case">
+        <div class="device-screen">
+          <img
+            src="screenshots/home-light.png"
+            alt="CrossLens home feed showing story clusters from multiple countries"
+            width="1080"
+            height="2400"
+            loading="lazy"
+          >
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="two-col story-section" style="padding-top: 0;">
-    <div class="device-frame reveal">
-      <img
-        src="screenshots/story-detail.png"
-        alt="CrossLens story detail screen showing event summary, attributed claims, and source list"
-        width="400"
-        loading="lazy"
-      >
+    <div class="android-device reveal" data-position="left">
+      <div class="device-case">
+        <div class="device-screen">
+          <img
+            src="screenshots/story-detail.png"
+            alt="CrossLens story detail screen showing event summary, attributed claims, and source list"
+            width="1080"
+            height="2400"
+            loading="lazy"
+          >
+        </div>
+      </div>
     </div>
     <div>
       <p class="story-label reveal" data-delay="1">Inside a story</p>
@@ -842,45 +825,27 @@
     </div>
   </div>
 
-  <!-- ====== ACT 2: Evidence stays visible — PINNED DEVICE ====== -->
+  <!-- ====== ACT 2: Evidence and comparison ====== -->
   <div class="divider"></div>
 
-  <div class="pinned-wrap" id="evidence">
-    <div class="pinned-device-col">
-      <div class="device-frame">
-        <img
-          id="pinned-img"
-          src="screenshots/comparison-free.png"
-          alt="CrossLens comparison screen"
-          width="360"
-          loading="lazy"
-        >
-      </div>
+  <div class="two-col story-section" id="evidence">
+    <div>
+      <p class="story-label reveal">Comparison view</p>
+      <h2 class="story-headline reveal" data-delay="1">Evidence stays<br>visible.</h2>
+      <p class="story-body reveal" data-delay="2">The CrossLens screen places two source perspectives side by side around the same event. Original headlines, translated excerpts, and framing observations appear together — so you can see differences without having to leave the app.</p>
+      <p class="story-body reveal" data-delay="3">Frame observations are labeled with the analysis method and confidence level. CrossLens describes what it found in the sampled articles — it does not declare claims verified.</p>
     </div>
-    <div class="pinned-copy-col">
-      <div class="caption-block" data-pinned-img="screenshots/comparison-free.png">
-        <p class="story-label">Comparison — CrossLens</p>
-        <h2 class="caption-headline">Evidence stays visible.</h2>
-        <p class="caption-body">The CrossLens screen places two source perspectives side by side around the same event. Original headlines, translated excerpts, and framing observations appear together — so you can see differences without having to leave the app.</p>
-        <p class="caption-note">Note: Frame observations are labeled with the analysis method and confidence level. CrossLens describes what it found in the sampled articles — it does not declare claims verified.</p>
-      </div>
-
-      <div class="caption-block" data-pinned-img="screenshots/comparison-plus.png">
-        <p class="caption-label">CrossLens Plus</p>
-        <h2 class="caption-headline">Read the original reporting.</h2>
-        <p class="caption-body">Tap any source card to open the original article. Every translated headline is labeled with its source language, translation method, and the date the translation was generated. The original text is always one tap away.</p>
-      </div>
-
-      <div class="caption-block" data-pinned-img="screenshots/comparison-plus.png">
-        <p class="caption-label">Translation provenance</p>
-        <h2 class="caption-headline">See translation provenance.</h2>
-        <p class="caption-body">CrossLens preserves the original alongside the translation — and discloses whether a translation is human-reviewed, machine-generated, or unavailable. Missing translations fall back to the original with a visible explanation.</p>
-      </div>
-
-      <div class="caption-block" data-pinned-img="screenshots/story-detail.png">
-        <p class="caption-label">Claims & Evidence</p>
-        <h2 class="caption-headline">Understand agreement and evidence limits.</h2>
-        <p class="caption-body">A corroborated claim still needs evidence. An apparent omission means "not found in this analyzed sample," not proof of intentional suppression. CrossLens helps you inspect reporting — it does not replace your judgment.</p>
+    <div class="android-device reveal" data-delay="1" data-position="right">
+      <div class="device-case">
+        <div class="device-screen">
+          <img
+            src="screenshots/comparison-plus.png"
+            alt="CrossLens comparison screen with side-by-side sources"
+            width="1080"
+            height="2400"
+            loading="lazy"
+          >
+        </div>
       </div>
     </div>
   </div>
@@ -889,19 +854,24 @@
   <div class="divider"></div>
 
   <div class="two-col story-section" id="your-lens">
-    <div>
-      <p class="story-label reveal">Your Lens, Under Your Control</p>
-      <h2 class="story-headline reveal" data-delay="1">Preferences are yours.<br>Not ours.</h2>
-      <p class="story-body reveal" data-delay="2">CrossLens Plus lets you surface more of what matters to you — by region, topic, or language. These preferences are stored locally on your device. They never alter the source evidence, editorial review decisions, or the underlying Lens Gap assessment.</p>
-      <p class="story-body reveal" data-delay="3">Every preference is reversible. Resetting your settings never changes the reporting; it only changes what you see first.</p>
+    <div class="android-device reveal" data-position="left">
+      <div class="device-case">
+        <div class="device-screen">
+          <img
+            src="screenshots/settings-plus.png"
+            alt="CrossLens Plus settings screen showing local preferences"
+            width="1080"
+            height="2400"
+            loading="lazy"
+          >
+        </div>
+      </div>
     </div>
-    <div class="device-frame reveal" data-delay="1">
-      <img
-        src="screenshots/settings-plus.png"
-        alt="CrossLens Plus settings screen showing local preferences"
-        width="380"
-        loading="lazy"
-      >
+    <div>
+      <p class="story-label reveal" data-delay="1">Your Lens, Under Your Control</p>
+      <h2 class="story-headline reveal" data-delay="2">Preferences are yours.<br>Not ours.</h2>
+      <p class="story-body reveal" data-delay="3">CrossLens Plus lets you surface more of what matters to you — by region, topic, or language. These preferences are stored locally on your device. They never alter the source evidence, editorial review decisions, or the underlying Lens Gap assessment.</p>
+      <p class="story-body reveal" data-delay="4">Every preference is reversible. Resetting your settings never changes the reporting; it only changes what you see first.</p>
     </div>
   </div>
 
@@ -919,20 +889,25 @@
   <!-- ====== ACT 4: Editorial Review ====== -->
   <div class="divider"></div>
 
-  <div class="editorial-callout reveal" style="padding: 5rem 5%;">
-    <div class="device-frame device-frame-sm">
-      <img
-        src="screenshots/explore-dark.png"
-        alt="CrossLens Explore screen with region and topic filters"
-        width="300"
-        loading="lazy"
-      >
-    </div>
+  <div class="two-col story-section" style="padding-top: 0;">
     <div>
-      <p class="story-label">Editorial Review — Demo</p>
-      <h2 class="story-headline" style="font-size: clamp(2rem, 3.5vw, 3.5rem);">Human review built into the workflow.</h2>
-      <p class="story-body" style="margin-top: 1.2rem;">The Editorial Review screen is an offline prototype demonstrating how human editors will approve, reject, or defer ingestion candidates — including cross-language matches and syndication detection.</p>
-      <p class="story-body" style="margin-top: 0.8rem;">This is not automated fact-checking. Every review note is attributed and timestamped. The demo illustrates the intended workflow; no live editorial decisions are made in the current release.</p>
+      <p class="story-label reveal">Explore</p>
+      <h2 class="story-headline reveal" data-delay="1">Filter, search,<br>and discover.</h2>
+      <p class="story-body reveal" data-delay="2">The Explore screen lets you filter stories by region, topic, and language. Combine filters to surface specific coverage patterns, or clear them all to return to the full feed.</p>
+      <p class="story-body reveal" data-delay="3">Filters are tools for discovery, not curation. They show you what exists in the available reporting — they don't tell you what to trust.</p>
+    </div>
+    <div class="android-device reveal" data-delay="1" data-position="right">
+      <div class="device-case">
+        <div class="device-screen">
+          <img
+            src="screenshots/explore-dark.png"
+            alt="CrossLens Explore screen with region and topic filters"
+            width="1080"
+            height="2400"
+            loading="lazy"
+          >
+        </div>
+      </div>
     </div>
   </div>
 
@@ -944,8 +919,12 @@
     </div>
     <div class="gallery-scroller" id="gallery-scroller" role="region" aria-label="App screenshot gallery">
       <div class="gallery-slide">
-        <div class="device-frame device-frame-sm">
-          <img src="screenshots/home-dark.png" alt="CrossLens Home feed — dark mode" loading="lazy">
+        <div class="android-device android-device-sm">
+          <div class="device-case">
+            <div class="device-screen">
+              <img src="screenshots/home-dark.png" alt="CrossLens Home feed — dark mode" width="1080" height="2400" loading="lazy">
+            </div>
+          </div>
         </div>
         <div class="gallery-caption">
           <strong>Home feed</strong>
@@ -953,8 +932,12 @@
         </div>
       </div>
       <div class="gallery-slide">
-        <div class="device-frame device-frame-sm">
-          <img src="screenshots/story-detail.png" alt="Story detail screen" loading="lazy">
+        <div class="android-device android-device-sm">
+          <div class="device-case">
+            <div class="device-screen">
+              <img src="screenshots/story-detail.png" alt="Story detail screen" width="1080" height="2400" loading="lazy">
+            </div>
+          </div>
         </div>
         <div class="gallery-caption">
           <strong>Story detail</strong>
@@ -962,8 +945,12 @@
         </div>
       </div>
       <div class="gallery-slide">
-        <div class="device-frame device-frame-sm">
-          <img src="screenshots/comparison-plus.png" alt="CrossLens comparison — Plus" loading="lazy">
+        <div class="android-device android-device-sm">
+          <div class="device-case">
+            <div class="device-screen">
+              <img src="screenshots/comparison-plus.png" alt="CrossLens comparison — Plus" width="1080" height="2400" loading="lazy">
+            </div>
+          </div>
         </div>
         <div class="gallery-caption">
           <strong>Comparison (Plus)</strong>
@@ -971,8 +958,12 @@
         </div>
       </div>
       <div class="gallery-slide">
-        <div class="device-frame device-frame-sm">
-          <img src="screenshots/settings-plus.png" alt="Settings — Plus preferences" loading="lazy">
+        <div class="android-device android-device-sm">
+          <div class="device-case">
+            <div class="device-screen">
+              <img src="screenshots/settings-plus.png" alt="Settings — Plus preferences" width="1080" height="2400" loading="lazy">
+            </div>
+          </div>
         </div>
         <div class="gallery-caption">
           <strong>Personal settings</strong>
@@ -980,8 +971,12 @@
         </div>
       </div>
       <div class="gallery-slide">
-        <div class="device-frame device-frame-sm">
-          <img src="screenshots/explore-dark.png" alt="Explore screen — dark mode" loading="lazy">
+        <div class="android-device android-device-sm">
+          <div class="device-case">
+            <div class="device-screen">
+              <img src="screenshots/explore-dark.png" alt="Explore screen — dark mode" width="1080" height="2400" loading="lazy">
+            </div>
+          </div>
         </div>
         <div class="gallery-caption">
           <strong>Explore</strong>
