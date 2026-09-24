@@ -97,19 +97,29 @@ function initGalleryNavigation() {
   const scroller = document.querySelector('.gallery-scroller');
   const slides = [...document.querySelectorAll('.gallery-slide')];
   const dots = [...document.querySelectorAll('.gallery-dot')];
-  if (!scroller || !slides.length) return;
+  if (!scroller || !slides.length || dots.length !== slides.length) return;
+
+  const maxScrollLeft = () => Math.max(scroller.scrollWidth - scroller.clientWidth, 0);
+
   const updateDots = () => {
-    const slideWidth = slides[0].offsetWidth + 32;
-    const activeIndex = clamp(Math.round(scroller.scrollLeft / slideWidth), 0, slides.length - 1);
+    // The gallery shows a different number of cards at each breakpoint. Map the
+    // real, scrollable track rather than guessing at a slide width and gap.
+    const maximum = maxScrollLeft();
+    const progress = maximum === 0 ? 0 : scroller.scrollLeft / maximum;
+    const activeIndex = clamp(Math.round(progress * (slides.length - 1)), 0, slides.length - 1);
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index === activeIndex);
       dot.setAttribute('aria-selected', String(index === activeIndex));
+      dot.tabIndex = index === activeIndex ? 0 : -1;
     });
   };
+
   scroller.addEventListener('scroll', updateDots, { passive: true });
   dots.forEach((dot, index) => dot.addEventListener('click', () => {
-    scroller.scrollTo({ left: (slides[0].offsetWidth + 32) * index, behavior: 'smooth' });
+    const target = maxScrollLeft() * (index / (slides.length - 1));
+    scroller.scrollTo({ left: target, behavior: 'smooth' });
   }));
+  window.addEventListener('resize', updateDots, { passive: true });
   updateDots();
 }
 
