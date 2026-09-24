@@ -3,6 +3,23 @@
   "name": "crosslens-api",
   "main": "src/index.js",
   "compatibility_date": "2026-09-24",
-  "triggers": { "crons": ["17 */2 * * *"] },
-  "d1_databases": [{ "binding": "DB", "database_name": "crosslens", "database_id": "6805b6f8-8c2f-4325-b5aa-3a5468a5abf1", "migrations_dir": "migrations" }]
+  "triggers": {
+    "crons": [
+      "17 */2 * * *"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "crosslens",
+      "database_id": "6805b6f8-8c2f-4325-b5aa-3a5468a5abf1",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "api.crosslens.space",
+      "custom_domain": true
+    }
+  ]
 }
