@@ -17,18 +17,26 @@ if (hasKeystoreFile) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
-// Environment variables take precedence over keystore.properties
-fun getSigningProperty(propertyName: String, envVarName: String): String? {
-    return System.getenv(envVarName) ?: keystoreProperties.getProperty(propertyName)
+// Priority: Gradle properties > Environment variables > keystore.properties
+fun getSigningProperty(propertyName: String, envVarName: String, gradlePropName: String): String? {
+    return project.findProperty(gradlePropName) as? String
+        ?: System.getenv(envVarName)
+        ?: keystoreProperties.getProperty(propertyName)
 }
 
-val storeFilePath = getSigningProperty("storeFile", "CROSSLENS_STORE_FILE")
-val storePassword = getSigningProperty("storePassword", "CROSSLENS_STORE_PASSWORD")
-val keyAlias = getSigningProperty("keyAlias", "CROSSLENS_KEY_ALIAS")
-val keyPassword = getSigningProperty("keyPassword", "CROSSLENS_KEY_PASSWORD")
+val storeFilePath = getSigningProperty("storeFile", "CROSSLENS_STORE_FILE", "crosslens.storeFile")
+val storePassword = getSigningProperty("storePassword", "CROSSLENS_STORE_PASSWORD", "crosslens.storePassword")
+val keyAlias = getSigningProperty("keyAlias", "CROSSLENS_KEY_ALIAS", "crosslens.keyAlias")
+val keyPassword = getSigningProperty("keyPassword", "CROSSLENS_KEY_PASSWORD", "crosslens.keyPassword")
 
 val hasSigningConfig = storeFilePath != null && storePassword != null &&
                        keyAlias != null && keyPassword != null
+
+// Capture non-null values for use in signing config
+val finalStoreFilePath = storeFilePath ?: ""
+val finalStorePassword = storePassword ?: ""
+val finalKeyAlias = keyAlias ?: ""
+val finalKeyPassword = keyPassword ?: ""
 
 android {
     namespace = "com.crosslens.app"
@@ -55,12 +63,13 @@ android {
 
     signingConfigs {
         if (hasSigningConfig) {
+            println("DEBUG: Creating release signing config")
             create("release") {
-                val storeFile = File(storeFilePath!!)
+                val storeFile = File(finalStoreFilePath)
                 if (!storeFile.exists()) {
                     throw GradleException(
                         """
-                        |Release keystore file not found: $storeFilePath
+                        |Release keystore file not found: $finalStoreFilePath
                         |
                         |Please ensure the keystore file exists at the specified path.
                         |See docs/RELEASE_SIGNING.md for setup instructions.
@@ -69,10 +78,13 @@ android {
                 }
 
                 this.storeFile = storeFile
-                this.storePassword = storePassword
-                this.keyAlias = keyAlias
-                this.keyPassword = keyPassword
+                this.storePassword = finalStorePassword
+                this.keyAlias = finalKeyAlias
+                this.keyPassword = finalKeyPassword
+                println("DEBUG: Release signing config created with keystore: ${storeFile.absolutePath}")
             }
+        } else {
+            println("DEBUG: No signing config - hasSigningConfig is false")
         }
     }
 
@@ -91,8 +103,11 @@ android {
 
             // Apply signing configuration if available
             if (hasSigningConfig) {
+                println("DEBUG: Applying signing config to release build type")
                 signingConfig = signingConfigs.getByName("release")
+                println("DEBUG: Signing config applied: ${signingConfig?.name}")
             } else {
+                println("DEBUG: NOT applying signing config - hasSigningConfig is false")
                 // Fail with clear instructions if signing config is missing
                 gradle.taskGraph.whenReady {
                     if (hasTask(":app:assembleRelease") ||
