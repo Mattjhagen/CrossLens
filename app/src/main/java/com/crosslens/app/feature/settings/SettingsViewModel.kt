@@ -41,6 +41,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateShowForYou(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.updateShowForYou(enabled)
+        }
+    }
+
     fun previewPlus() {
         viewModelScope.launch {
             entitlementRepository.setAccessTier(AccessTier.PLUS_DEMO)

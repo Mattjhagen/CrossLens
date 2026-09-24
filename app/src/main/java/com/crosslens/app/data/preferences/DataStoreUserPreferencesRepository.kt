@@ -27,6 +27,7 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         val DEMO_LOCAL_LOCATION = stringPreferencesKey("demo_local_location")
         val SHOW_LOCAL_ONLY = booleanPreferencesKey("show_local_only")
         val LAST_REFRESHED_TIME = longPreferencesKey("last_refreshed_time")
+        val SHOW_FOR_YOU = booleanPreferencesKey("show_for_you")
     }
 
     override val preferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
@@ -42,7 +43,8 @@ class DataStoreUserPreferencesRepository @Inject constructor(
             reducedMotion = prefs[PreferencesKeys.REDUCED_MOTION] ?: false,
             demoLocalLocation = prefs[PreferencesKeys.DEMO_LOCAL_LOCATION],
             showLocalOnly = prefs[PreferencesKeys.SHOW_LOCAL_ONLY] ?: false,
-            lastRefreshedTime = prefs[PreferencesKeys.LAST_REFRESHED_TIME]?.let { Instant.ofEpochMilli(it) }
+            lastRefreshedTime = prefs[PreferencesKeys.LAST_REFRESHED_TIME]?.let { Instant.ofEpochMilli(it) },
+            showForYou = prefs[PreferencesKeys.SHOW_FOR_YOU] ?: true
         )
     }
 
@@ -98,5 +100,9 @@ class DataStoreUserPreferencesRepository @Inject constructor(
 
     override suspend fun updateLastRefreshedTime(time: Instant) {
         dataStore.edit { it[PreferencesKeys.LAST_REFRESHED_TIME] = time.toEpochMilli() }
+    }
+
+    override suspend fun updateShowForYou(enabled: Boolean) {
+        dataStore.edit { it[PreferencesKeys.SHOW_FOR_YOU] = enabled }
     }
 }

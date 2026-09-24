@@ -46,6 +46,9 @@ fun HomeScreen(
     val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val lastRefreshedTime by viewModel.lastRefreshedTime.collectAsStateWithLifecycle()
+    val showForYou by viewModel.showForYou.collectAsStateWithLifecycle()
+    val forYouRecommendations by viewModel.forYouRecommendations.collectAsStateWithLifecycle()
+    val forYouEligible by viewModel.forYouEligible.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -227,6 +230,24 @@ fun HomeScreen(
                             }
                         }
 
+                        // For You section
+                        if (showForYou && forYouEligible && forYouRecommendations.isNotEmpty()) {
+                            item {
+                                ForYouSection(
+                                    recommendations = forYouRecommendations,
+                                    onStoryClick = onStoryClick,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                        } else if (showForYou && !forYouEligible) {
+                            item {
+                                ForYouNotEligibleCard(
+                                    onSettingsClick = onSettingsClick,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                        }
+
                         items(state.stories) { story ->
                             StoryCard(
                                 story = story,
@@ -303,6 +324,154 @@ private fun StoryCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+private fun ForYouSection(
+    recommendations: List<com.crosslens.app.core.model.PersonalizedRecommendation>,
+    onStoryClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.for_you_title),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = stringResource(R.string.for_you_notice),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        recommendations.forEach { recommendation ->
+            RecommendationCard(
+                recommendation = recommendation,
+                onClick = { onStoryClick(recommendation.story.id) }
+            )
+        }
+
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
+    }
+}
+
+@Composable
+private fun RecommendationCard(
+    recommendation: com.crosslens.app.core.model.PersonalizedRecommendation,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = recommendation.story.title,
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = recommendation.story.summary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Why you're seeing this
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.for_you_explanation_prefix),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        text = recommendation.explanation,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "${recommendation.story.articleIds.size} sources",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = recommendation.story.eventCountryCodes.joinToString(", "),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ForYouNotEligibleCard(
+    onSettingsClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.for_you_title),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.for_you_not_eligible),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                OutlinedButton(
+                    onClick = onSettingsClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Open Settings")
+                }
+            }
+        }
+
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
     }
 }
 

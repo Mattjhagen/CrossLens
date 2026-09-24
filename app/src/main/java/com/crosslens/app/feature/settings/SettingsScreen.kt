@@ -129,6 +129,29 @@ fun SettingsScreen(
 
                 item {
                     Text(
+                        text = stringResource(R.string.settings_personalization),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+
+                item {
+                    SettingItem(
+                        title = stringResource(R.string.show_for_you),
+                        subtitle = stringResource(R.string.show_for_you_summary)
+                    ) {
+                        Switch(
+                            checked = userPrefs!!.showForYou,
+                            onCheckedChange = { viewModel.updateShowForYou(it) }
+                        )
+                    }
+                }
+
+                item {
+                    Divider()
+                }
+
+                item {
+                    Text(
                         text = stringResource(R.string.settings_access),
                         style = MaterialTheme.typography.titleLarge
                     )
@@ -289,6 +312,8 @@ private fun PersonalPreferencesSection(
     onRemovePreference: (String) -> Unit,
     onClearAll: () -> Unit
 ) {
+    var showClearDialog by remember { mutableStateOf(false) }
+
     Card {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
@@ -297,7 +322,7 @@ private fun PersonalPreferencesSection(
             )
 
             Text(
-                text = "These choices will shape future recommendations when that feature is introduced. They don't affect which sources or evidence you see in story comparisons.",
+                text = stringResource(R.string.show_for_you_summary),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -348,13 +373,40 @@ private fun PersonalPreferencesSection(
                 HorizontalDivider()
 
                 OutlinedButton(
-                    onClick = onClearAll,
+                    onClick = { showClearDialog = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Reset all preferences")
+                    Text(stringResource(R.string.clear_preferences))
                 }
             }
         }
+    }
+
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            title = {
+                Text(stringResource(R.string.clear_preferences_confirm_title))
+            },
+            text = {
+                Text(stringResource(R.string.clear_preferences_confirm_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onClearAll()
+                        showClearDialog = false
+                    }
+                ) {
+                    Text(stringResource(R.string.clear_preferences_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) {
+                    Text(stringResource(R.string.clear_preferences_cancel))
+                }
+            }
+        )
     }
 }
 

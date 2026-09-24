@@ -12,7 +12,8 @@ data class UserPreferences(
     val reducedMotion: Boolean,
     val demoLocalLocation: String? = null, // LocalLocation.id for demo local news
     val showLocalOnly: Boolean = false, // Local filter toggle state
-    val lastRefreshedTime: Instant? = null // Last time demo data was refreshed
+    val lastRefreshedTime: Instant? = null, // Last time demo data was refreshed
+    val showForYou: Boolean = true // Show personalized For You section when eligible
 )
 
 enum class TranslationPreference {

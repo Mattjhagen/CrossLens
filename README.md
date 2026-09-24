@@ -6,7 +6,7 @@ CrossLens is an Android news app for understanding how the same event is reporte
 
 The goal is informed comparison: show where reporting overlaps, where emphasis differs, and what evidence supports those observations. A source's country is context, not a proxy for its politics or the views of an entire population.
 
-> **Project status:** ✅ **Pull to Refresh milestone complete (v0.0.10-beta).** The app runs offline with mock data, includes pull-to-refresh for reloading demo data, fictional local news from demo cities (Seattle, Paris, London, Toronto), manual location selection, and local filtering. Future work includes live local sources, recommendation algorithms, translation services, and automated analysis.
+> **Project status:** ✅ **For You Preview milestone complete (v0.0.11-beta).** The app includes a transparent, offline-only personalized recommendation preview using explicit on-device preferences. Shows "For You — Demo" suggestions on the home screen when users have selected topic/region interests or a local location. Future work includes live local sources, translation services, and automated analysis.
 
 ## Quick Start
 
@@ -38,7 +38,7 @@ adb shell am start -n com.crosslens.app.debug/.MainActivity
 ### Build Results
 
 - **Build:** ✅ SUCCESS (Gradle 8.9, AGP 8.5.2, Kotlin 1.9.24)
-- **Unit Tests:** ✅ 115/115 passed
+- **Unit Tests:** ✅ 128/128 passed
 - **Lint:** ✅ 0 errors, 0 warnings
 - **Quality Audit:** See [QUALITY_REPORT.md](docs/QUALITY_REPORT.md)
 
@@ -98,9 +98,10 @@ Home, Explore, and Settings are top-level destinations. Story and CrossLens are 
 - ✅ Reduced motion: Animations respect user preference
 - ✅ Multilingual fixtures: English, French, Arabic, Japanese samples
 - ✅ Editorial review workflow: Offline demo for reviewing cross-language matches and syndication candidates
-- ✅ Personal relevance feedback: Transparent "Show more/less like this" controls for future recommendations
-- ✅ Local sources: Manual demo location selection (Seattle, Paris, London, Toronto) with local filtering
+- ✅ Personal relevance feedback: Transparent "Show more/less like this" controls with clear preference management
 - ✅ Local sources: Demo local news from 4 cities (Seattle, Paris, London, Toronto) with manual location selection and filtering
+- ✅ For You — Demo: Personalized story recommendations using explicit metadata-based signals only (topics, regions, local location)
+- ✅ Personalization controls: Show/hide For You section, clear all preferences with confirmation, eligibility transparency
 
 ### Mock Data
 - 7 story clusters (3 global + 4 local: climate summit, AI regulation, trade, Seattle transit, Paris cycling, London housing, Toronto tech)

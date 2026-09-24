@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.crosslens.app.core.model.DemoLocalLocations
 import com.crosslens.app.core.model.LocalLocation
+import com.crosslens.app.core.model.PersonalizedRecommendation
 import com.crosslens.app.core.model.Story
+import com.crosslens.app.data.recommendation.PersonalizedRecommendationEngine
 import com.crosslens.app.data.repository.StoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -15,7 +17,9 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val storyRepository: StoryRepository,
-    private val userPreferencesRepository: com.crosslens.app.data.preferences.UserPreferencesRepository
+    private val userPreferencesRepository: com.crosslens.app.data.preferences.UserPreferencesRepository,
+    private val personalRelevanceRepository: com.crosslens.app.data.preferences.PersonalRelevanceRepository,
+    private val recommendationEngine: PersonalizedRecommendationEngine
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -35,6 +39,16 @@ class HomeViewModel @Inject constructor(
         .map { prefs -> prefs.lastRefreshedTime }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    val showForYou: StateFlow<Boolean> = userPreferencesRepository.preferencesFlow
+        .map { prefs -> prefs.showForYou }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    private val _forYouRecommendations = MutableStateFlow<List<PersonalizedRecommendation>>(emptyList())
+    val forYouRecommendations: StateFlow<List<PersonalizedRecommendation>> = _forYouRecommendations.asStateFlow()
+
+    private val _forYouEligible = MutableStateFlow(false)
+    val forYouEligible: StateFlow<Boolean> = _forYouEligible.asStateFlow()
+
     init {
         // Initialize filter state from preferences
         viewModelScope.launch {
@@ -50,14 +64,16 @@ class HomeViewModel @Inject constructor(
             combine(
                 storyRepository.observeStories(),
                 userPreferencesRepository.preferencesFlow,
+                personalRelevanceRepository.preferencesFlow,
                 _showLocalOnly
-            ) { allStories, preferences, localOnly ->
-                when {
-                    localOnly && preferences.demoLocalLocation != null -> {
+            ) { allStories, userPrefs, personalPrefs, localOnly ->
+                // Determine which stories to show in main feed
+                val feedStories = when {
+                    localOnly && userPrefs.demoLocalLocation != null -> {
                         // Show only local stories for selected location
-                        storyRepository.observeLocalStories(preferences.demoLocalLocation).first()
+                        storyRepository.observeLocalStories(userPrefs.demoLocalLocation).first()
                     }
-                    localOnly && preferences.demoLocalLocation == null -> {
+                    localOnly && userPrefs.demoLocalLocation == null -> {
                         // Filter is on but no location selected - show empty
                         emptyList()
                     }
@@ -66,6 +82,18 @@ class HomeViewModel @Inject constructor(
                         allStories
                     }
                 }
+
+                // Generate For You recommendations
+                val recommendationResult = recommendationEngine.generateRecommendations(
+                    allStories = allStories,
+                    preferences = personalPrefs,
+                    demoLocalLocation = userPrefs.demoLocalLocation
+                )
+
+                _forYouEligible.value = recommendationResult.isEligible
+                _forYouRecommendations.value = recommendationResult.recommendations
+
+                feedStories
             }
                 .catch { error ->
                     _uiState.value = HomeUiState.Error(error.message ?: "Unknown error")

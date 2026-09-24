@@ -20,12 +20,17 @@ class HomeViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var storyRepository: StoryRepository
     private lateinit var userPreferencesRepository: com.crosslens.app.data.preferences.UserPreferencesRepository
+    private lateinit var personalRelevanceRepository: com.crosslens.app.data.preferences.PersonalRelevanceRepository
+    private lateinit var recommendationEngine: com.crosslens.app.data.recommendation.PersonalizedRecommendationEngine
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         storyRepository = mock()
         userPreferencesRepository = mock()
+        personalRelevanceRepository = mock()
+        // Use real engine since it has no dependencies
+        recommendationEngine = com.crosslens.app.data.recommendation.PersonalizedRecommendationEngine()
 
         // Default preferences with no local location
         whenever(userPreferencesRepository.preferencesFlow).thenReturn(
@@ -38,10 +43,16 @@ class HomeViewModelTest {
                     translationPreference = TranslationPreference.AUTO,
                     theme = Theme.SYSTEM,
                     reducedMotion = false,
-                    demoLocalLocation = null
+                    demoLocalLocation = null,
+                    showLocalOnly = false,
+                    lastRefreshedTime = null,
+                    showForYou = true
                 )
             )
         )
+
+        // Default empty personal preferences
+        whenever(personalRelevanceRepository.preferencesFlow).thenReturn(flowOf(emptyList()))
     }
 
     @After
@@ -52,7 +63,7 @@ class HomeViewModelTest {
     @Test
     fun `empty story list shows Empty state`() = runTest {
         whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
 
         advanceUntilIdle()
 
@@ -76,7 +87,7 @@ class HomeViewModelTest {
             )
         )
         whenever(storyRepository.observeStories()).thenReturn(flowOf(stories))
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
 
         advanceUntilIdle()
 
@@ -120,7 +131,7 @@ class HomeViewModelTest {
             )
         )
 
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         // Should show EmptyLocal state because filter is on but no location selected
@@ -148,7 +159,7 @@ class HomeViewModelTest {
             )
         )
 
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         // Filter state should be restored from preferences
@@ -158,7 +169,7 @@ class HomeViewModelTest {
     @Test
     fun `toggleLocalFilter persists state`() = runTest {
         whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         viewModel.toggleLocalFilter()
@@ -189,7 +200,7 @@ class HomeViewModelTest {
             )
         )
 
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         val location = viewModel.currentLocation.value
@@ -201,7 +212,7 @@ class HomeViewModelTest {
     @Test
     fun `currentLocation is null when no location selected`() = runTest {
         whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         assertNull(viewModel.currentLocation.value)
@@ -210,7 +221,7 @@ class HomeViewModelTest {
     @Test
     fun `refresh sets isRefreshing to true then false`() = runTest {
         whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         // Initially not refreshing
@@ -233,7 +244,7 @@ class HomeViewModelTest {
     @Test
     fun `refresh updates lastRefreshedTime`() = runTest {
         whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         viewModel.refresh()
@@ -246,7 +257,7 @@ class HomeViewModelTest {
     @Test
     fun `refresh calls storyRepository refresh`() = runTest {
         whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         viewModel.refresh()
@@ -279,7 +290,7 @@ class HomeViewModelTest {
             )
         )
 
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         assertEquals(testTime, viewModel.lastRefreshedTime.value)
@@ -288,7 +299,7 @@ class HomeViewModelTest {
     @Test
     fun `lastRefreshedTime is null when never refreshed`() = runTest {
         whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
-        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine)
         advanceUntilIdle()
 
         assertNull(viewModel.lastRefreshedTime.value)

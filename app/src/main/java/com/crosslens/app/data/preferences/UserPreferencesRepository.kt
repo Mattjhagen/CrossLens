@@ -18,4 +18,5 @@ interface UserPreferencesRepository {
     suspend fun updateDemoLocalLocation(locationId: String?)
     suspend fun updateShowLocalOnly(enabled: Boolean)
     suspend fun updateLastRefreshedTime(time: Instant)
+    suspend fun updateShowForYou(enabled: Boolean)
 }

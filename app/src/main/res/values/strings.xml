@@ -21,6 +21,13 @@
     <string name="last_refreshed">Last refreshed: %s</string>
     <string name="demo_refresh_notice">Demo data refreshed</string>
 
+    <!-- For You Section -->
+    <string name="for_you_title">For You — Demo</string>
+    <string name="for_you_notice">Local preview using your explicit on-device choices. Does not affect evidence or editorial analysis.</string>
+    <string name="for_you_explanation_prefix">Why: </string>
+    <string name="for_you_not_eligible">Select "Show more like this" on a story or choose a demo location to see personalized suggestions.</string>
+    <string name="for_you_hidden">For You section hidden</string>
+
     <!-- Sort modes -->
     <string name="sort_latest">Latest</string>
     <string name="sort_coverage">Coverage</string>
@@ -83,6 +90,15 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="reduced_motion">Reduced motion</string>
+    <string name="settings_personalization">Personalization</string>
+    <string name="show_for_you">Show For You suggestions</string>
+    <string name="show_for_you_summary">Demo preview of personalized story ordering using your explicit choices</string>
+    <string name="clear_preferences">Clear all preferences</string>
+    <string name="clear_preferences_summary">Remove all "more/less like this" feedback. This will hide the For You section.</string>
+    <string name="clear_preferences_confirm_title">Clear all preferences?</string>
+    <string name="clear_preferences_confirm_message">This will remove all your "Show more like this" and "Show less like this" feedback.\n\nThe For You section will be hidden until you select new preferences.\n\nYour saved stories, local location, and other settings will not be affected.</string>
+    <string name="clear_preferences_confirm">Clear</string>
+    <string name="clear_preferences_cancel">Cancel</string>
     <string name="access_tier">Access tier</string>
     <string name="access_free">Free</string>
     <string name="access_plus_demo">Plus (Preview)</string>
