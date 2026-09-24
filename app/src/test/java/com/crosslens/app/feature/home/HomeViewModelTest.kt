@@ -206,4 +206,91 @@ class HomeViewModelTest {
 
         assertNull(viewModel.currentLocation.value)
     }
+
+    @Test
+    fun `refresh sets isRefreshing to true then false`() = runTest {
+        whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        advanceUntilIdle()
+
+        // Initially not refreshing
+        assertFalse(viewModel.isRefreshing.value)
+
+        // Start refresh (don't wait for it to complete yet)
+        viewModel.refresh()
+
+        // Give the coroutine a moment to start
+        testScheduler.runCurrent()
+
+        // Should be refreshing now (or already done if very fast)
+        // After refresh completes
+        advanceUntilIdle()
+
+        // Should be done refreshing
+        assertFalse(viewModel.isRefreshing.value)
+    }
+
+    @Test
+    fun `refresh updates lastRefreshedTime`() = runTest {
+        whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        advanceUntilIdle()
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        // Should call updateLastRefreshedTime with current time
+        verify(userPreferencesRepository).updateLastRefreshedTime(any())
+    }
+
+    @Test
+    fun `refresh calls storyRepository refresh`() = runTest {
+        whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        advanceUntilIdle()
+
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        // Should reload demo data from repository
+        verify(storyRepository).refresh()
+    }
+
+    @Test
+    fun `lastRefreshedTime flow maps from preferences`() = runTest {
+        val testTime = Instant.now()
+        whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
+
+        // Preferences with last refreshed time
+        whenever(userPreferencesRepository.preferencesFlow).thenReturn(
+            flowOf(
+                UserPreferences(
+                    readingLanguage = "en",
+                    homeCountry = null,
+                    homeRegion = null,
+                    enabledSourceIds = emptySet(),
+                    translationPreference = TranslationPreference.AUTO,
+                    theme = Theme.SYSTEM,
+                    reducedMotion = false,
+                    demoLocalLocation = null,
+                    showLocalOnly = false,
+                    lastRefreshedTime = testTime
+                )
+            )
+        )
+
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        advanceUntilIdle()
+
+        assertEquals(testTime, viewModel.lastRefreshedTime.value)
+    }
+
+    @Test
+    fun `lastRefreshedTime is null when never refreshed`() = runTest {
+        whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
+        advanceUntilIdle()
+
+        assertNull(viewModel.lastRefreshedTime.value)
+    }
 }

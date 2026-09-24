@@ -15,6 +15,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,8 +26,12 @@ import com.crosslens.app.R
 import com.crosslens.app.core.model.Story
 import com.crosslens.app.core.ui.components.CrossLensSignature
 import com.crosslens.app.core.ui.components.SignatureSize
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun HomeScreen(
@@ -38,6 +44,8 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val showLocalOnly by viewModel.showLocalOnly.collectAsStateWithLifecycle()
     val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+    val lastRefreshedTime by viewModel.lastRefreshedTime.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -164,51 +172,76 @@ fun HomeScreen(
                 }
             }
             is HomeUiState.Success -> {
-                LazyColumn(
+                val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+
+                SwipeRefresh(
+                    state = swipeRefreshState,
+                    onRefresh = { viewModel.refresh() },
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(paddingValues)
+                        .semantics {
+                            contentDescription = if (isRefreshing) {
+                                "Refreshing demo data"
+                            } else {
+                                "Pull to refresh demo data"
+                            }
+                        }
                 ) {
-                    item {
-                        Column(
-                            modifier = Modifier.padding(vertical = 16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CrossLensSignature(
-                                size = SignatureSize.Large,
-                                modifier = Modifier.padding(vertical = 16.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.home_subtitle),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.mock_edition_label),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
+                    LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            Column(
+                                modifier = Modifier.padding(vertical = 16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CrossLensSignature(
+                                    size = SignatureSize.Large,
+                                    modifier = Modifier.padding(vertical = 16.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(R.string.home_subtitle),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(R.string.mock_edition_label),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                if (lastRefreshedTime != null) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = stringResource(
+                                            R.string.last_refreshed,
+                                            formatRefreshTime(lastRefreshedTime)
+                                        ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        items(state.stories) { story ->
+                            StoryCard(
+                                story = story,
+                                onClick = { onStoryClick(story.id) }
                             )
                         }
-                    }
 
-                    items(state.stories) { story ->
-                        StoryCard(
-                            story = story,
-                            onClick = { onStoryClick(story.id) }
-                        )
-                    }
-
-                    item {
-                        Text(
-                            text = stringResource(R.string.edition_complete),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 24.dp)
-                        )
+                        item {
+                            Text(
+                                text = stringResource(R.string.edition_complete),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 24.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -277,4 +310,25 @@ private fun formatTime(instant: java.time.Instant): String {
     val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy HH:mm")
         .withZone(ZoneId.systemDefault())
     return formatter.format(instant)
+}
+
+private fun formatRefreshTime(instant: Instant?): String {
+    if (instant == null) return "Never"
+
+    val now = Instant.now()
+    val minutesAgo = ChronoUnit.MINUTES.between(instant, now)
+
+    return when {
+        minutesAgo < 1 -> "Just now"
+        minutesAgo < 60 -> "$minutesAgo min ago"
+        minutesAgo < 1440 -> {
+            val hoursAgo = minutesAgo / 60
+            "${hoursAgo}h ago"
+        }
+        else -> {
+            val formatter = DateTimeFormatter.ofPattern("MMM d, HH:mm")
+                .withZone(ZoneId.systemDefault())
+            formatter.format(instant)
+        }
+    }
 }

@@ -1,5 +1,7 @@
 package com.crosslens.app.core.model
 
+import java.time.Instant
+
 data class UserPreferences(
     val readingLanguage: String, // BCP 47
     val homeCountry: String?, // ISO 3166-1 alpha-2
@@ -9,7 +11,8 @@ data class UserPreferences(
     val theme: Theme,
     val reducedMotion: Boolean,
     val demoLocalLocation: String? = null, // LocalLocation.id for demo local news
-    val showLocalOnly: Boolean = false // Local filter toggle state
+    val showLocalOnly: Boolean = false, // Local filter toggle state
+    val lastRefreshedTime: Instant? = null // Last time demo data was refreshed
 )
 
 enum class TranslationPreference {

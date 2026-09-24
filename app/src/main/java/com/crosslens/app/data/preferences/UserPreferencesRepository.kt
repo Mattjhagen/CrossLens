@@ -4,6 +4,7 @@ import com.crosslens.app.core.model.Theme
 import com.crosslens.app.core.model.TranslationPreference
 import com.crosslens.app.core.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 interface UserPreferencesRepository {
     val preferencesFlow: Flow<UserPreferences>
@@ -16,4 +17,5 @@ interface UserPreferencesRepository {
     suspend fun updateReducedMotion(enabled: Boolean)
     suspend fun updateDemoLocalLocation(locationId: String?)
     suspend fun updateShowLocalOnly(enabled: Boolean)
+    suspend fun updateLastRefreshedTime(time: Instant)
 }

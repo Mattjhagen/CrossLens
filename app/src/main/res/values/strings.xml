@@ -17,6 +17,9 @@
     <string name="no_saved_stories">No saved stories yet</string>
     <string name="save_story">Save story</string>
     <string name="unsave_story">Unsave story</string>
+    <string name="refreshing">Refreshing demo data…</string>
+    <string name="last_refreshed">Last refreshed: %s</string>
+    <string name="demo_refresh_notice">Demo data refreshed</string>
 
     <!-- Sort modes -->
     <string name="sort_latest">Latest</string>
@@ -143,4 +146,6 @@
     <string name="cd_close">Close</string>
     <string name="cd_back">Back</string>
     <string name="cd_editorial_review">Open editorial review</string>
+    <string name="cd_refresh">Pull to refresh demo data</string>
+    <string name="cd_refreshing">Refreshing demo data</string>
 </resources>

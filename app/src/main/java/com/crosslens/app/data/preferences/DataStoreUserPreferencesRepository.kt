@@ -7,6 +7,7 @@ import com.crosslens.app.core.model.TranslationPreference
 import com.crosslens.app.core.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +26,7 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         val REDUCED_MOTION = booleanPreferencesKey("reduced_motion")
         val DEMO_LOCAL_LOCATION = stringPreferencesKey("demo_local_location")
         val SHOW_LOCAL_ONLY = booleanPreferencesKey("show_local_only")
+        val LAST_REFRESHED_TIME = longPreferencesKey("last_refreshed_time")
     }
 
     override val preferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
@@ -39,7 +41,8 @@ class DataStoreUserPreferencesRepository @Inject constructor(
             theme = prefs[PreferencesKeys.THEME]?.let { Theme.valueOf(it) } ?: Theme.SYSTEM,
             reducedMotion = prefs[PreferencesKeys.REDUCED_MOTION] ?: false,
             demoLocalLocation = prefs[PreferencesKeys.DEMO_LOCAL_LOCATION],
-            showLocalOnly = prefs[PreferencesKeys.SHOW_LOCAL_ONLY] ?: false
+            showLocalOnly = prefs[PreferencesKeys.SHOW_LOCAL_ONLY] ?: false,
+            lastRefreshedTime = prefs[PreferencesKeys.LAST_REFRESHED_TIME]?.let { Instant.ofEpochMilli(it) }
         )
     }
 
@@ -91,5 +94,9 @@ class DataStoreUserPreferencesRepository @Inject constructor(
 
     override suspend fun updateShowLocalOnly(enabled: Boolean) {
         dataStore.edit { it[PreferencesKeys.SHOW_LOCAL_ONLY] = enabled }
+    }
+
+    override suspend fun updateLastRefreshedTime(time: Instant) {
+        dataStore.edit { it[PreferencesKeys.LAST_REFRESHED_TIME] = time.toEpochMilli() }
     }
 }

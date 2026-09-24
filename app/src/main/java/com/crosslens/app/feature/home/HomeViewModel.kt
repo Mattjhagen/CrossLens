@@ -9,6 +9,7 @@ import com.crosslens.app.data.repository.StoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,8 +24,15 @@ class HomeViewModel @Inject constructor(
     private val _showLocalOnly = MutableStateFlow(false)
     val showLocalOnly: StateFlow<Boolean> = _showLocalOnly.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     val currentLocation: StateFlow<LocalLocation?> = userPreferencesRepository.preferencesFlow
         .map { prefs -> prefs.demoLocalLocation?.let { DemoLocalLocations.findById(it) } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val lastRefreshedTime: StateFlow<Instant?> = userPreferencesRepository.preferencesFlow
+        .map { prefs -> prefs.lastRefreshedTime }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
@@ -81,8 +89,15 @@ class HomeViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            _uiState.value = HomeUiState.Loading
-            storyRepository.refresh()
+            _isRefreshing.value = true
+            try {
+                // Reload deterministic demo data from Room
+                storyRepository.refresh()
+                // Update the timestamp to now
+                userPreferencesRepository.updateLastRefreshedTime(Instant.now())
+            } finally {
+                _isRefreshing.value = false
+            }
         }
     }
 }

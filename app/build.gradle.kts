@@ -127,6 +127,9 @@ dependencies {
     // Image loading
     implementation(libs.coil.compose)
 
+    // Accompanist
+    implementation(libs.accompanist.swiperefresh)
+
     // JSON
     implementation(libs.gson)
 
