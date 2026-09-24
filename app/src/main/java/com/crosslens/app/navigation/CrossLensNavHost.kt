@@ -51,6 +51,9 @@ fun CrossLensNavHost(
                 onBackClick = { navController.popBackStack() },
                 onCompareClick = { sid ->
                     navController.navigate(CrossLensDestination.CrossLens.createRoute(sid))
+                },
+                onArticleClick = { articleId ->
+                    navController.navigate(CrossLensDestination.SourceDetail.createRoute(articleId))
                 }
             )
         }

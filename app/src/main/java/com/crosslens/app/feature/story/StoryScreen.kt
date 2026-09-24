@@ -1,5 +1,6 @@
 package com.crosslens.app.feature.story
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +26,7 @@ fun StoryScreen(
     storyId: String,
     onBackClick: () -> Unit,
     onCompareClick: (String) -> Unit,
+    onArticleClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: StoryViewModel = hiltViewModel()
 ) {
@@ -154,7 +156,10 @@ fun StoryScreen(
                     }
 
                     items(state.articles) { article ->
-                        ArticleCard(article)
+                        ArticleCard(
+                            article = article,
+                            onClick = { onArticleClick(article.id) }
+                        )
                     }
                 }
             }
@@ -201,9 +206,15 @@ private fun ClaimCard(claim: Claim, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ArticleCard(article: Article, modifier: Modifier = Modifier) {
+private fun ArticleCard(
+    article: Article,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )

@@ -15,4 +15,5 @@ interface UserPreferencesRepository {
     suspend fun updateTheme(theme: Theme)
     suspend fun updateReducedMotion(enabled: Boolean)
     suspend fun updateDemoLocalLocation(locationId: String?)
+    suspend fun updateShowLocalOnly(enabled: Boolean)
 }

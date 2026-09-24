@@ -8,7 +8,8 @@ data class UserPreferences(
     val translationPreference: TranslationPreference,
     val theme: Theme,
     val reducedMotion: Boolean,
-    val demoLocalLocation: String? = null // LocalLocation.id for demo local news
+    val demoLocalLocation: String? = null, // LocalLocation.id for demo local news
+    val showLocalOnly: Boolean = false // Local filter toggle state
 )
 
 enum class TranslationPreference {

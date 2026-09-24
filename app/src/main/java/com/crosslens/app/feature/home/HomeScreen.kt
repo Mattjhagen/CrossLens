@@ -37,6 +37,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val showLocalOnly by viewModel.showLocalOnly.collectAsStateWithLifecycle()
+    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -44,9 +45,16 @@ fun HomeScreen(
                 title = {},
                 actions = {
                     IconButton(onClick = { viewModel.toggleLocalFilter() }) {
+                        val locationName = currentLocation?.let { "${it.cityName}, ${it.regionName}" }
+                        val contentDesc = when {
+                            showLocalOnly && locationName != null -> "Show local stories for $locationName, on"
+                            showLocalOnly -> "Show local stories, on"
+                            locationName != null -> "Show local stories for $locationName, off"
+                            else -> "Show local stories, off"
+                        }
                         Icon(
                             imageVector = if (showLocalOnly) Icons.Filled.LocationOn else Icons.Outlined.LocationOn,
-                            contentDescription = if (showLocalOnly) "Show all stories" else "Show local stories only",
+                            contentDescription = contentDesc,
                             tint = if (showLocalOnly) MaterialTheme.colorScheme.primary else LocalContentColor.current
                         )
                     }

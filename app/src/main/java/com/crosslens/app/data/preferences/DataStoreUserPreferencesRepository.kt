@@ -24,6 +24,7 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         val THEME = stringPreferencesKey("theme")
         val REDUCED_MOTION = booleanPreferencesKey("reduced_motion")
         val DEMO_LOCAL_LOCATION = stringPreferencesKey("demo_local_location")
+        val SHOW_LOCAL_ONLY = booleanPreferencesKey("show_local_only")
     }
 
     override val preferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
@@ -37,7 +38,8 @@ class DataStoreUserPreferencesRepository @Inject constructor(
             } ?: TranslationPreference.AUTO,
             theme = prefs[PreferencesKeys.THEME]?.let { Theme.valueOf(it) } ?: Theme.SYSTEM,
             reducedMotion = prefs[PreferencesKeys.REDUCED_MOTION] ?: false,
-            demoLocalLocation = prefs[PreferencesKeys.DEMO_LOCAL_LOCATION]
+            demoLocalLocation = prefs[PreferencesKeys.DEMO_LOCAL_LOCATION],
+            showLocalOnly = prefs[PreferencesKeys.SHOW_LOCAL_ONLY] ?: false
         )
     }
 
@@ -77,8 +79,17 @@ class DataStoreUserPreferencesRepository @Inject constructor(
 
     override suspend fun updateDemoLocalLocation(locationId: String?) {
         dataStore.edit {
-            if (locationId == null) it.remove(PreferencesKeys.DEMO_LOCAL_LOCATION)
-            else it[PreferencesKeys.DEMO_LOCAL_LOCATION] = locationId
+            if (locationId == null) {
+                it.remove(PreferencesKeys.DEMO_LOCAL_LOCATION)
+                // Also clear the filter when location is cleared
+                it[PreferencesKeys.SHOW_LOCAL_ONLY] = false
+            } else {
+                it[PreferencesKeys.DEMO_LOCAL_LOCATION] = locationId
+            }
         }
+    }
+
+    override suspend fun updateShowLocalOnly(enabled: Boolean) {
+        dataStore.edit { it[PreferencesKeys.SHOW_LOCAL_ONLY] = enabled }
     }
 }

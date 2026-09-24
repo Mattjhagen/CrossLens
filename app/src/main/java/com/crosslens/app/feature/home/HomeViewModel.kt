@@ -2,6 +2,8 @@ package com.crosslens.app.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.crosslens.app.core.model.DemoLocalLocations
+import com.crosslens.app.core.model.LocalLocation
 import com.crosslens.app.core.model.Story
 import com.crosslens.app.data.repository.StoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +23,17 @@ class HomeViewModel @Inject constructor(
     private val _showLocalOnly = MutableStateFlow(false)
     val showLocalOnly: StateFlow<Boolean> = _showLocalOnly.asStateFlow()
 
+    val currentLocation: StateFlow<LocalLocation?> = userPreferencesRepository.preferencesFlow
+        .map { prefs -> prefs.demoLocalLocation?.let { DemoLocalLocations.findById(it) } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     init {
+        // Initialize filter state from preferences
+        viewModelScope.launch {
+            userPreferencesRepository.preferencesFlow.collect { prefs ->
+                _showLocalOnly.value = prefs.showLocalOnly
+            }
+        }
         loadStories()
     }
 
@@ -32,11 +44,19 @@ class HomeViewModel @Inject constructor(
                 userPreferencesRepository.preferencesFlow,
                 _showLocalOnly
             ) { allStories, preferences, localOnly ->
-                if (localOnly && preferences.demoLocalLocation != null) {
-                    // Show only local stories for selected location
-                    storyRepository.observeLocalStories(preferences.demoLocalLocation).first()
-                } else {
-                    allStories
+                when {
+                    localOnly && preferences.demoLocalLocation != null -> {
+                        // Show only local stories for selected location
+                        storyRepository.observeLocalStories(preferences.demoLocalLocation).first()
+                    }
+                    localOnly && preferences.demoLocalLocation == null -> {
+                        // Filter is on but no location selected - show empty
+                        emptyList()
+                    }
+                    else -> {
+                        // Filter is off - show all stories
+                        allStories
+                    }
                 }
             }
                 .catch { error ->
@@ -53,7 +73,10 @@ class HomeViewModel @Inject constructor(
     }
 
     fun toggleLocalFilter() {
-        _showLocalOnly.value = !_showLocalOnly.value
+        viewModelScope.launch {
+            val newValue = !_showLocalOnly.value
+            userPreferencesRepository.updateShowLocalOnly(newValue)
+        }
     }
 
     fun refresh() {
