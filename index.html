@@ -98,65 +98,144 @@
     :root:not([data-theme="light"]) .icon-moon { display: block; }
 
     /* =====================
-       HERO — pinned scroll sequence
+       HERO — two-column product layout
     ===================== */
     .hero-sticky-wrap {
-      height: 250vh; /* scroll distance for pinned hero */
+      /* Keep enough scroll height for the deep-scroll fade on desktop */
+      height: 200vh;
       position: relative;
     }
     .hero-sticky {
       position: sticky; top: 0;
       height: 100vh;
+      display: grid;
+      /* Left col: text (slightly narrower); Right col: device */
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      column-gap: clamp(2rem, 5vw, 6rem);
+      padding: 0 clamp(1.5rem, 6%, 7rem);
+      padding-top: 52px; /* header height */
       overflow: hidden;
+    }
+
+    /* Left column — text stack */
+    .hero-text-col {
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: flex-start;
     }
     .hero-eyebrow {
       font-family: var(--f-mono);
       font-size: 0.72rem; text-transform: uppercase;
       letter-spacing: 0.14em; color: var(--ink-tertiary);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.4rem;
       opacity: 0; transform: translateY(12px);
       transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
     }
     .hero-sticky.entered .hero-eyebrow { opacity: 1; transform: none; }
+
     .hero-headline {
-      font-size: clamp(3.2rem, 7.5vw, 8rem);
-      font-weight: 900; line-height: 0.95;
+      font-size: clamp(2.6rem, 5vw, 5.5rem);
+      font-weight: 900; line-height: 0.97;
       letter-spacing: -0.055em;
-      text-align: center;
-      max-width: 14ch;
+      text-align: left;
+      /* Hard cap so it never wraps awkwardly into the device column */
+      max-width: 12ch;
       opacity: 0; transform: translateY(24px);
-      transition: opacity 0.7s 0.1s var(--ease-out), transform 0.7s 0.1s var(--ease-out);
+      transition: opacity 0.7s 0.08s var(--ease-out), transform 0.7s 0.08s var(--ease-out);
     }
     .hero-sticky.entered .hero-headline { opacity: 1; transform: none; }
     .hero-line2 { color: var(--ink-secondary); font-style: italic; }
+
     .hero-sub {
-      margin-top: 1.8rem;
-      font-size: clamp(1rem, 2vw, 1.4rem);
+      margin-top: 1.6rem;
+      font-size: clamp(0.95rem, 1.6vw, 1.2rem);
       font-weight: 400; color: var(--ink-secondary);
-      line-height: 1.45; text-align: center; max-width: 52ch;
-      padding: 0 5%;
+      line-height: 1.55; text-align: left;
+      max-width: 42ch;
       opacity: 0; transform: translateY(16px);
-      transition: opacity 0.7s 0.2s var(--ease-out), transform 0.7s 0.2s var(--ease-out);
+      transition: opacity 0.7s 0.18s var(--ease-out), transform 0.7s 0.18s var(--ease-out);
     }
     .hero-sticky.entered .hero-sub { opacity: 1; transform: none; }
 
-    /* Device image that scales in as hero scrolls */
-    .hero-device {
-      position: absolute; bottom: -8vh;
-      width: min(280px, 46vw);
-      filter: drop-shadow(var(--device-shadow));
-      transform: translateY(60px) scale(0.88);
-      opacity: 0;
-      transition: opacity 0.9s 0.3s var(--ease-out), transform 0.9s 0.3s var(--ease-out);
+    /* Right column — device image */
+    .hero-device-col {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%;
+      padding: 2rem 0;
     }
-    .hero-sticky.entered .hero-device { opacity: 1; transform: translateY(0) scale(1); }
+    .hero-device {
+      /* Size relative to column; clamp keeps it in-viewport on smaller screens */
+      width: clamp(220px, 38vw, 380px);
+      max-height: calc(100vh - 52px - 4rem);
+      object-fit: contain;
+      border-radius: 40px;
+      /* Layered shadow for premium object feel */
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.06),
+        0 24px 60px rgba(0,0,0,0.7),
+        0 8px 20px rgba(0,0,0,0.5);
+      /* Subtle glow ring — visible in dark mode */
+      outline: 1px solid rgba(255,255,255,0.05);
+      /* Enter from below, after text is already readable */
+      opacity: 0;
+      transform: translateY(36px) scale(0.96);
+      transition: opacity 0.85s 0.28s var(--ease-out), transform 0.85s 0.28s var(--ease-out);
+    }
+    [data-theme="light"] .hero-device {
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.06),
+        0 24px 60px rgba(0,0,0,0.12),
+        0 8px 20px rgba(0,0,0,0.08);
+      outline: 1px solid rgba(0,0,0,0.04);
+    }
+    .hero-sticky.entered .hero-device { opacity: 1; transform: none; }
 
-    /* Scroll-driven fade of headline as device rises */
-    .hero-sticky.deep .hero-headline { opacity: 0.15; transform: translateY(-20px); }
-    .hero-sticky.deep .hero-sub    { opacity: 0; transform: translateY(-12px); }
-    .hero-sticky.deep .hero-device { transform: translateY(-40px) scale(1.05); }
+    /* Deep-scroll: text quietly fades as user continues down */
+    .hero-sticky.deep .hero-eyebrow  { opacity: 0;    transform: translateY(-8px); }
+    .hero-sticky.deep .hero-headline { opacity: 0.08; transform: translateY(-14px); }
+    .hero-sticky.deep .hero-sub      { opacity: 0;    transform: translateY(-10px); }
+    /* Device stays put — no extra movement needed */
+
+    /* ---- Mobile: stack layout ---- */
+    @media (max-width: 720px) {
+      .hero-sticky-wrap { height: 160vh; }
+      .hero-sticky {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        justify-items: center;
+        padding: 0 1.5rem;
+        padding-top: 52px;
+        row-gap: 2rem;
+        height: 100svh;
+      }
+      .hero-text-col { align-items: center; text-align: center; }
+      .hero-headline { text-align: center; max-width: 16ch; font-size: clamp(2.2rem, 8vw, 3.6rem); }
+      .hero-sub { text-align: center; max-width: 36ch; font-size: clamp(0.9rem, 3.5vw, 1.05rem); }
+      .hero-device-col { height: auto; padding: 0; }
+      .hero-device {
+        width: clamp(180px, 55vw, 280px);
+        max-height: 38svh;
+        border-radius: 28px;
+      }
+    }
+
+    /* ---- Reduced motion: show everything immediately, no pinning ---- */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-sticky-wrap { height: auto; }
+      .hero-sticky {
+        position: relative;
+        height: auto;
+        min-height: 100svh;
+        padding-bottom: 4rem;
+      }
+      .hero-eyebrow, .hero-headline, .hero-sub, .hero-device {
+        opacity: 1 !important; transform: none !important;
+        transition: none !important;
+      }
+      .hero-sticky.deep .hero-eyebrow,
+      .hero-sticky.deep .hero-headline,
+      .hero-sticky.deep .hero-sub { opacity: 1 !important; transform: none !important; }
+    }
 
     /* =====================
        STORY SECTIONS (shared layout primitives)
@@ -503,19 +582,13 @@
     }
 
     /* =====================
-       REDUCED MOTION — show everything immediately, no animation
+       REDUCED MOTION — non-hero reveal elements
     ===================== */
     @media (prefers-reduced-motion: reduce) {
-      .reveal, .pop-card, .caption-block,
-      .hero-eyebrow, .hero-headline, .hero-sub, .hero-device {
+      .reveal, .pop-card, .caption-block {
         opacity: 1 !important; transform: none !important;
         transition: none !important;
       }
-      .hero-sticky { position: relative; height: auto; padding: 8rem 5% 4rem; }
-      .hero-sticky-wrap { height: auto; }
-      .hero-sticky.deep .hero-headline { opacity: 1 !important; transform: none !important; }
-      .hero-sticky.deep .hero-sub { opacity: 1 !important; transform: none !important; }
-      .hero-device { position: relative; bottom: auto; margin: 3rem auto 0; }
     }
   </style>
 </head>
@@ -540,20 +613,29 @@
   <!-- ====== HERO — pinned scroll sequence ====== -->
   <div class="hero-sticky-wrap" id="top">
     <div class="hero-sticky" id="hero-sticky">
-      <div class="hero-eyebrow">CrossLens for Android</div>
-      <h1 class="hero-headline">
-        One event.<br>
-        <span class="hero-line2">A world of perspectives.</span>
-      </h1>
-      <p class="hero-sub">CrossLens lets you follow the same story across countries, languages, and institutions — side by side, with sources you can inspect.</p>
-      <img
-        class="hero-device"
-        src="screenshots/home-dark.png"
-        alt="CrossLens home feed showing clustered stories"
-        width="280"
-        loading="eager"
-        fetchpriority="high"
-      >
+
+      <!-- Left: text -->
+      <div class="hero-text-col">
+        <div class="hero-eyebrow">CrossLens for Android</div>
+        <h1 class="hero-headline">
+          One event.<br>
+          <span class="hero-line2">A world of perspectives.</span>
+        </h1>
+        <p class="hero-sub">CrossLens lets you follow the same story across countries, languages, and institutions — side by side, with sources you can inspect.</p>
+      </div>
+
+      <!-- Right: device screenshot -->
+      <div class="hero-device-col">
+        <img
+          class="hero-device"
+          src="screenshots/home-dark.png"
+          alt="CrossLens home feed showing clustered global stories"
+          width="380"
+          loading="eager"
+          fetchpriority="high"
+        >
+      </div>
+
     </div>
   </div>
 
