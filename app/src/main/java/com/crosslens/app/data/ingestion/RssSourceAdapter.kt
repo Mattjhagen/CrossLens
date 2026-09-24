@@ -53,7 +53,8 @@ class RssSourceAdapter(
                             languageTag = inferLanguageFromSourceId(sourceId),
                             headline = item.title,
                             excerpt = item.description,
-                            contentPermission = ContentPermission.EXPLICIT_EXCERPT
+                            contentPermission = ContentPermission.EXPLICIT_EXCERPT,
+                            imageUrl = item.imageUrl
                         )
                     }
                 }

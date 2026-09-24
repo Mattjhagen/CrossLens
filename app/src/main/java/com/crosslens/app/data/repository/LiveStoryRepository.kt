@@ -270,7 +270,8 @@ class LiveStoryRepository @Inject constructor(
                                 originalContent = article.excerpt, // RSS only has excerpts
                                 attribution = adapter.sourceName,
                                 isDemo = false,
-                                requiresSubscription = true // Assume paywall for original articles
+                                requiresSubscription = true, // Assume paywall for original articles
+                                imageUrl = article.imageUrl
                             )
                         )
                     }
@@ -288,7 +289,8 @@ class LiveStoryRepository @Inject constructor(
                             claimIds = emptyList(),
                             lensGapScore = null,
                             lensGapStatus = "NOT_ASSESSED",
-                            lensGapIsDemo = false
+                            lensGapIsDemo = false,
+                            imageUrl = primaryArticle.second.imageUrl
                         )
                     )
                 }

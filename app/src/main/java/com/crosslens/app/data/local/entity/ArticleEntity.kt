@@ -17,5 +17,6 @@ data class ArticleEntity(
     val originalContent: String, // Full article content
     val attribution: String,
     val isDemo: Boolean,
-    val requiresSubscription: Boolean = false // Whether source likely has paywall
+    val requiresSubscription: Boolean = false, // Whether source likely has paywall
+    val imageUrl: String? = null // HTTPS URL to article image from source
 )

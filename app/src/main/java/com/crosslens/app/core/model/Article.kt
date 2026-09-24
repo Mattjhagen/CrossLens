@@ -14,7 +14,8 @@ data class Article(
     val originalContent: String, // Full article content
     val attribution: String,
     val contentUseMetadata: ContentUseMetadata,
-    val requiresSubscription: Boolean = false // Whether source likely has paywall
+    val requiresSubscription: Boolean = false, // Whether source likely has paywall
+    val imageUrl: String? = null // HTTPS URL to article image from source
 )
 
 data class ContentUseMetadata(

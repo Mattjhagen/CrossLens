@@ -32,7 +32,8 @@ fun StoryEntity.toDomain(lensGapDetails: String? = null): Story {
         eventCountryCodes = eventCountryCodes,
         articleIds = articleIds,
         claimIds = claimIds,
-        lensGapAssessment = lensGap
+        lensGapAssessment = lensGap,
+        imageUrl = imageUrl
     )
 }
 
@@ -69,7 +70,8 @@ fun ArticleEntity.toDomain() = Article(
         isDemo = isDemo,
         isDemoPlaceholder = true
     ),
-    requiresSubscription = requiresSubscription
+    requiresSubscription = requiresSubscription,
+    imageUrl = imageUrl
 )
 
 fun TranslationEntity.toDomain() = Translation(

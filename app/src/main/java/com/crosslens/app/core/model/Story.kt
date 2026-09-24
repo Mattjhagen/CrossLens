@@ -12,7 +12,8 @@ data class Story(
     val eventCountryCodes: List<String>,
     val articleIds: List<String>,
     val claimIds: List<String>,
-    val lensGapAssessment: LensGapAssessment?
+    val lensGapAssessment: LensGapAssessment?,
+    val imageUrl: String? = null // Representative image from articles
 )
 
 data class LensGapAssessment(

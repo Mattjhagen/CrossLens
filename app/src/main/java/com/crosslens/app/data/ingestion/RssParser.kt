@@ -53,6 +53,7 @@ class RssParser(
             var currentDescription: String? = null
             var currentPubDate: String? = null
             var currentCategory: String? = null
+            var currentImageUrl: String? = null
 
             while (eventType != XmlPullParser.END_DOCUMENT && items.size < maxItems) {
                 when (eventType) {
@@ -65,6 +66,7 @@ class RssParser(
                                 currentDescription = null
                                 currentPubDate = null
                                 currentCategory = null
+                                currentImageUrl = null
                             }
                             "title" -> {
                                 if (inItem) {
@@ -91,6 +93,40 @@ class RssParser(
                                     currentCategory = readText(parser)
                                 }
                             }
+                            "enclosure" -> {
+                                // Extract image from RSS enclosure tag
+                                if (inItem && currentImageUrl == null) {
+                                    val type = parser.getAttributeValue(null, "type")
+                                    if (type?.startsWith("image/") == true) {
+                                        val url = parser.getAttributeValue(null, "url")
+                                        if (url?.startsWith("https://") == true) {
+                                            currentImageUrl = url
+                                        }
+                                    }
+                                }
+                            }
+                            "thumbnail" -> {
+                                // Media RSS thumbnail (media:thumbnail)
+                                if (inItem && currentImageUrl == null) {
+                                    val url = parser.getAttributeValue(null, "url")
+                                    if (url?.startsWith("https://") == true) {
+                                        currentImageUrl = url
+                                    }
+                                }
+                            }
+                            "content" -> {
+                                // Media RSS content (media:content) - check if it's an image
+                                if (inItem && currentImageUrl == null && parser.namespace?.contains("media") == true) {
+                                    val medium = parser.getAttributeValue(null, "medium")
+                                    val type = parser.getAttributeValue(null, "type")
+                                    if (medium == "image" || type?.startsWith("image/") == true) {
+                                        val url = parser.getAttributeValue(null, "url")
+                                        if (url?.startsWith("https://") == true) {
+                                            currentImageUrl = url
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     XmlPullParser.END_TAG -> {
@@ -105,7 +141,8 @@ class RssParser(
                                         link = currentLink.trim(),
                                         description = currentDescription?.trim() ?: "",
                                         pubDate = parsePubDate(currentPubDate),
-                                        category = currentCategory?.trim()
+                                        category = currentCategory?.trim(),
+                                        imageUrl = currentImageUrl?.trim()
                                     )
                                 )
                             }
@@ -155,5 +192,6 @@ data class RssFeedItem(
     val link: String,
     val description: String,
     val pubDate: Instant?,
-    val category: String?
+    val category: String?,
+    val imageUrl: String? // HTTPS URL to article image from enclosure or media:content
 )

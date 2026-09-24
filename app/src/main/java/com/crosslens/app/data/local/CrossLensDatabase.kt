@@ -18,7 +18,7 @@ import com.crosslens.app.data.local.entity.*
         EditorialReviewEntity::class,
         FeedMetadataEntity::class
     ],
-    version = 6,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
