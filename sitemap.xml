@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://crosslens.space/</loc></url>
-  <url><loc>https://crosslens.space/privacy-policy.html</loc></url>
-  <url><loc>https://crosslens.space/terms.html</loc></url>
+  <url><loc>https://crosslens.space/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/privacy-policy.html</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/terms.html</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/sources/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/topics/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/sources/bbc-news/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/sources/al-jazeera/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/sources/deutsche-welle/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/sources/france-24/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/topics/world-news/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/topics/politics/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/topics/climate/</loc><lastmod>2026-09-24</lastmod></url>
+  <url><loc>https://crosslens.space/topics/technology/</loc><lastmod>2026-09-24</lastmod></url>
 </urlset>

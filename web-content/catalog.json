@@ -1,0 +1,47 @@
+{
+  "sources": [
+    {
+      "slug": "bbc-news",
+      "name": "BBC News",
+      "homepage": "https://www.bbc.com/news",
+      "feedUrl": "https://feeds.bbci.co.uk/news/rss.xml",
+      "country": "United Kingdom",
+      "language": "English",
+      "description": "BBC News is included in CrossLens' initial RSS feed set. Articles link to the original reporting."
+    },
+    {
+      "slug": "al-jazeera",
+      "name": "Al Jazeera",
+      "homepage": "https://www.aljazeera.com",
+      "feedUrl": "https://www.aljazeera.com/xml/rss/all.xml",
+      "country": "Qatar",
+      "language": "English",
+      "description": "Al Jazeera is included in CrossLens' initial RSS feed set. Articles link to the original reporting."
+    },
+    {
+      "slug": "deutsche-welle",
+      "name": "Deutsche Welle",
+      "homepage": "https://www.dw.com",
+      "feedUrl": "https://rss.dw.com/xml/rss-en-all",
+      "country": "Germany",
+      "language": "English",
+      "description": "Deutsche Welle is included in CrossLens' initial RSS feed set. Articles link to the original reporting."
+    },
+    {
+      "slug": "france-24",
+      "name": "France 24",
+      "homepage": "https://www.france24.com/en/",
+      "feedUrl": "https://www.france24.com/en/rss",
+      "country": "France",
+      "language": "English",
+      "description": "France 24 is included in CrossLens' initial RSS feed set. Articles link to the original reporting."
+    }
+  ],
+  "topics": [
+    { "slug": "world-news", "name": "World news", "description": "Cross-border reporting and international events, presented with visible publisher context." },
+    { "slug": "politics", "name": "Politics", "description": "Coverage of public policy and political events from available publishers." },
+    { "slug": "climate", "name": "Climate", "description": "Reporting about climate, environment, energy, and related public policy." },
+    { "slug": "technology", "name": "Technology", "description": "Reporting about technology, science, and their public impact." }
+  ],
+  "stories": []
+}
