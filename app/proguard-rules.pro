@@ -35,3 +35,8 @@
 
 # Keep exception classes for crash reporting
 -keep public class * extends java.lang.Exception
+
+# Crashlytics
+-keepattributes *Annotation*
+-keep class com.google.firebase.crashlytics.** { *; }
+-dontwarn com.google.firebase.crashlytics.**

@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Apply Firebase plugins only for release builds
+apply(plugin = "com.google.gms.google-services")
+apply(plugin = "com.google.firebase.crashlytics")
+
 // Load release signing configuration
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -46,8 +50,8 @@ android {
         applicationId = "com.crosslens.app"
         minSdk = 29
         targetSdk = 34
-        versionCode = 12
-        versionName = "0.0.12-beta"
+        versionCode = 13
+        versionName = "0.0.13-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -93,6 +97,11 @@ android {
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+
+            // Disable Crashlytics for debug builds
+            configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
+                mappingFileUploadEnabled = false
+            }
         }
         release {
             isMinifyEnabled = true
@@ -100,6 +109,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            // Upload ProGuard mapping files to Crashlytics for symbolicated stack traces
+            configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
+                mappingFileUploadEnabled = true
+            }
 
             // Apply signing configuration if available
             if (hasSigningConfig) {
@@ -233,6 +247,10 @@ dependencies {
 
     // JSON
     implementation(libs.gson)
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
 
     // Testing
     testImplementation(libs.junit)

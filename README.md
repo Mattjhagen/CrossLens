@@ -6,7 +6,7 @@ CrossLens is an Android news app for understanding how the same event is reporte
 
 The goal is informed comparison: show where reporting overlaps, where emphasis differs, and what evidence supports those observations. A source's country is context, not a proxy for its politics or the views of an entire population.
 
-> **Project status:** ✅ **Release Build Foundation milestone complete (v0.0.12-beta).** The project now supports properly signed release builds with secure credential management, comprehensive signing documentation, and a crash reporting integration plan. The app continues to work offline with mock data and includes personalized "For You — Demo" recommendations. Future work includes Firebase Crashlytics integration, live local sources, and translation services.
+> **Project status:** ✅ **Crash Reporting milestone complete (v0.0.13-beta).** Firebase Crashlytics is now integrated for production crash monitoring with ProGuard mapping file upload. The app supports properly signed release builds, includes personalized "For You — Demo" recommendations, and works offline with mock data. Future work includes crash reporting UI controls, live local sources, and translation services.
 
 ## Quick Start
 
@@ -53,6 +53,7 @@ ls -lh app/build/outputs/apk/release/app-release.apk
 - **Unit Tests:** ✅ 139/139 passed
 - **Lint:** ✅ 0 errors, 0 warnings
 - **Release Signing:** ✅ Configured (see [RELEASE_SIGNING.md](docs/RELEASE_SIGNING.md))
+- **Crash Reporting:** ✅ Firebase Crashlytics integrated
 - **Quality Audit:** See [QUALITY_REPORT.md](docs/QUALITY_REPORT.md)
 
 ## Product principles
