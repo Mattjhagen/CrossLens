@@ -15,7 +15,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindStoryRepository(impl: MockStoryRepository): StoryRepository
+    abstract fun bindStoryRepository(impl: com.crosslens.app.data.repository.LiveStoryRepository): StoryRepository
 
     @Binds
     @Singleton

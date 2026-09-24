@@ -50,8 +50,8 @@ android {
         applicationId = "com.crosslens.app"
         minSdk = 29
         targetSdk = 34
-        versionCode = 13
-        versionName = "0.0.13-beta"
+        versionCode = 14
+        versionName = "0.0.14-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

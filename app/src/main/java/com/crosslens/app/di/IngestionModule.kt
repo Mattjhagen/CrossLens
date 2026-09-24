@@ -1,13 +1,11 @@
 package com.crosslens.app.di
 
-import com.crosslens.app.data.ingestion.EventClusteringPipeline
-import com.crosslens.app.data.ingestion.InMemorySourceRegistry
-import com.crosslens.app.data.ingestion.SourceRegistry
-import com.crosslens.app.data.ingestion.SourceRegistryValidator
+import com.crosslens.app.data.ingestion.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import javax.inject.Singleton
 
 @Module
@@ -33,5 +31,17 @@ object IngestionModule {
             registry = registry,
             allowDemoSources = true // Prototype mode
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideHttpClient(): OkHttpClient {
+        return RssSourceAdapter.createHttpClient()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRssSourceAdapters(httpClient: OkHttpClient): List<RssSourceAdapter> {
+        return RssSourceAdapter.createApprovedSources(httpClient)
     }
 }

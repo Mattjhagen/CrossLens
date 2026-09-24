@@ -18,9 +18,15 @@ interface StoryDao {
     @Query("SELECT * FROM stories WHERE id = :storyId")
     suspend fun getStoryById(storyId: String): StoryEntity?
 
+    @Query("SELECT * FROM stories")
+    suspend fun getAllStories(): List<StoryEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStories(stories: List<StoryEntity>)
 
     @Query("DELETE FROM stories")
     suspend fun deleteAllStories()
+
+    @Query("DELETE FROM stories WHERE id IN (:storyIds)")
+    suspend fun deleteStories(storyIds: List<String>)
 }

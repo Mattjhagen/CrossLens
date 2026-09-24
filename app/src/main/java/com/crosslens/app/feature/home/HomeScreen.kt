@@ -49,6 +49,7 @@ fun HomeScreen(
     val showForYou by viewModel.showForYou.collectAsStateWithLifecycle()
     val forYouRecommendations by viewModel.forYouRecommendations.collectAsStateWithLifecycle()
     val forYouEligible by viewModel.forYouEligible.collectAsStateWithLifecycle()
+    val feedMetadata by viewModel.feedMetadata.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -211,18 +212,46 @@ fun HomeScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
+
+                                // Feed state indicator
+                                val currentFeedMetadata = feedMetadata
+                                val feedStateLabel = when (currentFeedMetadata?.state) {
+                                    com.crosslens.app.core.model.FeedState.LIVE -> "Live Feed"
+                                    com.crosslens.app.core.model.FeedState.CACHED -> "Cached Feed"
+                                    com.crosslens.app.core.model.FeedState.DEMO_FALLBACK -> stringResource(R.string.mock_edition_label)
+                                    com.crosslens.app.core.model.FeedState.LOADING -> "Updating..."
+                                    com.crosslens.app.core.model.FeedState.ERROR -> "Feed Unavailable"
+                                    null -> stringResource(R.string.mock_edition_label)
+                                }
                                 Text(
-                                    text = stringResource(R.string.mock_edition_label),
+                                    text = feedStateLabel,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = when (currentFeedMetadata?.state) {
+                                        com.crosslens.app.core.model.FeedState.LIVE -> MaterialTheme.colorScheme.tertiary
+                                        com.crosslens.app.core.model.FeedState.CACHED -> MaterialTheme.colorScheme.secondary
+                                        else -> MaterialTheme.colorScheme.primary
+                                    }
                                 )
-                                if (lastRefreshedTime != null) {
+
+                                // Show last updated time for live/cached feeds
+                                val displayTime = currentFeedMetadata?.lastUpdated ?: lastRefreshedTime
+                                if (displayTime != null) {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = stringResource(
                                             R.string.last_refreshed,
-                                            formatRefreshTime(lastRefreshedTime)
+                                            formatRefreshTime(displayTime)
                                         ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                // Show source count for live feeds
+                                if (currentFeedMetadata != null && currentFeedMetadata.successfulSourceCount > 0) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "${currentFeedMetadata.successfulSourceCount} source${if (currentFeedMetadata.successfulSourceCount > 1) "s" else ""}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
