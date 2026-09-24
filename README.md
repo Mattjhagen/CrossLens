@@ -6,7 +6,7 @@ CrossLens is an Android news app for understanding how the same event is reporte
 
 The goal is informed comparison: show where reporting overlaps, where emphasis differs, and what evidence supports those observations. A source's country is context, not a proxy for its politics or the views of an entire population.
 
-> **Project status:** ✅ **Personal Relevance Feedback milestone complete (v0.0.8-beta).** The app runs offline with mock data, includes full source article reading with personal feedback controls, and manages preferences locally. Future work includes live sources, recommendation algorithms, translation services, and automated analysis.
+> **Project status:** ✅ **Local Sources milestone complete (v0.0.9-beta).** The app runs offline with mock data, includes fictional local news from demo cities (Seattle, Paris, London, Toronto), manual location selection, and local filtering. Future work includes live local sources, recommendation algorithms, translation services, and automated analysis.
 
 ## Quick Start
 
@@ -92,20 +92,22 @@ Home, Explore, and Settings are top-level destinations. Story and CrossLens are 
 ### Features
 - ✅ Offline-first: All data seeded from mock fixtures in Room
 - ✅ Free/Plus access: Free users see first 2 sources, Plus unlocks all
-- ✅ DataStore persistence: Saved stories, last-opened, preferences, personal relevance feedback
+- ✅ DataStore persistence: Saved stories, last-opened, preferences, personal relevance feedback, demo local location
 - ✅ Custom Material 3 theme: Editorial design with serif/sans typography
 - ✅ Reduced motion: Animations respect user preference
 - ✅ Multilingual fixtures: English, French, Arabic, Japanese samples
 - ✅ Editorial review workflow: Offline demo for reviewing cross-language matches and syndication candidates
 - ✅ Personal relevance feedback: Transparent "Show more/less like this" controls for future recommendations
+- ✅ Local sources: Demo local news from 4 cities (Seattle, Paris, London, Toronto) with manual location selection and filtering
 
 ### Mock Data
-- 3 story clusters (climate summit, AI regulation, trade)
-- 6 sources across 4 regions (BBC, Le Monde, Al Jazeera, NYT, Globe and Mail, 読売新聞)
+- 7 story clusters (3 global + 4 local: climate summit, AI regulation, trade, Seattle transit, Paris cycling, London housing, Toronto tech)
+- 14 sources: 6 national/global + 8 local across 4 demo cities
 - Demo Lens Gap assessments clearly labeled
 - Claims with CORROBORATED/DISPUTED status
 - Frame observations with evidence references
 - Editorial review candidates (cross-language matches, syndication detection)
+- Local sources with publisher types (newspaper, TV)
 
 ## Technical Foundation
 

@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -197,6 +198,24 @@ fun SettingsScreen(
                         personalPreferences = viewModel.personalRelevancePreferences.collectAsStateWithLifecycle().value,
                         onRemovePreference = viewModel::removePersonalPreference,
                         onClearAll = viewModel::clearAllPersonalPreferences
+                    )
+                }
+
+                item {
+                    Divider()
+                }
+
+                item {
+                    Text(
+                        text = "Local News",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+
+                item {
+                    LocalLocationSection(
+                        selectedLocationId = userPrefs!!.demoLocalLocation,
+                        onLocationSelected = viewModel::updateDemoLocalLocation
                     )
                 }
 
@@ -395,6 +414,119 @@ private fun formatDimensionValue(value: String, type: com.crosslens.app.core.mod
                 else -> value.replace("_", " ").split(" ").joinToString(" ") {
                     it.replaceFirstChar { char -> char.uppercase() }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LocalLocationSection(
+    selectedLocationId: String?,
+    onLocationSelected: (String?) -> Unit
+) {
+    Card {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Demo Local News",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = "Choose a demo location to see fictional local news stories. This is a preview feature - live local source availability will vary by location.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            val selectedLocation = selectedLocationId?.let {
+                com.crosslens.app.core.model.DemoLocalLocations.findById(it)
+            }
+
+            if (selectedLocation != null) {
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "${selectedLocation.cityName}, ${selectedLocation.regionName}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Demo Location",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        IconButton(onClick = { onLocationSelected(null) }) {
+                            Text("×", style = MaterialTheme.typography.titleLarge)
+                        }
+                    }
+                }
+            }
+
+            var showLocationPicker by remember { mutableStateOf(false) }
+
+            OutlinedButton(
+                onClick = { showLocationPicker = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (selectedLocation == null) "Choose location" else "Change location")
+            }
+
+            if (showLocationPicker) {
+                AlertDialog(
+                    onDismissRequest = { showLocationPicker = false },
+                    title = { Text("Choose Demo Location") },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "Select a demo location to explore fictional local news:",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            com.crosslens.app.core.model.DemoLocalLocations.ALL_DEMO_LOCATIONS.forEach { location ->
+                                Card(
+                                    onClick = {
+                                        onLocationSelected(location.id)
+                                        showLocationPicker = false
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(
+                                            text = location.cityName,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = "${location.regionName}, ${location.countryCode}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showLocationPicker = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            if (selectedLocation != null) {
+                Text(
+                    text = "Local stories from this location will appear in Home when you filter by local news.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

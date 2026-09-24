@@ -23,6 +23,7 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         val TRANSLATION_PREF = stringPreferencesKey("translation_preference")
         val THEME = stringPreferencesKey("theme")
         val REDUCED_MOTION = booleanPreferencesKey("reduced_motion")
+        val DEMO_LOCAL_LOCATION = stringPreferencesKey("demo_local_location")
     }
 
     override val preferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
@@ -35,7 +36,8 @@ class DataStoreUserPreferencesRepository @Inject constructor(
                 TranslationPreference.valueOf(it)
             } ?: TranslationPreference.AUTO,
             theme = prefs[PreferencesKeys.THEME]?.let { Theme.valueOf(it) } ?: Theme.SYSTEM,
-            reducedMotion = prefs[PreferencesKeys.REDUCED_MOTION] ?: false
+            reducedMotion = prefs[PreferencesKeys.REDUCED_MOTION] ?: false,
+            demoLocalLocation = prefs[PreferencesKeys.DEMO_LOCAL_LOCATION]
         )
     }
 
@@ -71,5 +73,12 @@ class DataStoreUserPreferencesRepository @Inject constructor(
 
     override suspend fun updateReducedMotion(enabled: Boolean) {
         dataStore.edit { it[PreferencesKeys.REDUCED_MOTION] = enabled }
+    }
+
+    override suspend fun updateDemoLocalLocation(locationId: String?) {
+        dataStore.edit {
+            if (locationId == null) it.remove(PreferencesKeys.DEMO_LOCAL_LOCATION)
+            else it[PreferencesKeys.DEMO_LOCAL_LOCATION] = locationId
+        }
     }
 }

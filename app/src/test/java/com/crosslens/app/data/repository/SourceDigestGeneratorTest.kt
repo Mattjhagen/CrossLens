@@ -96,6 +96,7 @@ class SourceDigestGeneratorTest {
         regionIds = listOf("north_america"),
         defaultLanguages = listOf("en"),
         ownershipInfo = null,
-        editorialContext = null
+        editorialContext = null,
+        localSourceMetadata = null
     )
 }

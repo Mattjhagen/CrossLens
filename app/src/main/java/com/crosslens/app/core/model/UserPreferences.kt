@@ -7,7 +7,8 @@ data class UserPreferences(
     val enabledSourceIds: Set<String>,
     val translationPreference: TranslationPreference,
     val theme: Theme,
-    val reducedMotion: Boolean
+    val reducedMotion: Boolean,
+    val demoLocalLocation: String? = null // LocalLocation.id for demo local news
 )
 
 enum class TranslationPreference {

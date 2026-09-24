@@ -19,11 +19,29 @@ class HomeViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var storyRepository: StoryRepository
+    private lateinit var userPreferencesRepository: com.crosslens.app.data.preferences.UserPreferencesRepository
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         storyRepository = mock()
+        userPreferencesRepository = mock()
+
+        // Default preferences with no local location
+        whenever(userPreferencesRepository.preferencesFlow).thenReturn(
+            flowOf(
+                UserPreferences(
+                    readingLanguage = "en",
+                    homeCountry = null,
+                    homeRegion = null,
+                    enabledSourceIds = emptySet(),
+                    translationPreference = TranslationPreference.AUTO,
+                    theme = Theme.SYSTEM,
+                    reducedMotion = false,
+                    demoLocalLocation = null
+                )
+            )
+        )
     }
 
     @After
@@ -34,7 +52,7 @@ class HomeViewModelTest {
     @Test
     fun `empty story list shows Empty state`() = runTest {
         whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
-        val viewModel = HomeViewModel(storyRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
 
         advanceUntilIdle()
 
@@ -58,7 +76,7 @@ class HomeViewModelTest {
             )
         )
         whenever(storyRepository.observeStories()).thenReturn(flowOf(stories))
-        val viewModel = HomeViewModel(storyRepository)
+        val viewModel = HomeViewModel(storyRepository, userPreferencesRepository)
 
         advanceUntilIdle()
 

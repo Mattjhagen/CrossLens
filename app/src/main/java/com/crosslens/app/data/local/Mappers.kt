@@ -44,7 +44,14 @@ fun SourceEntity.toDomain() = Source(
     regionIds = regionIds,
     defaultLanguages = defaultLanguages,
     ownershipInfo = null,
-    editorialContext = null
+    editorialContext = null,
+    localSourceMetadata = if (isLocal && localLocationId != null && publisherType != null) {
+        LocalSourceMetadata(
+            localLocationId = localLocationId,
+            publisherType = PublisherType.valueOf(publisherType),
+            isDemo = true
+        )
+    } else null
 )
 
 fun ArticleEntity.toDomain() = Article(

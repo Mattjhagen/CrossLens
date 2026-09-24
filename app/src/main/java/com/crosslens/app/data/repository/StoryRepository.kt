@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface StoryRepository {
     fun observeStories(): Flow<List<Story>>
     fun observeStory(storyId: String): Flow<Story?>
+    fun observeLocalStories(locationId: String): Flow<List<Story>> // Get local stories for location
     suspend fun getStory(storyId: String): Story?
     suspend fun getArticlesForStory(storyId: String): List<Article>
     suspend fun getClaimsForStory(storyId: String): List<Claim>

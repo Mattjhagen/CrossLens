@@ -17,7 +17,7 @@ import com.crosslens.app.data.local.entity.*
         EditorialDecisionEntity::class,
         EditorialReviewEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

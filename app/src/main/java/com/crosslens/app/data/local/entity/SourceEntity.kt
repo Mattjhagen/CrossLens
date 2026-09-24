@@ -10,5 +10,8 @@ data class SourceEntity(
     val homepage: String,
     val countryCodes: List<String>,
     val regionIds: List<String>,
-    val defaultLanguages: List<String>
+    val defaultLanguages: List<String>,
+    val isLocal: Boolean = false,
+    val localLocationId: String? = null,
+    val publisherType: String? = null // PublisherType enum name
 )

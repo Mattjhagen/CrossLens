@@ -14,4 +14,5 @@ interface UserPreferencesRepository {
     suspend fun updateTranslationPreference(preference: TranslationPreference)
     suspend fun updateTheme(theme: Theme)
     suspend fun updateReducedMotion(enabled: Boolean)
+    suspend fun updateDemoLocalLocation(locationId: String?)
 }

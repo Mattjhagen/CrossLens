@@ -4,9 +4,7 @@ import com.crosslens.app.core.model.*
 import com.crosslens.app.data.local.*
 import com.crosslens.app.data.local.dao.*
 import com.crosslens.app.data.repository.StoryRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,6 +44,25 @@ class MockStoryRepository @Inject constructor(
 
     override fun observeStory(storyId: String): Flow<Story?> {
         return storyDao.observeStoryById(storyId).map { it?.toDomain() }
+    }
+
+    override fun observeLocalStories(locationId: String): Flow<List<Story>> {
+        return combine(
+            database.sourceDao().observeAllSources(),
+            database.storyDao().observeAllStories()
+        ) { sources, stories ->
+            // Find local sources for this location
+            val localSourceIds = sources
+                .filter { it.isLocal && it.localLocationId == locationId }
+                .map { it.id }
+                .toSet()
+
+            // Filter stories that have at least one article from a local source at this location
+            stories.filter { story ->
+                val articles = database.articleDao().getArticlesByIds(story.articleIds)
+                articles.any { it.sourceId in localSourceIds }
+            }.map { it.toDomain() }
+        }
     }
 
     override suspend fun getStory(storyId: String): Story? {

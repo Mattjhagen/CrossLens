@@ -55,6 +55,98 @@ object MockFixtures {
             countryCodes = listOf("JP"),
             regionIds = listOf("asia"),
             defaultLanguages = listOf("ja")
+        ),
+        // Local sources - Seattle
+        SourceEntity(
+            id = "seattle-times-local",
+            name = "The Seattle Times - Local",
+            homepage = "https://www.seattletimes.com/seattle-news/",
+            countryCodes = listOf("US"),
+            regionIds = listOf("north_america"),
+            defaultLanguages = listOf("en"),
+            isLocal = true,
+            localLocationId = "seattle_wa_us",
+            publisherType = "LOCAL_NEWSPAPER"
+        ),
+        SourceEntity(
+            id = "king5-local",
+            name = "KING 5 News",
+            homepage = "https://www.king5.com",
+            countryCodes = listOf("US"),
+            regionIds = listOf("north_america"),
+            defaultLanguages = listOf("en"),
+            isLocal = true,
+            localLocationId = "seattle_wa_us",
+            publisherType = "LOCAL_TV"
+        ),
+        // Local sources - Paris
+        SourceEntity(
+            id = "le-parisien-local",
+            name = "Le Parisien",
+            homepage = "https://www.leparisien.fr",
+            countryCodes = listOf("FR"),
+            regionIds = listOf("europe"),
+            defaultLanguages = listOf("fr"),
+            isLocal = true,
+            localLocationId = "paris_idf_fr",
+            publisherType = "LOCAL_NEWSPAPER"
+        ),
+        SourceEntity(
+            id = "france3-paris-local",
+            name = "France 3 Paris Île-de-France",
+            homepage = "https://www.france.tv/france-3/",
+            countryCodes = listOf("FR"),
+            regionIds = listOf("europe"),
+            defaultLanguages = listOf("fr"),
+            isLocal = true,
+            localLocationId = "paris_idf_fr",
+            publisherType = "LOCAL_TV"
+        ),
+        // Local sources - London
+        SourceEntity(
+            id = "evening-standard-local",
+            name = "Evening Standard",
+            homepage = "https://www.standard.co.uk",
+            countryCodes = listOf("GB"),
+            regionIds = listOf("europe"),
+            defaultLanguages = listOf("en"),
+            isLocal = true,
+            localLocationId = "london_eng_gb",
+            publisherType = "LOCAL_NEWSPAPER"
+        ),
+        SourceEntity(
+            id = "bbc-london-local",
+            name = "BBC London",
+            homepage = "https://www.bbc.com/news/england/london",
+            countryCodes = listOf("GB"),
+            regionIds = listOf("europe"),
+            defaultLanguages = listOf("en"),
+            isLocal = true,
+            localLocationId = "london_eng_gb",
+            publisherType = "LOCAL_TV"
+        ),
+        // Local sources - Toronto
+        SourceEntity(
+            id = "toronto-star-local",
+            name = "Toronto Star",
+            homepage = "https://www.thestar.com/news/gta.html",
+            countryCodes = listOf("CA"),
+            regionIds = listOf("north_america"),
+            defaultLanguages = listOf("en"),
+            isLocal = true,
+            localLocationId = "toronto_on_ca",
+            publisherType = "LOCAL_NEWSPAPER"
+        ),
+        SourceEntity(
+            id = "cp24-local",
+            name = "CP24",
+            homepage = "https://www.cp24.com",
+            countryCodes = listOf("CA"),
+            regionIds = listOf("north_america"),
+            defaultLanguages = listOf("en"),
+            isLocal = true,
+            localLocationId = "toronto_on_ca",
+            publisherType = "LOCAL_TV"
         )
     )
 
@@ -96,6 +188,66 @@ object MockFixtures {
             topicIds = listOf("economics", "trade"),
             eventCountryCodes = listOf("CA", "US", "MX"),
             articleIds = listOf("trade-nyt", "trade-globe"),
+            claimIds = emptyList(),
+            lensGapScore = null,
+            lensGapStatus = "INSUFFICIENT_COVERAGE",
+            lensGapIsDemo = true
+        ),
+        // Local stories - Seattle
+        StoryEntity(
+            id = "seattle-transit-expansion",
+            title = "Seattle Transit Expansion Plans Advance",
+            summary = "City council approves funding for light rail extension to Ballard and West Seattle neighborhoods.",
+            eventTime = baseTime.minus(8, ChronoUnit.HOURS),
+            updatedTime = baseTime.minus(4, ChronoUnit.HOURS),
+            topicIds = listOf("transportation", "local_government"),
+            eventCountryCodes = listOf("US"),
+            articleIds = listOf("seattle-transit-times", "seattle-transit-king5"),
+            claimIds = emptyList(),
+            lensGapScore = null,
+            lensGapStatus = "INSUFFICIENT_COVERAGE",
+            lensGapIsDemo = true
+        ),
+        // Local stories - Paris
+        StoryEntity(
+            id = "paris-cycling-infrastructure",
+            title = "Paris Expands Cycling Infrastructure",
+            summary = "Mayor announces new protected bike lanes across 12 arrondissements as part of sustainable mobility plan.",
+            eventTime = baseTime.minus(12, ChronoUnit.HOURS),
+            updatedTime = baseTime.minus(6, ChronoUnit.HOURS),
+            topicIds = listOf("transportation", "environment"),
+            eventCountryCodes = listOf("FR"),
+            articleIds = listOf("paris-cycling-parisien", "paris-cycling-france3"),
+            claimIds = emptyList(),
+            lensGapScore = null,
+            lensGapStatus = "INSUFFICIENT_COVERAGE",
+            lensGapIsDemo = true
+        ),
+        // Local stories - London
+        StoryEntity(
+            id = "london-housing-development",
+            title = "London Announces Affordable Housing Initiative",
+            summary = "City officials unveil plan for 10,000 new affordable homes across five boroughs over next three years.",
+            eventTime = baseTime.minus(10, ChronoUnit.HOURS),
+            updatedTime = baseTime.minus(5, ChronoUnit.HOURS),
+            topicIds = listOf("housing", "local_government"),
+            eventCountryCodes = listOf("GB"),
+            articleIds = listOf("london-housing-standard", "london-housing-bbc"),
+            claimIds = emptyList(),
+            lensGapScore = null,
+            lensGapStatus = "INSUFFICIENT_COVERAGE",
+            lensGapIsDemo = true
+        ),
+        // Local stories - Toronto
+        StoryEntity(
+            id = "toronto-tech-hub",
+            title = "Toronto Tech Sector Sees Record Investment",
+            summary = "Region attracts $2.5 billion in tech sector investment, creating thousands of jobs in AI and software development.",
+            eventTime = baseTime.minus(14, ChronoUnit.HOURS),
+            updatedTime = baseTime.minus(7, ChronoUnit.HOURS),
+            topicIds = listOf("technology", "economics"),
+            eventCountryCodes = listOf("CA"),
+            articleIds = listOf("toronto-tech-star", "toronto-tech-cp24"),
             claimIds = emptyList(),
             lensGapScore = null,
             lensGapStatus = "INSUFFICIENT_COVERAGE",
@@ -205,6 +357,170 @@ object MockFixtures {
                 The proposal now moves to the European Parliament and Council for review and potential amendments. If approved, the regulations would take effect across EU member states within two years, with companies facing substantial fines for non-compliance.
             """.trimIndent(),
             attribution = "BBC Technology",
+            isDemo = true,
+            requiresSubscription = false
+        ),
+        // Seattle local articles
+        ArticleEntity(
+            id = "seattle-transit-times",
+            storyId = "seattle-transit-expansion",
+            sourceId = "seattle-times-local",
+            originalUrl = "https://demo.example/seattle-times-transit",
+            publishedTime = baseTime.minus(8, ChronoUnit.HOURS),
+            originalLanguage = "en",
+            originalHeadline = "Seattle Council Approves $1.2B Light Rail Expansion to Ballard, West Seattle",
+            originalExcerpt = "The Seattle City Council voted 7-2 to approve funding for extending light rail service to two neighborhoods long awaiting rapid transit connections.",
+            originalContent = """
+                The Seattle City Council voted 7-2 to approve funding for extending light rail service to two neighborhoods long awaiting rapid transit connections.
+
+                The approved plan allocates $1.2 billion for light rail extensions to Ballard and West Seattle, with construction expected to begin in 2027 and service starting by 2032.
+
+                "This represents a generational investment in sustainable transportation for Seattle," said Council Member Maria Rodriguez. The extensions will add 12 miles of new track and 8 stations.
+            """.trimIndent(),
+            attribution = "Seattle Times",
+            isDemo = true,
+            requiresSubscription = false
+        ),
+        ArticleEntity(
+            id = "seattle-transit-king5",
+            storyId = "seattle-transit-expansion",
+            sourceId = "king5-local",
+            originalUrl = "https://demo.example/king5-transit",
+            publishedTime = baseTime.minus(7, ChronoUnit.HOURS),
+            originalLanguage = "en",
+            originalHeadline = "Major Transit Win: Light Rail Coming to Ballard, West Seattle",
+            originalExcerpt = "After years of community advocacy, Seattle takes major step toward expanding light rail network to underserved neighborhoods.",
+            originalContent = """
+                After years of community advocacy, Seattle takes major step toward expanding light rail network to underserved neighborhoods.
+
+                The Seattle City Council's approval marks a significant milestone. Community leaders expressed enthusiasm. "This will transform our neighborhood," said West Seattle Chamber president.
+
+                Construction scheduled to begin in 2027, with full service expected by 2032.
+            """.trimIndent(),
+            attribution = "KING 5 News",
+            isDemo = true,
+            requiresSubscription = false
+        ),
+        // Paris local articles
+        ArticleEntity(
+            id = "paris-cycling-parisien",
+            storyId = "paris-cycling-infrastructure",
+            sourceId = "le-parisien-local",
+            originalUrl = "https://demo.example/leparisien-velo",
+            publishedTime = baseTime.minus(12, ChronoUnit.HOURS),
+            originalLanguage = "fr",
+            originalHeadline = "Paris : 200 km de pistes cyclables sécurisées d'ici 2027",
+            originalExcerpt = "La maire Anne Hidalgo annonce un plan ambitieux pour doubler le réseau de voies cyclables protégées dans 12 arrondissements.",
+            originalContent = """
+                La maire Anne Hidalgo annonce un plan ambitieux pour doubler le réseau de voies cyclables protégées dans 12 arrondissements.
+
+                Paris va investir 250 millions d'euros pour créer 200 kilomètres de nouvelles pistes cyclables sécurisées d'ici 2027.
+
+                "Nous poursuivons notre engagement pour faire de Paris une ville cyclable," a déclaré la maire.
+            """.trimIndent(),
+            attribution = "Le Parisien",
+            isDemo = true,
+            requiresSubscription = false
+        ),
+        ArticleEntity(
+            id = "paris-cycling-france3",
+            storyId = "paris-cycling-infrastructure",
+            sourceId = "france3-paris-local",
+            originalUrl = "https://demo.example/france3-velo",
+            publishedTime = baseTime.minus(11, ChronoUnit.HOURS),
+            originalLanguage = "fr",
+            originalHeadline = "Plan vélo : Paris investit massivement dans les infrastructures cyclables",
+            originalExcerpt = "Un budget de 250 millions d'euros pour transformer 12 arrondissements et encourager la mobilité douce.",
+            originalContent = """
+                Un budget de 250 millions d'euros pour transformer 12 arrondissements et encourager la mobilité douce.
+
+                La capitale poursuit sa transformation en ville cyclable avec un investissement majeur. Le plan prévoit 200 km de pistes cyclables protégées.
+
+                L'objectif est d'atteindre 15% de déplacements à vélo d'ici 2027, contre 9% actuellement.
+            """.trimIndent(),
+            attribution = "France 3 Paris",
+            isDemo = true,
+            requiresSubscription = false
+        ),
+        // London local articles
+        ArticleEntity(
+            id = "london-housing-standard",
+            storyId = "london-housing-development",
+            sourceId = "evening-standard-local",
+            originalUrl = "https://demo.example/standard-housing",
+            publishedTime = baseTime.minus(10, ChronoUnit.HOURS),
+            originalLanguage = "en",
+            originalHeadline = "London Unveils Plan for 10,000 Affordable Homes Across Five Boroughs",
+            originalExcerpt = "Mayor announces £3 billion initiative to address housing crisis with new developments in Newham, Southwark, Brent, Haringey, and Croydon.",
+            originalContent = """
+                Mayor announces £3 billion initiative to address housing crisis with new developments across five boroughs.
+
+                London's affordable housing plan aims to deliver 10,000 new homes over three years, targeting families and key workers priced out of the market.
+
+                At least 40% of units will be designated for social housing. Construction on the first phase expected to begin in early 2027.
+            """.trimIndent(),
+            attribution = "Evening Standard",
+            isDemo = true,
+            requiresSubscription = false
+        ),
+        ArticleEntity(
+            id = "london-housing-bbc",
+            storyId = "london-housing-development",
+            sourceId = "bbc-london-local",
+            originalUrl = "https://demo.example/bbc-london-housing",
+            publishedTime = baseTime.minus(9, ChronoUnit.HOURS),
+            originalLanguage = "en",
+            originalHeadline = "Major Affordable Housing Scheme Announced for London",
+            originalExcerpt = "City officials commit £3 billion to create thousands of homes for families and key workers across capital.",
+            originalContent = """
+                City officials commit £3 billion to create thousands of homes for families and key workers across capital.
+
+                London will see 10,000 new affordable homes built over the next three years as part of major initiative to tackle housing crisis.
+
+                Developments will be spread across five boroughs with good transport links. The project will prioritize sustainable construction methods.
+            """.trimIndent(),
+            attribution = "BBC London",
+            isDemo = true,
+            requiresSubscription = false
+        ),
+        // Toronto local articles
+        ArticleEntity(
+            id = "toronto-tech-star",
+            storyId = "toronto-tech-hub",
+            sourceId = "toronto-star-local",
+            originalUrl = "https://demo.example/thestar-tech",
+            publishedTime = baseTime.minus(14, ChronoUnit.HOURS),
+            originalLanguage = "en",
+            originalHeadline = "Toronto Tech Sector Attracts Record $2.5B Investment",
+            originalExcerpt = "Region becomes North American hub for AI and software development, creating thousands of high-skilled jobs.",
+            originalContent = """
+                Region becomes North American hub for AI and software development, creating thousands of high-skilled jobs.
+
+                Toronto's tech sector has attracted record-breaking $2.5 billion in investment over the past year, solidifying position as major technology hub.
+
+                The tech boom has created approximately 8,500 new jobs in the past year. Average salaries now exceed $95,000 annually.
+            """.trimIndent(),
+            attribution = "Toronto Star",
+            isDemo = true,
+            requiresSubscription = false
+        ),
+        ArticleEntity(
+            id = "toronto-tech-cp24",
+            storyId = "toronto-tech-hub",
+            sourceId = "cp24-local",
+            originalUrl = "https://demo.example/cp24-tech",
+            publishedTime = baseTime.minus(13, ChronoUnit.HOURS),
+            originalLanguage = "en",
+            originalHeadline = "Toronto's Tech Sector Booms with $2.5B in New Investment",
+            originalExcerpt = "City emerges as AI powerhouse, attracting major companies and creating thousands of jobs in technology sector.",
+            originalContent = """
+                City emerges as AI powerhouse, attracting major companies and creating thousands of jobs in technology sector.
+
+                Toronto's technology industry continues remarkable growth with $2.5 billion in new investment announced this year.
+
+                The surge has been particularly strong in artificial intelligence and machine learning sectors. Economic impact extends beyond tech sector itself.
+            """.trimIndent(),
+            attribution = "CP24",
             isDemo = true,
             requiresSubscription = false
         )

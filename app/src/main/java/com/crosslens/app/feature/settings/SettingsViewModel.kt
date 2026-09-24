@@ -64,4 +64,10 @@ class SettingsViewModel @Inject constructor(
             personalRelevanceRepository.clearAll()
         }
     }
+
+    fun updateDemoLocalLocation(locationId: String?) {
+        viewModelScope.launch {
+            userPreferencesRepository.updateDemoLocalLocation(locationId)
+        }
+    }
 }

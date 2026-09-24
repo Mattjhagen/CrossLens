@@ -11,11 +11,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val storyRepository: StoryRepository
+    private val storyRepository: StoryRepository,
+    private val userPreferencesRepository: com.crosslens.app.data.preferences.UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    private val _showLocalOnly = MutableStateFlow(false)
+    val showLocalOnly: StateFlow<Boolean> = _showLocalOnly.asStateFlow()
 
     init {
         loadStories()
@@ -23,18 +27,33 @@ class HomeViewModel @Inject constructor(
 
     private fun loadStories() {
         viewModelScope.launch {
-            storyRepository.observeStories()
+            combine(
+                storyRepository.observeStories(),
+                userPreferencesRepository.preferencesFlow,
+                _showLocalOnly
+            ) { allStories, preferences, localOnly ->
+                if (localOnly && preferences.demoLocalLocation != null) {
+                    // Show only local stories for selected location
+                    storyRepository.observeLocalStories(preferences.demoLocalLocation).first()
+                } else {
+                    allStories
+                }
+            }
                 .catch { error ->
                     _uiState.value = HomeUiState.Error(error.message ?: "Unknown error")
                 }
                 .collect { stories ->
-                    _uiState.value = if (stories.isEmpty()) {
-                        HomeUiState.Empty
-                    } else {
-                        HomeUiState.Success(stories)
+                    _uiState.value = when {
+                        stories.isEmpty() && _showLocalOnly.value -> HomeUiState.EmptyLocal
+                        stories.isEmpty() -> HomeUiState.Empty
+                        else -> HomeUiState.Success(stories)
                     }
                 }
         }
+    }
+
+    fun toggleLocalFilter() {
+        _showLocalOnly.value = !_showLocalOnly.value
     }
 
     fun refresh() {
@@ -48,6 +67,7 @@ class HomeViewModel @Inject constructor(
 sealed interface HomeUiState {
     data object Loading : HomeUiState
     data object Empty : HomeUiState
+    data object EmptyLocal : HomeUiState
     data class Success(val stories: List<Story>) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
