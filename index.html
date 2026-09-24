@@ -11,6 +11,8 @@
   <meta property="og:url" content="https://crosslens.space/">
   <meta name="twitter:card" content="summary_large_image">
   <title>CrossLens — Global News Perspectives</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -102,7 +104,7 @@
     ===================== */
     .hero-sticky-wrap {
       /* Keep enough scroll height for the deep-scroll fade on desktop */
-      height: 200vh;
+      height: 130vh;
       position: relative;
     }
     .hero-sticky {
@@ -319,6 +321,60 @@
     [data-theme="light"] .device-frame img,
     [data-theme="light"] .device-frame-sm img {
       box-shadow: 0 30px 80px rgba(0,0,0,0.12);
+    }
+
+    /* =====================
+       PREMIUM PHONE FRAME (hero device)
+    ===================== */
+    .hero-device-phone {
+      position: relative;
+      width: clamp(220px, 38vw, 380px);
+      max-height: calc(100vh - 52px - 4rem);
+      opacity: 0;
+      transform: translateY(36px) scale(0.96);
+      transition: opacity 0.85s 0.28s var(--ease-out), transform 0.85s 0.28s var(--ease-out);
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+    .hero-sticky.entered .hero-device-phone { opacity: 1; transform: none; }
+
+    .phone-frame-wrapper {
+      position: relative;
+      width: 100%;
+      /* Android aspect ratio ~2:1 */
+      aspect-ratio: 400 / 820;
+      filter: drop-shadow(0 24px 60px rgba(0,0,0,0.5)) drop-shadow(0 8px 20px rgba(0,0,0,0.3));
+    }
+    [data-theme="light"] .phone-frame-wrapper {
+      filter: drop-shadow(0 24px 60px rgba(0,0,0,0.12)) drop-shadow(0 8px 20px rgba(0,0,0,0.08));
+    }
+
+    .phone-frame-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .phone-screen-img {
+      position: absolute;
+      /* Inset to match SVG screen area (10px margins in 400x820 viewBox) */
+      left: 2.5%;
+      top: 1.22%;
+      width: 95%;
+      height: 97.56%;
+      object-fit: cover;
+      border-radius: 8%;
+    }
+
+    /* Reduced motion: disable 3D transforms */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-device-phone {
+        transform: none !important;
+        transition: opacity 0.3s !important;
+      }
     }
 
     /* =====================
@@ -624,16 +680,42 @@
         <p class="hero-sub">CrossLens lets you follow the same story across countries, languages, and institutions — side by side, with sources you can inspect.</p>
       </div>
 
-      <!-- Right: device screenshot -->
+      <!-- Right: device screenshot with premium phone frame -->
       <div class="hero-device-col">
-        <img
-          class="hero-device"
-          src="screenshots/home-dark.png"
-          alt="CrossLens home feed showing clustered global stories"
-          width="380"
-          loading="eager"
-          fetchpriority="high"
-        >
+        <div class="hero-device-phone">
+          <div class="phone-frame-wrapper">
+            <svg class="phone-frame-svg" viewBox="0 0 400 820" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="frame-edge" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#2a2a2d;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#1a1a1d;stop-opacity:1" />
+                </linearGradient>
+                <filter id="frame-shadow">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+                  <feOffset dx="0" dy="2" result="offsetblur"/>
+                  <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+                  <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <rect x="0" y="0" width="400" height="820" rx="44" fill="url(#frame-edge)" filter="url(#frame-shadow)"/>
+              <rect x="8" y="8" width="384" height="804" rx="38" fill="#1d1d1f" stroke="#2a2a2d" stroke-width="0.5"/>
+              <rect x="10" y="10" width="380" height="800" rx="32" fill="#000"/>
+              <rect x="150" y="20" width="100" height="3" rx="1.5" fill="#0a0a0a" opacity="0.8"/>
+              <circle cx="270" cy="21.5" r="5" fill="#0a0a0a" opacity="0.8"/>
+              <circle cx="270" cy="21.5" r="2.5" fill="#1a2a3a" opacity="0.6"/>
+              <rect x="8.5" y="8.5" width="383" height="803" rx="37.5" fill="none" stroke="#3a3a3d" stroke-width="0.5" opacity="0.3"/>
+            </svg>
+            <img
+              class="phone-screen-img"
+              src="screenshots/home-dark.png"
+              alt="CrossLens home feed showing clustered global stories"
+              width="380"
+              height="800"
+              loading="eager"
+              fetchpriority="high"
+            >
+          </div>
+        </div>
       </div>
 
     </div>
@@ -862,119 +944,6 @@
   </footer>
 
   <!-- ====== JAVASCRIPT ====== -->
-  <script>
-    /* ---- Theme toggle ---- */
-    function toggleTheme() {
-      const root = document.documentElement;
-      const isLight = root.getAttribute('data-theme') === 'light';
-      if (isLight) { root.removeAttribute('data-theme'); localStorage.setItem('theme', 'dark'); }
-      else { root.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); }
-    }
-
-    /* ---- Respect reduced motion ---- */
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    /* ---- Hero pinned scroll scrub ---- */
-    const heroSticky = document.getElementById('hero-sticky');
-    const heroWrap   = document.querySelector('.hero-sticky-wrap');
-
-    function scrubHero() {
-      if (prefersReduced) return;
-      const wh = window.innerHeight;
-      const rect = heroWrap.getBoundingClientRect();
-      // scrolled tells how far into the sticky zone we are (0–1)
-      const totalScroll = heroWrap.offsetHeight - wh;
-      const scrolled = Math.max(0, -rect.top) / totalScroll;
-
-      if (rect.top <= 0) {
-        heroSticky.classList.add('entered');
-      }
-      if (scrolled > 0.55) {
-        heroSticky.classList.add('deep');
-      } else {
-        heroSticky.classList.remove('deep');
-      }
-    }
-
-    /* ---- Generic scroll reveal (IntersectionObserver) ---- */
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-
-    document.querySelectorAll('.reveal, .pop-card').forEach(el => revealObserver.observe(el));
-
-    /* ---- Pinned device image swap ---- */
-    const pinnedImg = document.getElementById('pinned-img');
-    const captionObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          if (!prefersReduced && pinnedImg) {
-            const src = entry.target.dataset.pinnedImg;
-            if (src && pinnedImg.src !== src) {
-              pinnedImg.style.opacity = '0';
-              setTimeout(() => {
-                pinnedImg.src = src;
-                pinnedImg.style.opacity = '1';
-              }, 180);
-              pinnedImg.style.transition = 'opacity 0.35s ease';
-            }
-          }
-        }
-      });
-    }, { threshold: 0.5 });
-
-    document.querySelectorAll('.caption-block').forEach(el => captionObserver.observe(el));
-
-    /* ---- Gallery drag-scroll & dot nav ---- */
-    const scroller = document.getElementById('gallery-scroller');
-    const dots = document.querySelectorAll('.gallery-dot');
-    let isDown = false, startX, scrollLeft;
-
-    if (scroller) {
-      scroller.addEventListener('mousedown', e => {
-        isDown = true; scroller.style.userSelect = 'none';
-        startX = e.pageX - scroller.offsetLeft;
-        scrollLeft = scroller.scrollLeft;
-      });
-      ['mouseleave','mouseup'].forEach(ev => scroller.addEventListener(ev, () => { isDown = false; }));
-      scroller.addEventListener('mousemove', e => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - scroller.offsetLeft;
-        scroller.scrollLeft = scrollLeft - (x - startX) * 1.2;
-      });
-
-      // Update dots on scroll
-      scroller.addEventListener('scroll', () => {
-        const slideW = scroller.querySelector('.gallery-slide')?.offsetWidth || 300;
-        const idx = Math.round(scroller.scrollLeft / (slideW + 32));
-        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-      }, { passive: true });
-
-      // Dot click
-      dots.forEach(dot => {
-        dot.addEventListener('click', () => {
-          const slideW = scroller.querySelector('.gallery-slide')?.offsetWidth || 300;
-          const idx = parseInt(dot.dataset.slide);
-          scroller.scrollTo({ left: idx * (slideW + 32), behavior: 'smooth' });
-        });
-      });
-    }
-
-    /* ---- Scroll listener ---- */
-    window.addEventListener('scroll', () => {
-      requestAnimationFrame(scrubHero);
-    }, { passive: true });
-
-    /* ---- Init ---- */
-    heroSticky.classList.add('entered'); // trigger on load (page top)
-    scrubHero();
-  </script>
+  <script src="main-improved.js"></script>
 </body>
 </html>
