@@ -38,6 +38,9 @@ class LiveStoryRepository @Inject constructor(
     companion object {
         private const val CACHE_FRESHNESS_THRESHOLD_MINUTES = 15L
         private const val LIVE_FEED_MARKER = "live_feed_"
+        private const val MAX_ARTICLES_PER_PUBLISHER = 5
+        private const val TITLE_SIMILARITY_THRESHOLD = 0.70
+        private const val TIME_PROXIMITY_HOURS = 6L
     }
 
     init {
@@ -226,48 +229,73 @@ class LiveStoryRepository @Inject constructor(
                     storyDao.deleteStories(listOf(story.id))
                 }
 
-                // Create stories from articles (one story per article for now, no clustering)
-                val newStories = allItems.map { (adapter, article) ->
+                // Apply per-publisher balancing: max 5 articles per publisher, chronological within publisher
+                val balancedItems = allItems
+                    .groupBy { it.first.sourceId }
+                    .flatMap { (_, items) ->
+                        items.sortedByDescending { it.second.publishedAt }
+                            .take(MAX_ARTICLES_PER_PUBLISHER)
+                    }
+                    .sortedByDescending { it.second.publishedAt }
+
+                // Group articles by conservative similarity matching
+                val storyGroups = groupArticlesByConservativeSimilarity(balancedItems)
+
+                // Create story and article entities from groups
+                val storiesToInsert = mutableListOf<StoryEntity>()
+                val articlesToInsert = mutableListOf<ArticleEntity>()
+
+                storyGroups.forEach { group ->
                     val storyId = "${LIVE_FEED_MARKER}${UUID.randomUUID()}"
-                    val articleId = "article_${UUID.randomUUID()}"
-                    val sourceId = "live_${adapter.sourceId}"
+                    val articleIds = mutableListOf<String>()
 
-                    val storyEntity = StoryEntity(
-                        id = storyId,
-                        title = article.headline,
-                        summary = article.excerpt,
-                        eventTime = article.publishedAt,
-                        updatedTime = now,
-                        topicIds = emptyList(),
-                        eventCountryCodes = emptyList(),
-                        articleIds = listOf(articleId),
-                        claimIds = emptyList(),
-                        lensGapScore = null,
-                        lensGapStatus = "NOT_ASSESSED",
-                        lensGapIsDemo = false
+                    // Use first article as primary for story metadata
+                    val primaryArticle = group.first()
+
+                    group.forEach { (adapter, article) ->
+                        val articleId = "article_${UUID.randomUUID()}"
+                        articleIds.add(articleId)
+                        val sourceId = "live_${adapter.sourceId}"
+
+                        articlesToInsert.add(
+                            ArticleEntity(
+                                id = articleId,
+                                storyId = storyId,
+                                sourceId = sourceId,
+                                originalUrl = article.url,
+                                publishedTime = article.publishedAt,
+                                originalLanguage = article.languageTag,
+                                originalHeadline = article.headline,
+                                originalExcerpt = article.excerpt,
+                                originalContent = article.excerpt, // RSS only has excerpts
+                                attribution = adapter.sourceName,
+                                isDemo = false,
+                                requiresSubscription = true // Assume paywall for original articles
+                            )
+                        )
+                    }
+
+                    storiesToInsert.add(
+                        StoryEntity(
+                            id = storyId,
+                            title = primaryArticle.second.headline,
+                            summary = primaryArticle.second.excerpt,
+                            eventTime = primaryArticle.second.publishedAt,
+                            updatedTime = now,
+                            topicIds = emptyList(),
+                            eventCountryCodes = emptyList(),
+                            articleIds = articleIds,
+                            claimIds = emptyList(),
+                            lensGapScore = null,
+                            lensGapStatus = "NOT_ASSESSED",
+                            lensGapIsDemo = false
+                        )
                     )
-
-                    val articleEntity = ArticleEntity(
-                        id = articleId,
-                        storyId = storyId,
-                        sourceId = sourceId,
-                        originalUrl = article.url,
-                        publishedTime = article.publishedAt,
-                        originalLanguage = article.languageTag,
-                        originalHeadline = article.headline,
-                        originalExcerpt = article.excerpt,
-                        originalContent = article.excerpt, // RSS only has excerpts
-                        attribution = adapter.sourceName,
-                        isDemo = false,
-                        requiresSubscription = true // Assume paywall for original articles
-                    )
-
-                    storyEntity to articleEntity
                 }
 
                 // Insert new stories and articles
-                storyDao.insertStories(newStories.map { it.first })
-                articleDao.insertArticles(newStories.map { it.second })
+                storyDao.insertStories(storiesToInsert)
+                articleDao.insertArticles(articlesToInsert)
 
                 // Update metadata
                 feedMetadataDao.insertMetadata(
@@ -298,5 +326,89 @@ class LiveStoryRepository @Inject constructor(
         val lastFetch = metadata.lastSuccessfulFetch ?: return false
         val ageMinutes = java.time.Duration.between(lastFetch, Instant.now()).toMinutes()
         return ageMinutes < CACHE_FRESHNESS_THRESHOLD_MINUTES
+    }
+
+    /**
+     * Group articles by conservative similarity matching.
+     * Groups only when:
+     * - Normalized title similarity > 70%
+     * - Published within 6 hours
+     * - Same canonical URL (exact match)
+     *
+     * When uncertain, keeps articles separate.
+     */
+    private fun groupArticlesByConservativeSimilarity(
+        items: List<Pair<RssSourceAdapter, com.crosslens.app.data.ingestion.SourceArticleRecord>>
+    ): List<List<Pair<RssSourceAdapter, com.crosslens.app.data.ingestion.SourceArticleRecord>>> {
+        val groups = mutableListOf<MutableList<Pair<RssSourceAdapter, com.crosslens.app.data.ingestion.SourceArticleRecord>>>()
+        val used = mutableSetOf<Int>()
+
+        items.forEachIndexed outer@{ i, item ->
+            if (i in used) return@outer
+
+            val group = mutableListOf(item)
+            used.add(i)
+
+            // Try to find matching articles
+            items.forEachIndexed inner@{ j, candidate ->
+                if (j <= i || j in used) return@inner
+
+                if (articlesMatch(item.second, candidate.second)) {
+                    group.add(candidate)
+                    used.add(j)
+                }
+            }
+
+            groups.add(group)
+        }
+
+        return groups
+    }
+
+    /**
+     * Conservative article matching: returns true only when confident articles describe same event.
+     */
+    private fun articlesMatch(
+        a: com.crosslens.app.data.ingestion.SourceArticleRecord,
+        b: com.crosslens.app.data.ingestion.SourceArticleRecord
+    ): Boolean {
+        // Exact URL match (canonical link)
+        if (a.url == b.url) return true
+
+        // Time proximity check: within 6 hours
+        val timeDiff = java.time.Duration.between(a.publishedAt, b.publishedAt).abs()
+        if (timeDiff.toHours() > TIME_PROXIMITY_HOURS) return false
+
+        // Normalized title similarity
+        val similarity = calculateTitleSimilarity(a.headline, b.headline)
+        return similarity >= TITLE_SIMILARITY_THRESHOLD
+    }
+
+    /**
+     * Calculate normalized title similarity using Jaccard similarity of word sets.
+     * Returns value between 0.0 (no match) and 1.0 (identical).
+     */
+    private fun calculateTitleSimilarity(title1: String, title2: String): Double {
+        // Normalize: lowercase, remove punctuation, split into words
+        val words1 = normalizeTitle(title1).split("\\s+".toRegex()).filter { it.isNotBlank() }.toSet()
+        val words2 = normalizeTitle(title2).split("\\s+".toRegex()).filter { it.isNotBlank() }.toSet()
+
+        if (words1.isEmpty() || words2.isEmpty()) return 0.0
+
+        // Jaccard similarity: intersection / union
+        val intersection = words1.intersect(words2).size
+        val union = words1.union(words2).size
+
+        return if (union > 0) intersection.toDouble() / union else 0.0
+    }
+
+    /**
+     * Normalize title for comparison: lowercase, remove punctuation, trim.
+     */
+    private fun normalizeTitle(title: String): String {
+        return title.lowercase()
+            .replace("[^a-z0-9\\s]".toRegex(), " ")
+            .trim()
+            .replace("\\s+".toRegex(), " ")
     }
 }

@@ -5,9 +5,9 @@
 
 ## Overview
 
-CrossLens v0.0.14-beta introduces live RSS feed ingestion from approved international news publishers. This document lists each source, its feed URL, permissions, and known limitations.
+CrossLens v0.0.14-beta introduces live RSS feed ingestion from 15 approved international news publishers spanning North America, Europe, Middle East, and Asia-Pacific. This document lists each source, its feed URL, permissions, and known limitations.
 
-## Current Sources
+## Current Sources (15 Total)
 
 ### 1. BBC News (United Kingdom)
 
@@ -77,6 +77,173 @@ CrossLens v0.0.14-beta introduces live RSS feed ingestion from approved internat
   - French international news perspective
   - International coverage with French/European context
 
+### 5. The Guardian (United Kingdom)
+
+- **Feed URL:** `https://www.theguardian.com/world/rss`
+- **Language:** English (en-GB)
+- **Publishing Region:** United Kingdom / Europe
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Copyright notice present in feed
+  - Original article link required
+- **Limitations:**
+  - World news section feed
+  - Full articles require visiting original URL
+
+### 6. The New York Times (United States)
+
+- **Feed URL:** `https://rss.nytimes.com/services/xml/rss/nyt/World.xml`
+- **Language:** English (en-US)
+- **Publishing Region:** United States / North America
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Official public RSS feed
+  - CORS-enabled, original article link required
+- **Limitations:**
+  - World news section feed
+  - Most articles require subscription
+
+### 7. CBC News (Canada)
+
+- **Feed URL:** `https://www.cbc.ca/webfeed/rss/rss-topstories`
+- **Language:** English (en-CA)
+- **Publishing Region:** Canada / North America
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Canadian public broadcaster
+  - Original article link required
+- **Limitations:**
+  - Top stories feed includes domestic and international
+
+### 8. ABC News Australia (Australia)
+
+- **Feed URL:** `https://www.abc.net.au/news/feed/51120/rss.xml`
+- **Language:** English (en-AU)
+- **Publishing Region:** Australia / Asia-Pacific
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Australian public broadcaster
+  - Original article link required
+- **Limitations:**
+  - Mix of domestic and Asia-Pacific regional coverage
+
+### 9. The Japan Times (Japan)
+
+- **Feed URL:** `https://www.japantimes.co.jp/feed/`
+- **Language:** English
+- **Publishing Region:** Japan / Asia
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Japan's English-language newspaper
+  - Original article link required
+- **Limitations:**
+  - English edition; focus on Japan and East Asian news
+
+### 10. The Hindu (India)
+
+- **Feed URL:** `https://www.thehindu.com/news/national/feeder/default.rss`
+- **Language:** English (en-IN)
+- **Publishing Region:** India / South Asia
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Major Indian newspaper
+  - Original article link required
+- **Limitations:**
+  - National news section; mix of domestic and international
+
+### 11. Der Spiegel International (Germany)
+
+- **Feed URL:** `https://www.spiegel.de/international/index.rss`
+- **Language:** English
+- **Publishing Region:** Germany / Europe
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - German news magazine English edition
+  - Original article link required
+- **Limitations:**
+  - English translation of German content
+  - Continental European perspective
+
+### 12. Channel NewsAsia (Singapore)
+
+- **Feed URL:** `https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml`
+- **Language:** English (en-SG)
+- **Publishing Region:** Singapore / Southeast Asia
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Singapore public broadcaster
+  - Original article link required
+- **Limitations:**
+  - Southeast Asian regional focus
+
+### 13. swissinfo.ch (Switzerland)
+
+- **Feed URL:** `https://www.swissinfo.ch/eng/feed/`
+- **Language:** English
+- **Publishing Region:** Switzerland / Europe
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Swiss public broadcaster
+  - WordPress VIP platform, original article link required
+- **Limitations:**
+  - 301 redirect from /eng/rss/feed/ to /eng/feed/
+  - Neutral Swiss perspective
+
+### 14. ABC Spain (Spain)
+
+- **Feed URL:** `https://www.abc.es/rss/feeds/abc_Internacional.xml`
+- **Language:** Spanish (es)
+- **Publishing Region:** Spain / Europe
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Spanish newspaper international section
+  - Original article link required
+- **Limitations:**
+  - Spanish-language headlines displayed untranslated
+  - International section feed
+
+### 15. Asahi Shimbun (Japan)
+
+- **Feed URL:** `https://www.asahi.com/rss/asahi/newsheadlines.rdf`
+- **Language:** Japanese (ja)
+- **Publishing Region:** Japan / Asia
+- **Content Provided:** Title, description, link, publication date
+- **Attribution Requirements:**
+  - Major Japanese newspaper
+  - Original article link required
+- **Limitations:**
+  - Japanese-language headlines displayed untranslated
+  - Native Japanese perspective
+
+## Geographic Distribution
+
+- **North America:** 2 sources (NY Times, CBC)
+- **Europe:** 7 sources (BBC, DW, France 24, Guardian, Der Spiegel, swissinfo.ch, ABC Spain)
+- **Middle East:** 1 source (Al Jazeera)
+- **Asia-Pacific:** 5 sources (Japan Times, The Hindu, Channel NewsAsia, ABC Australia, Asahi Shimbun)
+
+## Language Distribution
+
+- **English:** 13 sources
+- **Spanish:** 1 source (ABC Spain)
+- **Japanese:** 1 source (Asahi Shimbun)
+
+## Per-Publisher Balancing
+
+To prevent single-publisher domination:
+- Maximum 5 articles per publisher in visible feed
+- Chronological sorting preserved within each publisher's quota
+- Ensures diverse representation across all 15 sources
+
+## Conservative Story Grouping
+
+Articles are grouped into stories only when high confidence exists:
+- **Normalized title similarity** > 70% (Jaccard similarity of word sets)
+- **Published within 6 hours** of each other
+- **Same canonical URL** (exact match)
+
+When uncertain, articles remain separate. Each story shows "N sources" where N = number of grouped articles.
+
 ## Caching Strategy
 
 CrossLens implements an offline-first caching strategy:
@@ -102,7 +269,7 @@ Each RSS source is fetched independently with:
 - **No location collection:** Source region is publishing context only
 - **No advertising IDs or passive tracking**
 - **No credentials in repository:** All sources use public URLs
-- **Request headers:** User-Agent identifies as "CrossLens/0.0.14-beta (Android)"
+- **Request headers:** User-Agent identifies as "CrossLens/0.0.14-beta (Android; +https://crosslens.org)"
 - **HTTPS only:** All feeds and original article URLs use HTTPS
 
 ## Feed State Indicators
@@ -117,19 +284,20 @@ The app displays the current feed state clearly:
 
 ## Known Limitations
 
-1. **No automatic event clustering:** v0.0.14 shows a chronological feed; articles are not yet matched across sources as covering the same event
+1. **Conservative grouping only:** Articles are grouped conservatively; some matching stories may remain separate to avoid false positives
 2. **Headline-level only:** RSS provides title and excerpt; full article opens in-app browser
-3. **No paywalled content bypass:** Original reporting may require publisher subscription
-4. **English-first:** All four sources provide English feeds; multilingual expansion deferred
+3. **No paywalled content bypass:** Original reporting may require publisher subscription (especially NY Times, Guardian)
+4. **Mostly English:** 13 of 15 sources are English; Spanish and Japanese headlines displayed untranslated with language tags
 5. **No source metadata inference:** Source country is publishing location only, not a proxy for political stance or national viewpoint
 6. **No editorial analysis:** Lens Gap, claims, and framing observations remain mock-only for v0.0.14
 
 ## Future Considerations
 
+- **Improved clustering:** Machine learning or LLM-based semantic similarity for better cross-source matching
 - **Multilingual variants:** DW, France 24, and Al Jazeera publish feeds in German, French, Spanish, and Arabic
 - **Licensed API integration:** Architecture supports coexistence of RSS and licensed content APIs
-- **Event clustering:** Cross-source matching can be added without changing feed infrastructure
-- **Publisher agreements:** Additional sources require individual legal review and terms verification
+- **Additional sources:** African, Latin American, and Eastern European coverage gaps
+- **Publisher agreements:** New sources require individual legal review and terms verification
 
 ## Technical Implementation
 
