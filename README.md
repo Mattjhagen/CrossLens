@@ -6,7 +6,7 @@ CrossLens is an Android news app for understanding how the same event is reporte
 
 The goal is informed comparison: show where reporting overlaps, where emphasis differs, and what evidence supports those observations. A source's country is context, not a proxy for its politics or the views of an entire population.
 
-> **Project status:** ✅ **For You Preview milestone complete (v0.0.11-beta).** The app includes a transparent, offline-only personalized recommendation preview using explicit on-device preferences. Shows "For You — Demo" suggestions on the home screen when users have selected topic/region interests or a local location. Future work includes live local sources, translation services, and automated analysis.
+> **Project status:** ✅ **Release Build Foundation milestone complete (v0.0.12-beta).** The project now supports properly signed release builds with secure credential management, comprehensive signing documentation, and a crash reporting integration plan. The app continues to work offline with mock data and includes personalized "For You — Demo" recommendations. Future work includes Firebase Crashlytics integration, live local sources, and translation services.
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ The goal is informed comparison: show where reporting overlaps, where emphasis d
 git clone https://github.com/Mattjhagen/CrossLens.git
 cd CrossLens
 
-# Build debug APK
+# Build debug APK (no signing config needed)
 ./gradlew :app:assembleDebug
 
 # Run tests and lint
@@ -35,11 +35,24 @@ adb shell am start -n com.crosslens.app.debug/.MainActivity
 
 **APK Location:** `app/build/outputs/apk/debug/app-debug.apk`
 
+### Release Builds
+
+Release builds require signing configuration. See [Release Signing Guide](docs/RELEASE_SIGNING.md) for setup.
+
+```sh
+# Build signed release APK (requires keystore.properties or env vars)
+./gradlew :app:assembleRelease
+
+# Output location
+ls -lh app/build/outputs/apk/release/app-release.apk
+```
+
 ### Build Results
 
 - **Build:** ✅ SUCCESS (Gradle 8.9, AGP 8.5.2, Kotlin 1.9.24)
-- **Unit Tests:** ✅ 128/128 passed
+- **Unit Tests:** ✅ 139/139 passed
 - **Lint:** ✅ 0 errors, 0 warnings
+- **Release Signing:** ✅ Configured (see [RELEASE_SIGNING.md](docs/RELEASE_SIGNING.md))
 - **Quality Audit:** See [QUALITY_REPORT.md](docs/QUALITY_REPORT.md)
 
 ## Product principles

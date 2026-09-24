@@ -24,3 +24,14 @@
 -keep class * extends androidx.room.RoomDatabase
 -keep @androidx.room.Entity class *
 -dontwarn androidx.room.paging.**
+
+# Keep app models for crash reporting and debugging
+-keep class com.crosslens.app.core.model.** { *; }
+-keepnames class com.crosslens.app.** { *; }
+
+# Keep line numbers for stack traces
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# Keep exception classes for crash reporting
+-keep public class * extends java.lang.Exception

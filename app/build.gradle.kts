@@ -1,9 +1,34 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
+
+// Load release signing configuration
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+val hasKeystoreFile = keystorePropertiesFile.exists()
+
+if (hasKeystoreFile) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+// Environment variables take precedence over keystore.properties
+fun getSigningProperty(propertyName: String, envVarName: String): String? {
+    return System.getenv(envVarName) ?: keystoreProperties.getProperty(propertyName)
+}
+
+val storeFilePath = getSigningProperty("storeFile", "CROSSLENS_STORE_FILE")
+val storePassword = getSigningProperty("storePassword", "CROSSLENS_STORE_PASSWORD")
+val keyAlias = getSigningProperty("keyAlias", "CROSSLENS_KEY_ALIAS")
+val keyPassword = getSigningProperty("keyPassword", "CROSSLENS_KEY_PASSWORD")
+
+val hasSigningConfig = storeFilePath != null && storePassword != null &&
+                       keyAlias != null && keyPassword != null
 
 android {
     namespace = "com.crosslens.app"
@@ -13,8 +38,8 @@ android {
         applicationId = "com.crosslens.app"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.0.7-beta"
+        versionCode = 12
+        versionName = "0.0.12-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -25,6 +50,29 @@ android {
             arg("room.schemaLocation", "$projectDir/schemas")
             arg("room.incremental", "true")
             arg("room.generateKotlin", "true")
+        }
+    }
+
+    signingConfigs {
+        if (hasSigningConfig) {
+            create("release") {
+                val storeFile = File(storeFilePath!!)
+                if (!storeFile.exists()) {
+                    throw GradleException(
+                        """
+                        |Release keystore file not found: $storeFilePath
+                        |
+                        |Please ensure the keystore file exists at the specified path.
+                        |See docs/RELEASE_SIGNING.md for setup instructions.
+                        """.trimMargin()
+                    )
+                }
+
+                this.storeFile = storeFile
+                this.storePassword = storePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            }
         }
     }
 
@@ -40,6 +88,44 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            // Apply signing configuration if available
+            if (hasSigningConfig) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                // Fail with clear instructions if signing config is missing
+                gradle.taskGraph.whenReady {
+                    if (hasTask(":app:assembleRelease") ||
+                        hasTask(":app:bundleRelease") ||
+                        hasTask(":app:installRelease")) {
+                        throw GradleException(
+                            """
+                            |
+                            |❌ Release signing configuration missing.
+                            |
+                            |To build a release APK, you must configure release signing credentials.
+                            |
+                            |Option 1: Create keystore.properties file
+                            |  1. Copy keystore.properties.example to keystore.properties
+                            |  2. Replace placeholder values with your actual signing credentials
+                            |  3. Generate a signing key if you don't have one yet
+                            |
+                            |Option 2: Set environment variables
+                            |  export CROSSLENS_STORE_FILE=/path/to/keystore.jks
+                            |  export CROSSLENS_STORE_PASSWORD=your_store_password
+                            |  export CROSSLENS_KEY_ALIAS=your_key_alias
+                            |  export CROSSLENS_KEY_PASSWORD=your_key_password
+                            |
+                            |For detailed setup instructions, see:
+                            |  docs/RELEASE_SIGNING.md
+                            |
+                            |Debug builds continue to work without signing configuration.
+                            |
+                            """.trimMargin()
+                        )
+                    }
+                }
+            }
         }
     }
 
