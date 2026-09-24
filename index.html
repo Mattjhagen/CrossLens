@@ -11,6 +11,7 @@
   <meta property="og:url" content="https://crosslens.space/">
   <meta name="twitter:card" content="summary_large_image">
   <title>CrossLens — Global News Perspectives</title>
+  <link rel="icon" type="image/svg+xml" href="crosslens-icon.svg">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -79,6 +80,14 @@
     .header-logo {
       font-size: 1.1rem; font-weight: 900; letter-spacing: -0.03em;
       color: var(--ink); text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .header-logo-icon {
+      width: 24px; height: 24px;
+      display: block; flex-shrink: 0;
+    }
+    @media (max-width: 720px) {
+      .header-logo-icon { width: 22px; height: 22px; }
     }
     .header-nav { display: flex; align-items: center; gap: 1.5rem; }
     .header-nav a {
@@ -303,24 +312,82 @@
     .pop-card.visible { opacity: 1; transform: none; }
 
     /* =====================
-       SCREENSHOT / DEVICE FRAMES
+       ANDROID DEVICE FRAMES (reusable component)
     ===================== */
     .device-frame {
       position: relative;
       display: flex; align-items: center; justify-content: center;
+      padding: 14px;
+      background: linear-gradient(135deg, #2a2a2d 0%, #1a1a1d 100%);
+      border-radius: 44px;
+      box-shadow:
+        0 60px 120px rgba(0,0,0,0.5),
+        0 20px 40px rgba(0,0,0,0.3),
+        inset 0 0 0 0.5px rgba(255,255,255,0.08);
     }
+    [data-theme="light"] .device-frame {
+      background: linear-gradient(135deg, #3a3a3d 0%, #2a2a2d 100%);
+      box-shadow:
+        0 60px 120px rgba(0,0,0,0.15),
+        0 20px 40px rgba(0,0,0,0.1),
+        inset 0 0 0 0.5px rgba(255,255,255,0.12);
+    }
+
+    /* Earpiece notch */
+    .device-frame::before {
+      content: '';
+      position: absolute;
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: rgba(0,0,0,0.8);
+      border-radius: 1.5px;
+      z-index: 10;
+    }
+
+    /* Front camera */
+    .device-frame::after {
+      content: '';
+      position: absolute;
+      top: 21px;
+      left: 50%;
+      transform: translateX(38px);
+      width: 8px;
+      height: 8px;
+      background: radial-gradient(circle, #1a2a3a 50%, #0a0a0a 100%);
+      border-radius: 50%;
+      z-index: 10;
+      opacity: 0.8;
+    }
+
     .device-frame img {
-      border-radius: 36px;
+      border-radius: 32px;
       width: 100%;
-      box-shadow: var(--device-shadow);
+      display: block;
+      background: #000;
+      box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.2);
+    }
+
+    /* Smaller variant for gallery */
+    .device-frame-sm {
+      padding: 12px;
+      border-radius: 36px;
+    }
+    .device-frame-sm::before {
+      top: 20px;
+      width: 60px;
+      height: 2.5px;
+    }
+    .device-frame-sm::after {
+      top: 19px;
+      transform: translateX(28px);
+      width: 6px;
+      height: 6px;
     }
     .device-frame-sm img {
-      border-radius: 28px;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
-    }
-    [data-theme="light"] .device-frame img,
-    [data-theme="light"] .device-frame-sm img {
-      box-shadow: 0 30px 80px rgba(0,0,0,0.12);
+      border-radius: 26px;
     }
 
     /* =====================
@@ -349,15 +416,6 @@
       filter: drop-shadow(0 24px 60px rgba(0,0,0,0.12)) drop-shadow(0 8px 20px rgba(0,0,0,0.08));
     }
 
-    .phone-frame-svg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-      pointer-events: none;
-    }
-
     .phone-screen-img {
       position: absolute;
       /* Inset to match SVG screen area (10px margins in 400x820 viewBox) */
@@ -367,6 +425,17 @@
       height: 97.56%;
       object-fit: cover;
       border-radius: 8%;
+      z-index: 1;
+      background: #1a1a1d;
+    }
+
+    .phone-frame-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
     }
 
     /* Reduced motion: disable 3D transforms */
@@ -652,7 +721,22 @@
 
   <!-- ====== HEADER ====== -->
   <header>
-    <a class="header-logo" href="#top">CrossLens</a>
+    <a class="header-logo" href="#top">
+      <svg class="header-logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="header-lens-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#2997ff;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#0066cc;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="50" fill="#1a1a1d"/>
+        <circle cx="38" cy="50" r="22" fill="none" stroke="url(#header-lens-gradient)" stroke-width="3.5" opacity="0.85"/>
+        <circle cx="62" cy="50" r="22" fill="none" stroke="#ffffff" stroke-width="3.5" opacity="0.75"/>
+        <circle cx="50" cy="50" r="8" fill="url(#header-lens-gradient)" opacity="0.9"/>
+        <circle cx="50" cy="50" r="5" fill="#ffffff" opacity="0.95"/>
+      </svg>
+      CrossLens
+    </a>
     <nav class="header-nav">
       <a href="#follow-the-story">Story</a>
       <a href="#evidence">Evidence</a>
@@ -713,6 +797,7 @@
               height="800"
               loading="eager"
               fetchpriority="high"
+              onerror="this.style.border='2px solid red'; console.error('Hero screenshot failed to load');"
             >
           </div>
         </div>
@@ -859,35 +944,45 @@
     </div>
     <div class="gallery-scroller" id="gallery-scroller" role="region" aria-label="App screenshot gallery">
       <div class="gallery-slide">
-        <img src="screenshots/home-dark.png" alt="CrossLens Home feed — dark mode" loading="lazy">
+        <div class="device-frame device-frame-sm">
+          <img src="screenshots/home-dark.png" alt="CrossLens Home feed — dark mode" loading="lazy">
+        </div>
         <div class="gallery-caption">
           <strong>Home feed</strong>
           Stories clustered by event. Sort by latest, coverage breadth, or Lens Gap.
         </div>
       </div>
       <div class="gallery-slide">
-        <img src="screenshots/story-detail.png" alt="Story detail screen" loading="lazy">
+        <div class="device-frame device-frame-sm">
+          <img src="screenshots/story-detail.png" alt="Story detail screen" loading="lazy">
+        </div>
         <div class="gallery-caption">
           <strong>Story detail</strong>
           Event summary, attributed claims, and a clear route into comparison.
         </div>
       </div>
       <div class="gallery-slide">
-        <img src="screenshots/comparison-plus.png" alt="CrossLens comparison — Plus" loading="lazy">
+        <div class="device-frame device-frame-sm">
+          <img src="screenshots/comparison-plus.png" alt="CrossLens comparison — Plus" loading="lazy">
+        </div>
         <div class="gallery-caption">
           <strong>Comparison (Plus)</strong>
           Full source set with translated headlines and framing observations.
         </div>
       </div>
       <div class="gallery-slide">
-        <img src="screenshots/settings-plus.png" alt="Settings — Plus preferences" loading="lazy">
+        <div class="device-frame device-frame-sm">
+          <img src="screenshots/settings-plus.png" alt="Settings — Plus preferences" loading="lazy">
+        </div>
         <div class="gallery-caption">
           <strong>Personal settings</strong>
           Local preferences for region, language, and source selection.
         </div>
       </div>
       <div class="gallery-slide">
-        <img src="screenshots/explore-dark.png" alt="Explore screen — dark mode" loading="lazy">
+        <div class="device-frame device-frame-sm">
+          <img src="screenshots/explore-dark.png" alt="Explore screen — dark mode" loading="lazy">
+        </div>
         <div class="gallery-caption">
           <strong>Explore</strong>
           Filter by region, topic, and language. Combine filters and clear them anytime.
