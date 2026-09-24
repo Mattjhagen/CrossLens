@@ -100,13 +100,9 @@ function initGalleryNavigation() {
   if (!scroller || !slides.length || dots.length !== slides.length) return;
 
   const maxScrollLeft = () => Math.max(scroller.scrollWidth - scroller.clientWidth, 0);
+  let pendingDotIndex = null;
 
-  const updateDots = () => {
-    // The gallery shows a different number of cards at each breakpoint. Map the
-    // real, scrollable track rather than guessing at a slide width and gap.
-    const maximum = maxScrollLeft();
-    const progress = maximum === 0 ? 0 : scroller.scrollLeft / maximum;
-    const activeIndex = clamp(Math.round(progress * (slides.length - 1)), 0, slides.length - 1);
+  const setActiveDot = (activeIndex) => {
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index === activeIndex);
       dot.setAttribute('aria-selected', String(index === activeIndex));
@@ -114,8 +110,20 @@ function initGalleryNavigation() {
     });
   };
 
+  const updateDots = () => {
+    // The gallery shows a different number of cards at each breakpoint. Map the
+    // real, scrollable track rather than guessing at a slide width and gap.
+    const maximum = maxScrollLeft();
+    const progress = maximum === 0 ? 0 : scroller.scrollLeft / maximum;
+    const calculatedIndex = clamp(Math.round(progress * (slides.length - 1)), 0, slides.length - 1);
+    if (pendingDotIndex !== null && calculatedIndex === pendingDotIndex) pendingDotIndex = null;
+    setActiveDot(pendingDotIndex ?? calculatedIndex);
+  };
+
   scroller.addEventListener('scroll', updateDots, { passive: true });
   dots.forEach((dot, index) => dot.addEventListener('click', () => {
+    pendingDotIndex = index;
+    setActiveDot(index);
     const target = maxScrollLeft() * (index / (slides.length - 1));
     scroller.scrollTo({ left: target, behavior: 'smooth' });
   }));
