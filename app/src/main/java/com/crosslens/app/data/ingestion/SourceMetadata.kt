@@ -196,6 +196,87 @@ object SourceMetadataRegistry {
             homepage = "https://www.asahi.com"
         ),
 
+        // Batch 1 Expansion - Additional international sources
+        "irishtimes-rss" to SourceMetadata(
+            publisherName = "The Irish Times",
+            country = "Ireland",
+            primaryLanguage = "English",
+            languageCode = "en-IE",
+            editorialDescription = "Irish newspaper owned by Irish Times Trust",
+            descriptionProvenance = "Irish Times Trust documentation",
+            homepage = "https://www.irishtimes.com"
+        ),
+
+        "washingtonpost-rss" to SourceMetadata(
+            publisherName = "The Washington Post",
+            country = "United States",
+            primaryLanguage = "English",
+            languageCode = "en-US",
+            editorialDescription = "American newspaper owned by Nash Holdings (Jeff Bezos)",
+            descriptionProvenance = "Washington Post ownership documentation",
+            homepage = "https://www.washingtonpost.com"
+        ),
+
+        "timesofindia-rss" to SourceMetadata(
+            publisherName = "The Times of India",
+            country = "India",
+            primaryLanguage = "English",
+            languageCode = "en-IN",
+            editorialDescription = "Indian newspaper owned by Bennett, Coleman & Co.",
+            descriptionProvenance = "Times of India corporate profile",
+            homepage = "https://timesofindia.indiatimes.com"
+        ),
+
+        "straitstimes-rss" to SourceMetadata(
+            publisherName = "The Straits Times",
+            country = "Singapore",
+            primaryLanguage = "English",
+            languageCode = "en-SG",
+            editorialDescription = "Singaporean newspaper owned by SPH Media",
+            descriptionProvenance = "SPH Media corporate structure",
+            homepage = "https://www.straitstimes.com"
+        ),
+
+        "koreaherald-rss" to SourceMetadata(
+            publisherName = "The Korea Herald",
+            country = "South Korea",
+            primaryLanguage = "English",
+            languageCode = "en",
+            editorialDescription = "English-language South Korean newspaper",
+            descriptionProvenance = "Korea Herald corporate profile",
+            homepage = "http://www.koreaherald.com"
+        ),
+
+        "arabnews-rss" to SourceMetadata(
+            publisherName = "Arab News",
+            country = "Saudi Arabia",
+            primaryLanguage = "English",
+            languageCode = "en",
+            editorialDescription = "English-language daily owned by Saudi Research and Marketing Group",
+            descriptionProvenance = "Arab News corporate structure",
+            homepage = "https://www.arabnews.com"
+        ),
+
+        "scmp-rss" to SourceMetadata(
+            publisherName = "South China Morning Post",
+            country = "Hong Kong SAR",
+            primaryLanguage = "English",
+            languageCode = "en",
+            editorialDescription = "Hong Kong newspaper owned by Alibaba Group",
+            descriptionProvenance = "SCMP ownership documentation",
+            homepage = "https://www.scmp.com"
+        ),
+
+        "lemonde-rss" to SourceMetadata(
+            publisherName = "Le Monde",
+            country = "France",
+            primaryLanguage = "French",
+            languageCode = "fr",
+            editorialDescription = "French daily newspaper owned by Le Monde Group",
+            descriptionProvenance = "Le Monde corporate structure",
+            homepage = "https://www.lemonde.fr"
+        ),
+
         // Demo sources (must be labeled as fictional)
         "bbc-demo" to SourceMetadata(
             publisherName = "BBC News (Demo)",

@@ -85,6 +85,15 @@ class RssSourceAdapter(
             sourceId.contains("swissinfo") -> "en"
             sourceId.contains("abc-es") -> "es"
             sourceId.contains("asahi") -> "ja"
+            sourceId.contains("irishtimes") -> "en-IE"
+            sourceId.contains("washingtonpost") -> "en-US"
+            sourceId.contains("timesofindia") -> "en-IN"
+            sourceId.contains("independent") -> "en-GB"
+            sourceId.contains("straitstimes") -> "en-SG"
+            sourceId.contains("koreaherald") -> "en"
+            sourceId.contains("arabnews") -> "en"
+            sourceId.contains("scmp") -> "en"
+            sourceId.contains("lemonde") -> "fr"
             else -> "en"
         }
     }
@@ -104,11 +113,11 @@ class RssSourceAdapter(
         }
 
         /**
-         * Create the 15 approved RSS source adapters with global coverage.
+         * Create the 23 approved RSS source adapters with global coverage.
          */
         fun createApprovedSources(httpClient: OkHttpClient): List<RssSourceAdapter> {
             return listOf(
-                // Original 4 sources
+                // Core international sources (4)
                 RssSourceAdapter(
                     sourceId = "bbc-news-rss",
                     sourceName = "BBC News",
@@ -200,6 +209,55 @@ class RssSourceAdapter(
                     sourceId = "asahi-rss",
                     sourceName = "朝日新聞 (Asahi Shimbun)",
                     feedUrl = "https://www.asahi.com/rss/asahi/newsheadlines.rdf",
+                    httpClient = httpClient
+                ),
+                // Batch 1 Expansion - Additional international coverage (8)
+                RssSourceAdapter(
+                    sourceId = "irishtimes-rss",
+                    sourceName = "The Irish Times",
+                    feedUrl = "https://www.irishtimes.com/cmlink/news-1.1319192",
+                    httpClient = httpClient
+                ),
+                RssSourceAdapter(
+                    sourceId = "washingtonpost-rss",
+                    sourceName = "The Washington Post",
+                    feedUrl = "https://feeds.washingtonpost.com/rss/world",
+                    httpClient = httpClient
+                ),
+                RssSourceAdapter(
+                    sourceId = "timesofindia-rss",
+                    sourceName = "The Times of India",
+                    feedUrl = "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+                    httpClient = httpClient
+                ),
+                RssSourceAdapter(
+                    sourceId = "straitstimes-rss",
+                    sourceName = "The Straits Times",
+                    feedUrl = "https://www.straitstimes.com/news/world/rss.xml",
+                    httpClient = httpClient
+                ),
+                RssSourceAdapter(
+                    sourceId = "koreaherald-rss",
+                    sourceName = "The Korea Herald",
+                    feedUrl = "http://www.koreaherald.com/common/newslist.xml?ct=020000000000",
+                    httpClient = httpClient
+                ),
+                RssSourceAdapter(
+                    sourceId = "arabnews-rss",
+                    sourceName = "Arab News",
+                    feedUrl = "https://www.arabnews.com/rss.xml",
+                    httpClient = httpClient
+                ),
+                RssSourceAdapter(
+                    sourceId = "scmp-rss",
+                    sourceName = "South China Morning Post",
+                    feedUrl = "https://www.scmp.com/rss/91/feed",
+                    httpClient = httpClient
+                ),
+                RssSourceAdapter(
+                    sourceId = "lemonde-rss",
+                    sourceName = "Le Monde",
+                    feedUrl = "https://www.lemonde.fr/rss/une.xml",
                     httpClient = httpClient
                 )
             )
