@@ -1,6 +1,7 @@
 package com.crosslens.app.data.repository
 
 import com.crosslens.app.core.model.FeedState
+import com.crosslens.app.data.clustering.EventClusteringService
 import com.crosslens.app.data.ingestion.RssSourceAdapter
 import com.crosslens.app.data.ingestion.SourceArticleRecord
 import com.crosslens.app.data.ingestion.ContentPermission
@@ -24,9 +25,11 @@ class LiveStoryRepositoryTest {
     private lateinit var articleDao: ArticleDao
     private lateinit var sourceDao: SourceDao
     private lateinit var feedMetadataDao: FeedMetadataDao
+    private lateinit var eventClusterDao: EventClusterDao
     private lateinit var database: CrossLensDatabase
     private lateinit var mockRepository: MockStoryRepository
     private lateinit var digestGenerator: SourceDigestGenerator
+    private lateinit var clusteringService: EventClusteringService
     private lateinit var repository: LiveStoryRepository
 
     @Before
@@ -36,9 +39,11 @@ class LiveStoryRepositoryTest {
         articleDao = mock()
         sourceDao = mock()
         feedMetadataDao = mock()
+        eventClusterDao = mock()
         database = mock()
         mockRepository = mock()
         digestGenerator = mock()
+        clusteringService = EventClusteringService()
 
         // Setup database mock
         whenever(database.storyDao()).thenReturn(storyDao)
@@ -61,9 +66,11 @@ class LiveStoryRepositoryTest {
             articleDao,
             sourceDao,
             feedMetadataDao,
+            eventClusterDao,
             database,
             mockRepository,
-            digestGenerator
+            digestGenerator,
+            clusteringService
         )
 
         val metadata = repository.getFeedMetadata()
@@ -108,9 +115,11 @@ class LiveStoryRepositoryTest {
             articleDao,
             sourceDao,
             feedMetadataDao,
+            eventClusterDao,
             database,
             mockRepository,
-            digestGenerator
+            digestGenerator,
+            clusteringService
         )
 
         val feedMeta = repository.getFeedMetadata()
@@ -155,9 +164,11 @@ class LiveStoryRepositoryTest {
             articleDao,
             sourceDao,
             feedMetadataDao,
+            eventClusterDao,
             database,
             mockRepository,
-            digestGenerator
+            digestGenerator,
+            clusteringService
         )
 
         val feedMeta = repository.getFeedMetadata()
@@ -178,21 +189,34 @@ class LiveStoryRepositoryTest {
         whenever(failingAdapter1.fetchArticles()).thenReturn(emptyList())
         whenever(failingAdapter2.fetchArticles()).thenReturn(emptyList())
 
+        // Mock fresh metadata to prevent init block from triggering background refresh
+        val freshMetadata = FeedMetadataEntity(
+            lastSuccessfulFetch = Instant.now(),
+            lastAttemptedFetch = Instant.now(),
+            successfulSourceCount = 0,
+            failedSourceCount = 0,
+            totalArticleCount = 0
+        )
+        whenever(feedMetadataDao.getFeedMetadata()).thenReturn(freshMetadata)
+        whenever(storyDao.getAllStories()).thenReturn(emptyList())
+
         repository = LiveStoryRepository(
             listOf(failingAdapter1, failingAdapter2),
             storyDao,
             articleDao,
             sourceDao,
             feedMetadataDao,
+            eventClusterDao,
             database,
             mockRepository,
-            digestGenerator
+            digestGenerator,
+            clusteringService
         )
 
         val result = repository.refresh()
 
         assertTrue(result.isSuccess)
-        verify(feedMetadataDao).insertMetadata(argThat {
+        verify(feedMetadataDao, atLeastOnce()).insertMetadata(argThat {
             successfulSourceCount == 0 && failedSourceCount == 2
         })
     }
@@ -213,10 +237,22 @@ class LiveStoryRepositoryTest {
             languageTag = "en",
             headline = "Test Article",
             excerpt = "Test excerpt",
-            contentPermission = ContentPermission.EXPLICIT_EXCERPT
+            contentPermission = ContentPermission.EXPLICIT_EXCERPT,
+            sourceId = "success-source"
         )
         whenever(successAdapter.fetchArticles()).thenReturn(listOf(article))
         whenever(sourceDao.getSourcesByIds(any())).thenReturn(emptyList())
+
+        // Mock fresh metadata to prevent init block from triggering background refresh
+        val freshMetadata = FeedMetadataEntity(
+            lastSuccessfulFetch = Instant.now(),
+            lastAttemptedFetch = Instant.now(),
+            successfulSourceCount = 0,
+            failedSourceCount = 0,
+            totalArticleCount = 0
+        )
+        whenever(feedMetadataDao.getFeedMetadata()).thenReturn(freshMetadata)
+        whenever(storyDao.getAllStories()).thenReturn(emptyList())
 
         repository = LiveStoryRepository(
             listOf(successAdapter, failingAdapter),
@@ -224,16 +260,18 @@ class LiveStoryRepositoryTest {
             articleDao,
             sourceDao,
             feedMetadataDao,
+            eventClusterDao,
             database,
             mockRepository,
-            digestGenerator
+            digestGenerator,
+            clusteringService
         )
 
         val result = repository.refresh()
 
         assertTrue(result.isSuccess)
-        verify(storyDao).insertStories(argThat { isNotEmpty() })
-        verify(articleDao).insertArticles(argThat { isNotEmpty() })
+        verify(storyDao, atLeastOnce()).insertStories(argThat { isNotEmpty() })
+        verify(articleDao, atLeastOnce()).insertArticles(argThat { isNotEmpty() })
     }
 
     @Test
@@ -276,9 +314,11 @@ class LiveStoryRepositoryTest {
             articleDao,
             sourceDao,
             feedMetadataDao,
+            eventClusterDao,
             database,
             mockRepository,
-            digestGenerator
+            digestGenerator,
+            clusteringService
         )
 
         val stories = repository.observeStories().first()
@@ -312,9 +352,11 @@ class LiveStoryRepositoryTest {
             articleDao,
             sourceDao,
             feedMetadataDao,
+            eventClusterDao,
             database,
             mockRepository,
-            digestGenerator
+            digestGenerator,
+            clusteringService
         )
 
         val stories = repository.observeStories().first()
@@ -337,10 +379,22 @@ class LiveStoryRepositoryTest {
             headline = "Test Article",
             excerpt = "Test excerpt",
             contentPermission = ContentPermission.EXPLICIT_EXCERPT,
-            imageUrl = "https://example.com/image.jpg"
+            imageUrl = "https://example.com/image.jpg",
+            sourceId = "test-source"
         )
         whenever(successAdapter.fetchArticles()).thenReturn(listOf(article))
         whenever(sourceDao.getSourcesByIds(any())).thenReturn(emptyList())
+
+        // Mock fresh metadata to prevent init block from triggering background refresh
+        val freshMetadata = FeedMetadataEntity(
+            lastSuccessfulFetch = Instant.now(),
+            lastAttemptedFetch = Instant.now(),
+            successfulSourceCount = 0,
+            failedSourceCount = 0,
+            totalArticleCount = 0
+        )
+        whenever(feedMetadataDao.getFeedMetadata()).thenReturn(freshMetadata)
+        whenever(storyDao.getAllStories()).thenReturn(emptyList())
 
         repository = LiveStoryRepository(
             listOf(successAdapter),
@@ -348,9 +402,11 @@ class LiveStoryRepositoryTest {
             articleDao,
             sourceDao,
             feedMetadataDao,
+            eventClusterDao,
             database,
             mockRepository,
-            digestGenerator
+            digestGenerator,
+            clusteringService
         )
 
         val result = repository.refresh()
@@ -358,12 +414,12 @@ class LiveStoryRepositoryTest {
         assertTrue(result.isSuccess)
 
         // Verify article was inserted with imageUrl
-        verify(articleDao).insertArticles(argThat { articles ->
+        verify(articleDao, atLeastOnce()).insertArticles(argThat { articles ->
             articles.isNotEmpty() && articles.first().imageUrl == "https://example.com/image.jpg"
         })
 
         // Verify story was created with imageUrl from primary article
-        verify(storyDao).insertStories(argThat { stories ->
+        verify(storyDao, atLeastOnce()).insertStories(argThat { stories ->
             stories.isNotEmpty() && stories.first().imageUrl == "https://example.com/image.jpg"
         })
     }

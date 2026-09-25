@@ -54,4 +54,7 @@ object DatabaseModule {
 
     @Provides
     fun provideFeedMetadataDao(database: CrossLensDatabase) = database.feedMetadataDao()
+
+    @Provides
+    fun provideEventClusterDao(database: CrossLensDatabase) = database.eventClusterDao()
 }

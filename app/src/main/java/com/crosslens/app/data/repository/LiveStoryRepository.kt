@@ -1,7 +1,9 @@
 package com.crosslens.app.data.repository
 
 import com.crosslens.app.core.model.*
+import com.crosslens.app.data.clustering.EventClusteringService
 import com.crosslens.app.data.ingestion.RssSourceAdapter
+import com.crosslens.app.data.ingestion.SourceArticleRecord
 import com.crosslens.app.data.local.CrossLensDatabase
 import com.crosslens.app.data.local.dao.*
 import com.crosslens.app.data.local.entity.*
@@ -28,9 +30,11 @@ class LiveStoryRepository @Inject constructor(
     private val articleDao: ArticleDao,
     private val sourceDao: SourceDao,
     private val feedMetadataDao: FeedMetadataDao,
+    private val eventClusterDao: EventClusterDao,
     private val database: CrossLensDatabase,
     private val mockRepository: MockStoryRepository,
-    private val digestGenerator: SourceDigestGenerator
+    private val digestGenerator: SourceDigestGenerator,
+    private val clusteringService: EventClusteringService
 ) : StoryRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -39,8 +43,6 @@ class LiveStoryRepository @Inject constructor(
         private const val CACHE_FRESHNESS_THRESHOLD_MINUTES = 15L
         private const val LIVE_FEED_MARKER = "live_feed_"
         private const val MAX_ARTICLES_PER_PUBLISHER = 5
-        private const val TITLE_SIMILARITY_THRESHOLD = 0.70
-        private const val TIME_PROXIMITY_HOURS = 6L
     }
 
     init {
@@ -238,23 +240,100 @@ class LiveStoryRepository @Inject constructor(
                     }
                     .sortedByDescending { it.second.publishedAt }
 
-                // Group articles by conservative similarity matching
-                val storyGroups = groupArticlesByConservativeSimilarity(balancedItems)
+                // Convert to SourceArticleRecord for clustering
+                val articleRecords = balancedItems.map { (adapter, article) -> article }
 
-                // Create story and article entities from groups
+                // Use EventClusteringService for intelligent grouping
+                val clusters = clusteringService.clusterArticles(articleRecords)
+
+                // Create a map from article URL to adapter for later lookup
+                val articleToAdapter = balancedItems.associate { (adapter, article) ->
+                    article.url to adapter
+                }
+
+                // Create story and article entities from clusters
                 val storiesToInsert = mutableListOf<StoryEntity>()
                 val articlesToInsert = mutableListOf<ArticleEntity>()
+                val eventClustersToInsert = mutableListOf<EventClusterEntity>()
 
-                storyGroups.forEach { group ->
+                // Process clustered events (2+ publishers)
+                clusters.forEach { cluster ->
                     val storyId = "${LIVE_FEED_MARKER}${UUID.randomUUID()}"
                     val articleIds = mutableListOf<String>()
 
-                    // Use first article as primary for story metadata
-                    val primaryArticle = group.first()
+                    // Create articles for each source in cluster
+                    cluster.articles.forEach { clusteredArticle ->
+                        val adapter = articleToAdapter[clusteredArticle.url]
+                        if (adapter != null) {
+                            val articleId = "article_${UUID.randomUUID()}"
+                            articleIds.add(articleId)
+                            val sourceId = "live_${adapter.sourceId}"
 
-                    group.forEach { (adapter, article) ->
+                            articlesToInsert.add(
+                                ArticleEntity(
+                                    id = articleId,
+                                    storyId = storyId,
+                                    sourceId = sourceId,
+                                    originalUrl = clusteredArticle.url,
+                                    publishedTime = clusteredArticle.publishedAt,
+                                    originalLanguage = clusteredArticle.languageTag,
+                                    originalHeadline = clusteredArticle.headline,
+                                    originalExcerpt = clusteredArticle.excerpt,
+                                    originalContent = clusteredArticle.excerpt,
+                                    attribution = adapter.sourceName,
+                                    isDemo = false,
+                                    requiresSubscription = true,
+                                    imageUrl = clusteredArticle.imageUrl
+                                )
+                            )
+                        }
+                    }
+
+                    // Create story for this event cluster
+                    storiesToInsert.add(
+                        StoryEntity(
+                            id = storyId,
+                            title = cluster.eventSummary,
+                            summary = "${cluster.articles.size} sources • ${cluster.commonEntities.joinToString(", ")}",
+                            eventTime = cluster.eventTime,
+                            updatedTime = now,
+                            topicIds = emptyList(),
+                            eventCountryCodes = emptyList(),
+                            articleIds = articleIds,
+                            claimIds = emptyList(),
+                            lensGapScore = null,
+                            lensGapStatus = "EVENT_CLUSTER",
+                            lensGapIsDemo = false,
+                            imageUrl = cluster.articles.firstOrNull()?.imageUrl
+                        )
+                    )
+
+                    // Store event cluster metadata
+                    eventClustersToInsert.add(
+                        EventClusterEntity(
+                            id = cluster.id,
+                            eventSummary = cluster.eventSummary,
+                            eventTime = cluster.eventTime,
+                            clusteredAt = cluster.clusteredAt,
+                            confidence = cluster.confidence.name,
+                            groupingExplanation = cluster.groupingExplanation,
+                            commonEntities = cluster.commonEntities,
+                            publisherCount = cluster.publisherCount,
+                            imageUrl = cluster.articles.firstOrNull()?.imageUrl,
+                            articleIds = articleIds
+                        )
+                    )
+                }
+
+                // Process unclustered articles (single publisher or didn't match)
+                val clusteredUrls = clusters.flatMap { cluster ->
+                    cluster.articles.map { it.url }
+                }.toSet()
+
+                balancedItems.filter { (_, article) -> article.url !in clusteredUrls }
+                    .forEach { (adapter, article) ->
+                        val storyId = "${LIVE_FEED_MARKER}${UUID.randomUUID()}"
                         val articleId = "article_${UUID.randomUUID()}"
-                        articleIds.add(articleId)
                         val sourceId = "live_${adapter.sourceId}"
 
                         articlesToInsert.add(
@@ -267,37 +346,37 @@ class LiveStoryRepository @Inject constructor(
                                 originalLanguage = article.languageTag,
                                 originalHeadline = article.headline,
                                 originalExcerpt = article.excerpt,
-                                originalContent = article.excerpt, // RSS only has excerpts
+                                originalContent = article.excerpt,
                                 attribution = adapter.sourceName,
                                 isDemo = false,
-                                requiresSubscription = true, // Assume paywall for original articles
+                                requiresSubscription = true,
+                                imageUrl = article.imageUrl
+                            )
+                        )
+
+                        storiesToInsert.add(
+                            StoryEntity(
+                                id = storyId,
+                                title = article.headline,
+                                summary = article.excerpt,
+                                eventTime = article.publishedAt,
+                                updatedTime = now,
+                                topicIds = emptyList(),
+                                eventCountryCodes = emptyList(),
+                                articleIds = listOf(articleId),
+                                claimIds = emptyList(),
+                                lensGapScore = null,
+                                lensGapStatus = "NOT_ASSESSED",
+                                lensGapIsDemo = false,
                                 imageUrl = article.imageUrl
                             )
                         )
                     }
 
-                    storiesToInsert.add(
-                        StoryEntity(
-                            id = storyId,
-                            title = primaryArticle.second.headline,
-                            summary = primaryArticle.second.excerpt,
-                            eventTime = primaryArticle.second.publishedAt,
-                            updatedTime = now,
-                            topicIds = emptyList(),
-                            eventCountryCodes = emptyList(),
-                            articleIds = articleIds,
-                            claimIds = emptyList(),
-                            lensGapScore = null,
-                            lensGapStatus = "NOT_ASSESSED",
-                            lensGapIsDemo = false,
-                            imageUrl = primaryArticle.second.imageUrl
-                        )
-                    )
-                }
-
-                // Insert new stories and articles
+                // Insert new stories, articles, and event clusters
                 storyDao.insertStories(storiesToInsert)
                 articleDao.insertArticles(articlesToInsert)
+                eventClusterDao.insertClusters(eventClustersToInsert)
 
                 // Update metadata
                 feedMetadataDao.insertMetadata(
@@ -328,89 +407,5 @@ class LiveStoryRepository @Inject constructor(
         val lastFetch = metadata.lastSuccessfulFetch ?: return false
         val ageMinutes = java.time.Duration.between(lastFetch, Instant.now()).toMinutes()
         return ageMinutes < CACHE_FRESHNESS_THRESHOLD_MINUTES
-    }
-
-    /**
-     * Group articles by conservative similarity matching.
-     * Groups only when:
-     * - Normalized title similarity > 70%
-     * - Published within 6 hours
-     * - Same canonical URL (exact match)
-     *
-     * When uncertain, keeps articles separate.
-     */
-    private fun groupArticlesByConservativeSimilarity(
-        items: List<Pair<RssSourceAdapter, com.crosslens.app.data.ingestion.SourceArticleRecord>>
-    ): List<List<Pair<RssSourceAdapter, com.crosslens.app.data.ingestion.SourceArticleRecord>>> {
-        val groups = mutableListOf<MutableList<Pair<RssSourceAdapter, com.crosslens.app.data.ingestion.SourceArticleRecord>>>()
-        val used = mutableSetOf<Int>()
-
-        items.forEachIndexed outer@{ i, item ->
-            if (i in used) return@outer
-
-            val group = mutableListOf(item)
-            used.add(i)
-
-            // Try to find matching articles
-            items.forEachIndexed inner@{ j, candidate ->
-                if (j <= i || j in used) return@inner
-
-                if (articlesMatch(item.second, candidate.second)) {
-                    group.add(candidate)
-                    used.add(j)
-                }
-            }
-
-            groups.add(group)
-        }
-
-        return groups
-    }
-
-    /**
-     * Conservative article matching: returns true only when confident articles describe same event.
-     */
-    private fun articlesMatch(
-        a: com.crosslens.app.data.ingestion.SourceArticleRecord,
-        b: com.crosslens.app.data.ingestion.SourceArticleRecord
-    ): Boolean {
-        // Exact URL match (canonical link)
-        if (a.url == b.url) return true
-
-        // Time proximity check: within 6 hours
-        val timeDiff = java.time.Duration.between(a.publishedAt, b.publishedAt).abs()
-        if (timeDiff.toHours() > TIME_PROXIMITY_HOURS) return false
-
-        // Normalized title similarity
-        val similarity = calculateTitleSimilarity(a.headline, b.headline)
-        return similarity >= TITLE_SIMILARITY_THRESHOLD
-    }
-
-    /**
-     * Calculate normalized title similarity using Jaccard similarity of word sets.
-     * Returns value between 0.0 (no match) and 1.0 (identical).
-     */
-    private fun calculateTitleSimilarity(title1: String, title2: String): Double {
-        // Normalize: lowercase, remove punctuation, split into words
-        val words1 = normalizeTitle(title1).split("\\s+".toRegex()).filter { it.isNotBlank() }.toSet()
-        val words2 = normalizeTitle(title2).split("\\s+".toRegex()).filter { it.isNotBlank() }.toSet()
-
-        if (words1.isEmpty() || words2.isEmpty()) return 0.0
-
-        // Jaccard similarity: intersection / union
-        val intersection = words1.intersect(words2).size
-        val union = words1.union(words2).size
-
-        return if (union > 0) intersection.toDouble() / union else 0.0
-    }
-
-    /**
-     * Normalize title for comparison: lowercase, remove punctuation, trim.
-     */
-    private fun normalizeTitle(title: String): String {
-        return title.lowercase()
-            .replace("[^a-z0-9\\s]".toRegex(), " ")
-            .trim()
-            .replace("\\s+".toRegex(), " ")
     }
 }

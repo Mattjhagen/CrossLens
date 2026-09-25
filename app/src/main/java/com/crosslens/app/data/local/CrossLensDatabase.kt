@@ -16,9 +16,10 @@ import com.crosslens.app.data.local.entity.*
         FrameObservationEntity::class,
         EditorialDecisionEntity::class,
         EditorialReviewEntity::class,
-        FeedMetadataEntity::class
+        FeedMetadataEntity::class,
+        EventClusterEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -32,4 +33,5 @@ abstract class CrossLensDatabase : RoomDatabase() {
     abstract fun editorialDecisionDao(): EditorialDecisionDao
     abstract fun editorialReviewDao(): EditorialReviewDao
     abstract fun feedMetadataDao(): FeedMetadataDao
+    abstract fun eventClusterDao(): EventClusterDao
 }
