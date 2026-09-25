@@ -271,92 +271,276 @@ Event in Paris:
 
 ## Feature Priorities for Informed Exposure
 
-### Phase 1: Visibility (Next 2 Cycles)
-**Goal**: Make coverage structure and gaps visible
+**REVISED PRIORITIZATION** (2026-09-25)
 
-1. **Explicit Gap Notices** (HIGH priority)
-   - "Only English-language coverage"
-   - "Single source - coverage may be incomplete"
-   - "No local reporting found yet"
-
-2. **Per-Article Appearance Explanation** (MEDIUM priority)
-   - Tags: local/international/wire
-   - "Why this article is included" text
-
-3. **Diversity Metrics Dashboard** (HIGH priority)
-   - Track publishers per event
-   - Monitor cross-source reading
-   - Measure coverage completeness
-
-### Phase 2: Structure (Cycles 3-4)
-**Goal**: Show coverage dimensions, not just counts
-
-4. **Source Classification System** (HIGH priority, blocking)
-   - Tag sources as wire/broadcaster/newspaper/specialist
-   - Classify local vs international per event
-   - Expand SourceMetadata with source types
-
-5. **Coverage Map Visualization** (HIGH priority)
-   - Visual indicators for coverage dimensions
-   - Icons: 📍 local, 🌍 international, 📡 wire
-   - Completeness scoring
-
-6. **Corrections Policy Tracking** (MEDIUM priority)
-   - Document corrections policies for all sources
-   - Add to SourceMetadata
-   - Display in source attribution
-
-### Phase 3: Action (Cycles 5-6)
-**Goal**: Enable deliberate cross-source reading
-
-7. **"Read Across Coverage" Feature** (MEDIUM priority)
-   - Diversity-optimized source selection (3-4 sources)
-   - Explains selection: "Local + International + Wire"
-   - One-tap access to maximally diverse set
-
-8. **User Filtering with Broad Default** (LOW priority)
-   - Allow users to filter by region/language/type
-   - Default always shows full coverage
-   - One-tap "Reset to Full Coverage" button
-
-### Phase 4: Verification (Cycles 7+)
-**Goal**: Distinguish verified reporting from claims
-
-9. **Verification Status Labels** (MEDIUM priority, complex)
-   - "Reported by multiple sources" (consensus)
-   - "Unverified claim from [Source]"
-   - "Disputed" (conflicting claims)
-
-10. **Reporting vs Commentary Labels** (LOW priority)
-    - Tag articles as reporting/analysis/opinion
-    - Filter option for reporting-only view
+The roadmap has been revised to focus on achievable, high-impact improvements in the right order. Build quality infrastructure before adding visualization complexity.
 
 ---
 
-## Implementation Strategy
+### Priority 1: Source Health Gate ✅ IN PROGRESS
+**Goal**: Achieve 90% source success rate before expanding features
+
+**Status**: BLOCKING all other work until complete
+
+**Current**: 17/22 sources (77%)  
+**Target**: 20/22 sources (90%+)  
+**Timeline**: 3-5 days
+
+**Actions**:
+- Identify 5 failing sources by name
+- Diagnose each failing source (cURL, format validation)
+- Fix or disable to reach 90%+
+- Validate 48-hour stability
+- Document all fixes and disabled sources
+
+**Rationale**: Cannot build coverage features on unstable source infrastructure. Quality gate must pass first.
+
+---
+
+### Priority 2: Gap Notices + "Why This Appears" Explanations
+**Goal**: Make coverage limitations and grouping logic transparent
+
+**Target**: Event comparison UI (where users see multiple sources)
+
+**Components**:
+
+1. **Coverage Gap Notices** (event comparison screen)
+   - "⚠️ Only English-language coverage" when all sources share language
+   - "Single source - coverage may be incomplete" on single-publisher events
+   - "No local reporting found yet" when event has no sources from event location
+   - Language gaps: "No French coverage available" (if event is in France)
+   - Temporal gaps: "Coverage from last 24 hours only"
+
+2. **"Why This Appears" Explanations** (per article in comparison)
+   - Simple, factual labels based on existing metadata
+   - "From [Publisher] ([Country])" - already present
+   - "Published [timestamp]" - show why it's in 72h window
+   - "Different publisher from [other sources in cluster]" - shows diversity
+   - NO classification labels without provenance (see constraint below)
+
+**Implementation**:
+- Use existing SourceMetadata (country, language)
+- Use clustering data (time window, publisher diversity)
+- Use simple language detection (infer from RSS feed)
+- NO new classification system yet
+
+**Timeline**: Next feature cycle (after health gate passes)  
+**Complexity**: Low (uses existing data)
+
+---
+
+### Priority 3: "Read Across Coverage" Action
+**Goal**: Enable one-tap access to maximally diverse sources
+
+**Target**: Event cards and event comparison screen
+
+**Algorithm** (diversity-maximizing selection):
+```
+Select 3-4 sources from event that maximize:
+1. Geographic diversity (different countries)
+2. Language diversity (different languages if available)
+3. Publisher type diversity (mix of source types)
+4. Existing metadata only - no unverified classification
+```
+
+**UI**:
+- Button on event card: "Read Across Coverage (3 sources)"
+- Selection explanation: "Selected for geographic diversity"
+- Show each source with country/language: "🇬🇧 BBC (UK, English)"
+- Link directly to original articles in external browser
+
+**Provenance Constraint**:
+- Only use metadata with documented provenance
+- Country: from SourceMetadata (documented ownership location)
+- Language: from RSS feed language tags or sourceId inference
+- Publisher type: ONLY if documented in SourceMetadata editorial description
+- DO NOT infer labels like "wire service" without documented provenance
+
+**Timeline**: 1-2 cycles after Priority 2  
+**Complexity**: Medium (selection algorithm + UI)
+
+---
+
+### Priority 4: Coverage Map Visualization
+**Goal**: Visual representation of coverage structure
+
+**DEFERRED until**:
+- ✅ 90% source health sustained
+- ✅ 25+ reliable sources active
+- ✅ Sufficient source diversity (3+ regions, 3+ languages)
+- ✅ Classification provenance documented for ALL sources
+
+**Rationale**:
+- Coverage map is only valuable with diverse, stable source base
+- Requires classification labels with clear provenance
+- Premature to build visualization on 22 sources (many still failing)
+
+**When Ready, Include**:
+- Icons for provenance-backed dimensions only
+- Clear "How we classify sources" documentation
+- Each label traceable to documented fact
+- No inferred or algorithmic classifications
+
+**Timeline**: Deferred to 4+ cycles out  
+**Complexity**: High (requires classification infrastructure)
+
+---
+
+### Deprioritized (No Timeline)
+
+**Source Classification System**:
+- BLOCKED until provenance documented for all sources
+- Cannot add labels like "wire service", "local reporting" without documented basis
+- Each classification must be inspectable and verified
+- Requires research phase to document provenance for all 22+ sources
+
+**Diversity Metrics Dashboard**:
+- Valuable but not user-facing
+- Build when analytics infrastructure ready
+- Not blocking other features
+
+**User Filtering**:
+- Deferred until user research shows need
+- Default broad view is working correctly
+
+**Verification Status Labels**:
+- Long-term feature requiring NLP infrastructure
+- Not critical for informed exposure (attribution sufficient for now)
+
+**Reporting vs Commentary Labels**:
+- RSS feeds often don't distinguish
+- Low value without comprehensive publisher data
+
+---
+
+## Critical Constraint: Provenance for All Labels
+
+**RULE**: Do not add source classification labels unless each label has clear, inspectable provenance.
+
+### What This Means
+
+**Permitted** (with documentation):
+- **Country**: From documented publisher headquarters/ownership location
+  - Example: "BBC (UK)" - documented as British public broadcaster in BBC Royal Charter
+  - Provenance: SourceMetadata.country with documented ownership
+
+- **Language**: From RSS feed language tags or publisher documentation
+  - Example: "Le Monde (French)" - RSS feed declares language="fr"
+  - Provenance: RSS metadata or publisher's stated language
+
+- **Publisher Type**: ONLY when documented in official publisher description
+  - Example: "Al Jazeera - State-funded international news service"
+  - Provenance: SourceMetadata.editorialDescription with documented provenance field
+
+**Prohibited** (without provenance):
+- **"Wire service"** - Cannot infer without documented evidence of wire service status
+  - BAD: Assuming Reuters is wire service because it seems like one
+  - GOOD: Documenting Reuters' official self-description as news agency
+
+- **"Local reporting"** - Cannot infer without documented presence in event location
+  - BAD: Assuming source is "local" because country matches event location
+  - GOOD: Documenting publisher has reporters/bureau in event location
+
+- **"Investigative journalism"** - Cannot infer without documented investigative team
+  - BAD: Labeling long articles as "investigative"
+  - GOOD: Publisher documents investigative unit and this article is from that unit
+
+- **"Primary source"** - Cannot infer without documented direct access
+  - BAD: Assuming article is primary source because it's detailed
+  - GOOD: Article explicitly states "our reporters witnessed" with byline
+
+### Why This Matters
+
+**Without provenance**:
+- Labels become editorial judgments, not facts
+- Users cannot verify claims about sources
+- Classifications appear arbitrary or biased
+- Violates transparency principle
+
+**With provenance**:
+- Every label traceable to documented fact
+- Users can inspect classification basis
+- Classifications are verifiable and consistent
+- Maintains trust and transparency
+
+### Implementation Standard
+
+When adding ANY classification to a source:
+
+1. **Document the basis**: What official source confirms this classification?
+2. **Record provenance**: Where does this information come from?
+3. **Make it inspectable**: Can users see the documentation?
+4. **Apply consistently**: Same standard for all sources, all regions
+
+**Example - Good Implementation**:
+```kotlin
+SourceMetadata(
+    publisherName = "Al Jazeera",
+    country = "Qatar",
+    editorialDescription = "State-funded international news service",
+    descriptionProvenance = "Al Jazeera corporate profile",
+    sourceType = "international-broadcaster", // ONLY because documented
+    sourceTypeProvenance = "Al Jazeera About page: 'international broadcaster'"
+)
+```
+
+**Example - Bad Implementation**:
+```kotlin
+SourceMetadata(
+    publisherName = "The Guardian",
+    sourceType = "left-leaning newspaper", // PROHIBITED - ideological inference
+    sourceType = "quality journalism", // PROHIBITED - subjective judgment
+    sourceType = "wire service" // PROHIBITED - no documented evidence
+)
+```
+
+### Before Adding Classifications
+
+**Research phase required**:
+1. Review each source's official About page
+2. Document official self-descriptions
+3. Verify against third-party documentation (e.g., Reuters Institute)
+4. Record provenance for every classification
+5. Build reviewable classification database
+6. Only then expose labels to users
+
+**Timeline**: Research phase for 22+ sources is substantial work (weeks, not days). Do not rush this.
+
+---
+
+## Implementation Strategy (Revised)
 
 ### Build Order Rationale
 
-**Phase 1 (Visibility)** comes first because:
+**Priority 1 (Source Health Gate)** is blocking:
+- Cannot build features on unstable infrastructure
+- 77% success rate too low for quality product
+- Must reach 90%+ before expanding functionality
+- Timeline: 3-5 days
+
+**Priority 2 (Gap Notices + Explanations)** comes next because:
 - Low complexity, high impact
-- Uses existing data (source counts, languages)
+- Uses existing data (source counts, languages, clustering)
 - No new infrastructure required
-- Immediate alignment with principles
+- Makes coverage limitations immediately visible
+- Builds trust through transparency
 
-**Phase 2 (Structure)** enables Phase 3:
-- Source classification is foundational
-- Coverage maps depend on classification
-- Metrics track structural diversity
+**Priority 3 ("Read Across Coverage")** enables key use case:
+- Deliberate diversity exposure is core to informed reading
+- Can build with existing metadata (country, language)
+- Does not require classification system
+- High user value for cross-source reading
 
-**Phase 3 (Action)** builds on Phase 2:
-- "Read Across" needs source classification
-- Filtering requires coverage structure
-- User actions guided by visible structure
+**Priority 4 (Coverage Map)** deferred until:
+- Stable source base (25+ sources at 90%+)
+- Classification provenance documented
+- Sufficient diversity to make map meaningful
+- Premature with current 22-source base
 
-**Phase 4 (Verification)** is most complex:
-- Requires NLP and verification databases
-- Depends on claim extraction technology
-- Can defer without blocking core value
+**Deprioritized features**:
+- Classification system: Requires provenance research (weeks)
+- Verification status: Requires NLP infrastructure (months)
+- Metrics dashboard: Valuable but not user-facing
 
 ### Technology Dependencies
 
@@ -472,7 +656,7 @@ While building these features, explicitly avoid:
 
 ---
 
-## Conclusion
+## Conclusion (Revised)
 
 Current implementation has a **strong foundation** for informed exposure:
 - ✅ No engagement optimization
@@ -480,15 +664,33 @@ Current implementation has a **strong foundation** for informed exposure:
 - ✅ Clear attribution
 - ✅ Conservative clustering
 
-**Next steps** to full alignment:
-1. **Phase 1** (2 cycles): Add gap notices, per-article explanations, diversity metrics
-2. **Phase 2** (2 cycles): Build source classification, coverage maps, corrections tracking
-3. **Phase 3** (2 cycles): Enable "Read Across Coverage" diversity action
-4. **Phase 4** (long-term): Add verification status and claim distinction
+**Revised implementation sequence** (focused and achievable):
 
-**Timeline**: Full alignment in 6-8 feature cycles, with incremental value delivered at each phase.
+1. **Source Health Gate (BLOCKING)** - 3-5 days
+   - Fix failing sources to reach 90%+ success rate
+   - Validate 48-hour stability
+   - Quality infrastructure before feature expansion
 
-**Principle commitment**: When principles conflict with convenience or engagement, **principles win**.
+2. **Gap Notices + Explanations** - Next feature cycle
+   - Make coverage limitations visible
+   - Explain why articles are grouped
+   - Use existing data only (no new classification)
+
+3. **"Read Across Coverage" Action** - 1-2 cycles later
+   - Enable one-tap diverse source selection
+   - Use documented metadata only (country, language)
+   - Core informed-exposure use case
+
+4. **Coverage Map (Deferred)** - When source base mature
+   - Wait for 25+ stable sources
+   - Document classification provenance first
+   - Build visualization only on verified data
+
+**Critical constraint**: No classification labels without clear, inspectable provenance. Research phase required before adding "wire service", "local reporting", or similar labels.
+
+**Timeline**: Core informed-exposure features in 2-3 cycles after health gate passes. Coverage visualization deferred until source base and provenance research complete.
+
+**Principle commitment**: When principles conflict with convenience or engagement, **principles win**. When tempted to add unverified labels, **document provenance first**.
 
 ---
 
