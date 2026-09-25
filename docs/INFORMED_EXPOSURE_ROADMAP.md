@@ -271,34 +271,23 @@ Event in Paris:
 
 ## Feature Priorities for Informed Exposure
 
-**REVISED PRIORITIZATION** (2026-09-25)
+**REVISED PRIORITIZATION** (2026-09-25, updated)
 
-The roadmap has been revised to focus on achievable, high-impact improvements in the right order. Build quality infrastructure before adding visualization complexity.
-
----
-
-### Priority 1: Source Health Gate ✅ IN PROGRESS
-**Goal**: Achieve 90% source success rate before expanding features
-
-**Status**: BLOCKING all other work until complete
-
-**Current**: 17/22 sources (77%)  
-**Target**: 20/22 sources (90%+)  
-**Timeline**: 3-5 days
-
-**Actions**:
-- Identify 5 failing sources by name
-- Diagnose each failing source (cURL, format validation)
-- Fix or disable to reach 90%+
-- Validate 48-hour stability
-- Document all fixes and disabled sources
-
-**Rationale**: Cannot build coverage features on unstable source infrastructure. Quality gate must pass first.
+Build transparency features now using available metadata. The 90% health gate is a **release gate**, not a development blocker.
 
 ---
 
-### Priority 2: Gap Notices + "Why This Appears" Explanations
+### Priority 1: Gap Notices + "Why This Appears" Explanations
 **Goal**: Make coverage limitations and grouping logic transparent
+
+**Status**: READY TO BUILD NOW (uses existing metadata)
+
+**Why Build This First**:
+- Makes current 77% source limitation visible to users
+- Uses existing metadata (country, language, time)
+- No infrastructure dependencies
+- High transparency value, low complexity
+- Aligns with informed-exposure principle (show gaps plainly)
 
 **Target**: Event comparison UI (where users see multiple sources)
 
@@ -324,8 +313,33 @@ The roadmap has been revised to focus on achievable, high-impact improvements in
 - Use simple language detection (infer from RSS feed)
 - NO new classification system yet
 
-**Timeline**: Next feature cycle (after health gate passes)  
-**Complexity**: Low (uses existing data)
+**Timeline**: START NOW (immediate next work)  
+**Complexity**: Low (uses existing data)  
+**Release Requirement**: None (improves current experience)
+
+---
+
+### Priority 2: Source Health Gate (Release Gate)
+**Goal**: Achieve 90% source success rate for production release
+
+**Status**: In progress, does NOT block Priority 1 development
+
+**Current**: 17/22 sources (77%)  
+**Target**: 20/22 sources (90%+)  
+**Timeline**: 3-5 days (parallel with Priority 1 development)
+
+**Actions**:
+- Identify 5 failing sources by name
+- Diagnose each failing source (cURL, format validation)
+- Fix or disable to reach 90%+
+- Validate 48-hour stability
+- Document all fixes and disabled sources
+
+**Role**: RELEASE GATE, not development blocker
+- Priority 1 features can be built and tested at 77%
+- Gap notices will make 77% limitation visible (good!)
+- Must reach 90% before production release
+- Allows parallel development and infrastructure work
 
 ---
 
@@ -512,24 +526,27 @@ SourceMetadata(
 
 ### Build Order Rationale
 
-**Priority 1 (Source Health Gate)** is blocking:
-- Cannot build features on unstable infrastructure
-- 77% success rate too low for quality product
-- Must reach 90%+ before expanding functionality
-- Timeline: 3-5 days
-
-**Priority 2 (Gap Notices + Explanations)** comes next because:
+**Priority 1 (Gap Notices + Explanations)** comes first:
 - Low complexity, high impact
 - Uses existing data (source counts, languages, clustering)
-- No new infrastructure required
-- Makes coverage limitations immediately visible
+- No infrastructure dependencies
+- Makes current 77% limitation visible (aligns with informed-exposure principle)
 - Builds trust through transparency
+- Can ship immediately without waiting for health gate
+
+**Priority 2 (Source Health Gate)** runs in parallel as release gate:
+- Works on infrastructure while Priority 1 develops
+- 77% is acceptable for development and testing
+- Must reach 90%+ before production release
+- Does NOT block feature development
+- Timeline: 3-5 days parallel to Priority 1
 
 **Priority 3 ("Read Across Coverage")** enables key use case:
 - Deliberate diversity exposure is core to informed reading
 - Can build with existing metadata (country, language)
 - Does not require classification system
 - High user value for cross-source reading
+- Start after Priority 1 ships
 
 **Priority 4 (Coverage Map)** deferred until:
 - Stable source base (25+ sources at 90%+)
@@ -537,10 +554,11 @@ SourceMetadata(
 - Sufficient diversity to make map meaningful
 - Premature with current 22-source base
 
-**Deprioritized features**:
-- Classification system: Requires provenance research (weeks)
-- Verification status: Requires NLP infrastructure (months)
-- Metrics dashboard: Valuable but not user-facing
+**Parallel Development**:
+- Build Priority 1 features now (gap notices, explanations)
+- Fix source health in parallel (release gate)
+- Do not let infrastructure work block product development
+- Gap notices make 77% visible, which is good transparency
 
 ### Technology Dependencies
 
@@ -664,19 +682,21 @@ Current implementation has a **strong foundation** for informed exposure:
 - ✅ Clear attribution
 - ✅ Conservative clustering
 
-**Revised implementation sequence** (focused and achievable):
+**Revised implementation sequence** (parallel development, release gate):
 
-1. **Source Health Gate (BLOCKING)** - 3-5 days
-   - Fix failing sources to reach 90%+ success rate
-   - Validate 48-hour stability
-   - Quality infrastructure before feature expansion
-
-2. **Gap Notices + Explanations** - Next feature cycle
+1. **Gap Notices + Explanations** - START NOW
    - Make coverage limitations visible
    - Explain why articles are grouped
    - Use existing data only (no new classification)
+   - Ships immediately (no release gate dependency)
 
-3. **"Read Across Coverage" Action** - 1-2 cycles later
+2. **Source Health Gate (Release Gate)** - Parallel, 3-5 days
+   - Fix failing sources to reach 90%+ success rate
+   - Validate 48-hour stability
+   - Does NOT block Priority 1 development
+   - Blocks production release only
+
+3. **"Read Across Coverage" Action** - After Priority 1 ships
    - Enable one-tap diverse source selection
    - Use documented metadata only (country, language)
    - Core informed-exposure use case
@@ -686,11 +706,13 @@ Current implementation has a **strong foundation** for informed exposure:
    - Document classification provenance first
    - Build visualization only on verified data
 
+**Key Change**: Health gate is a **release gate**, not a development blocker. Build transparency features now; they make the current 77% limitation visible, which aligns with informed-exposure principles.
+
 **Critical constraint**: No classification labels without clear, inspectable provenance. Research phase required before adding "wire service", "local reporting", or similar labels.
 
-**Timeline**: Core informed-exposure features in 2-3 cycles after health gate passes. Coverage visualization deferred until source base and provenance research complete.
+**Timeline**: Gap notices + explanations start now (immediate work). Source health fixes run in parallel. "Read Across Coverage" follows. Coverage visualization deferred until source base and provenance research complete.
 
-**Principle commitment**: When principles conflict with convenience or engagement, **principles win**. When tempted to add unverified labels, **document provenance first**.
+**Principle commitment**: When principles conflict with convenience or engagement, **principles win**. When tempted to add unverified labels, **document provenance first**. When infrastructure work would block transparency, **build transparency anyway**.
 
 ---
 

@@ -10,12 +10,12 @@
 
 **Product Direction Established**: CrossLens optimizes for **informed exposure, not agreement or time spent**. Complete principles documented with implementation roadmap.
 
-**Current Blocker**: Source health at 77% (17/22 sources), below 90% production-ready threshold. Must fix before proceeding.
+**Current State**: Source health at 77% (17/22 sources). This is a **release gate**, not a development blocker.
 
-**Next 3 Priorities**:
-1. **Pass 90% health gate** (3-5 days)
-2. **Add gap notices + explanations** (next cycle)
-3. **Build "Read Across Coverage" action** (1-2 cycles later)
+**Next 3 Priorities** (parallel development):
+1. **Add gap notices + explanations** (START NOW)
+2. **Pass 90% health gate** (parallel, 3-5 days - release gate only)
+3. **Build "Read Across Coverage" action** (after #1)
 
 ---
 
@@ -82,19 +82,21 @@
 
 ---
 
-## Blocking Issue: 77% Source Success Rate
+## Release Gate: 77% Source Success Rate
+
+**Status**: Below 90% production-ready threshold (release gate, not development blocker)
 
 **Problem**: 5 sources failing, unknown which ones
 
-**Impact**: Below 90% production-ready threshold
+**Impact**: Blocks production release, does NOT block feature development
 
-**Next Steps**:
+**Next Steps** (parallel with Priority 1 development):
 1. Add debug logging to identify failing sources by name
 2. Diagnose each failing source (cURL tests, format validation)
 3. Fix or disable to reach 20/22 (91%)
 4. Validate 48-hour stability at 90%+
 
-**Timeline**: 3-5 days to diagnose, fix, and validate
+**Timeline**: 3-5 days (parallel with transparency feature development)
 
 **Likely Failing Sources**:
 - Asahi Shimbun (RDF format, not RSS 2.0)
@@ -105,25 +107,13 @@
 
 ---
 
-## Revised Feature Priorities
+## Revised Feature Priorities (Parallel Development)
 
-### Priority 1: Source Health Gate (BLOCKING)
-**Status**: IN PROGRESS (77% → target 90%+)  
-**Timeline**: 3-5 days  
-**Deliverable**: 20/22 sources active, stable for 48 hours
-
-**Actions**:
-- [ ] Add debug logging to identify failing sources
-- [ ] Run feed refresh, capture logcat with errors
-- [ ] Diagnose each failing source (cURL + format check)
-- [ ] Fix or disable sources to reach 90%+
-- [ ] Validate stability over 48 hours
-- [ ] Document all fixes and disabled sources
-
-### Priority 2: Gap Notices + "Why This Appears"
-**Status**: READY TO START (after health gate passes)  
-**Timeline**: Next feature cycle  
-**Complexity**: Low (uses existing data)
+### Priority 1: Gap Notices + "Why This Appears"
+**Status**: READY TO START NOW  
+**Timeline**: Immediate next work  
+**Complexity**: Low (uses existing data)  
+**Release Gate**: None (improves current 77% experience)
 
 **Components**:
 
@@ -140,6 +130,27 @@
    - NO classification labels without provenance
 
 **Data Sources**: Existing SourceMetadata (country, language), clustering data (time window, publisher diversity)
+
+**Why Build This First**:
+- Makes current 77% limitation visible to users (transparency principle)
+- No infrastructure dependencies
+- Can ship immediately without waiting for health gate
+- Gap notices will actually improve current user experience at 77%
+
+### Priority 2: Source Health Gate (Release Gate)
+**Status**: IN PROGRESS (parallel with Priority 1)  
+**Timeline**: 3-5 days  
+**Role**: RELEASE GATE (does not block Priority 1 development)
+
+**Actions**:
+- [ ] Add debug logging to identify failing sources
+- [ ] Run feed refresh, capture logcat with errors
+- [ ] Diagnose each failing source (cURL + format check)
+- [ ] Fix or disable sources to reach 90%+
+- [ ] Validate stability over 48 hours
+- [ ] Document all fixes and disabled sources
+
+**Deliverable**: 20/22 sources active, stable for 48 hours before production release
 
 ### Priority 3: "Read Across Coverage" Action
 **Status**: PLANNED  
