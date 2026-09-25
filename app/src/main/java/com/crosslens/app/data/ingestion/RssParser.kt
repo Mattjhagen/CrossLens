@@ -70,7 +70,8 @@ class RssParser(
                             }
                             "title" -> {
                                 if (inItem) {
-                                    currentTitle = readText(parser)
+                                    val rawTitle = readText(parser)
+                                    currentTitle = sanitizeHtml(rawTitle)
                                 }
                             }
                             "link" -> {
@@ -80,7 +81,8 @@ class RssParser(
                             }
                             "description" -> {
                                 if (inItem) {
-                                    currentDescription = readText(parser).take(maxDescriptionLength)
+                                    val rawDescription = readText(parser)
+                                    currentDescription = sanitizeHtml(rawDescription).take(maxDescriptionLength)
                                 }
                             }
                             "pubdate" -> {
@@ -179,6 +181,150 @@ class RssParser(
 
         // If all formatters fail, return null rather than throwing
         return null
+    }
+
+    /**
+     * Sanitize HTML content from RSS titles and descriptions.
+     * Decodes nested/escaped entities, then removes tags to produce clean plain text.
+     * Safe for JVM unit tests - no Android dependencies.
+     */
+    private fun sanitizeHtml(html: String): String {
+        if (html.isBlank()) return ""
+
+        return try {
+            var text = html
+
+            // Decode HTML entities first (up to 3 passes for nested/double-escaped content)
+            // Example: &amp;lt;i&amp;gt; → &lt;i&gt; → <i>
+            for (i in 0 until 3) {
+                val decoded = decodeHtmlEntities(text)
+                if (decoded == text) break // No more changes
+                text = decoded
+            }
+
+            // Remove script, style, and noscript blocks with their content
+            text = safeReplace(text, "<script[^>]*>.*?</script>", "", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+            text = safeReplace(text, "<style[^>]*>.*?</style>", "", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+            text = safeReplace(text, "<noscript[^>]*>.*?</noscript>", "", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+
+            // Remove HTML comments
+            text = safeReplace(text, "<!--.*?-->", "", setOf(RegexOption.DOT_MATCHES_ALL))
+
+            // Convert block-level tags to spaces before removing (preserves readability)
+            val blockTags = listOf("p", "div", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6",
+                                   "li", "tr", "td", "th", "blockquote", "pre", "article", "section")
+            for (tag in blockTags) {
+                text = safeReplace(text, "<$tag[^>]*>", " ", setOf(RegexOption.IGNORE_CASE))
+                text = safeReplace(text, "</$tag>", " ", setOf(RegexOption.IGNORE_CASE))
+            }
+
+            // Remove all remaining HTML tags (inline tags like <i>, <b>, <span>, etc.)
+            text = safeReplace(text, "<[^>]+>", "")
+
+            // Handle escaped backslash sequences like \<p\> (some feeds double-escape)
+            text = safeReplace(text, """\\<[^>]*\\>""", " ")
+            text = safeReplace(text, """\\<[^>]*>""", " ")
+            text = safeReplace(text, """<[^>]*\\>""", " ")
+
+            // Normalize whitespace
+            text = safeReplace(text, "\\s+", " ").trim()
+
+            text
+        } catch (e: Exception) {
+            // If sanitization fails completely, return trimmed original
+            html.trim()
+        }
+    }
+
+    /**
+     * Safely replace regex pattern, catching any regex exceptions.
+     */
+    private fun safeReplace(input: String, pattern: String, replacement: String, options: Set<RegexOption> = emptySet()): String {
+        return try {
+            input.replace(Regex(pattern, options), replacement)
+        } catch (e: Exception) {
+            input
+        }
+    }
+
+    /**
+     * Decode common HTML entities to their character equivalents.
+     */
+    private fun decodeHtmlEntities(text: String): String {
+        return try {
+            var decoded = text
+
+            // Named entities (most common first)
+            val namedEntities = mapOf(
+                "&amp;" to "&",
+                "&lt;" to "<",
+                "&gt;" to ">",
+                "&quot;" to "\"",
+                "&apos;" to "'",
+                "&nbsp;" to " ",
+                "&ndash;" to "–",
+                "&mdash;" to "—",
+                "&hellip;" to "…",
+                "&lsquo;" to "'",
+                "&rsquo;" to "'",
+                "&ldquo;" to """,
+                "&rdquo;" to """,
+                "&bull;" to "•",
+                "&middot;" to "·",
+                "&copy;" to "©",
+                "&reg;" to "®",
+                "&trade;" to "™",
+                "&euro;" to "€",
+                "&pound;" to "£",
+                "&yen;" to "¥"
+            )
+
+            for ((entity, char) in namedEntities) {
+                decoded = decoded.replace(entity, char, ignoreCase = true)
+            }
+
+            // Decode numeric entities (&#123; and &#xAB;)
+            decoded = safeReplace(decoded, "&#(\\d+);") { matchResult ->
+                val code = matchResult.groupValues[1].toIntOrNull()
+                if (code != null && code in 32..65535) { // Valid Char range, excluding control chars
+                    try {
+                        code.toChar().toString()
+                    } catch (e: Exception) {
+                        matchResult.value
+                    }
+                } else {
+                    matchResult.value
+                }
+            }
+
+            decoded = safeReplace(decoded, "&#[xX]([0-9a-fA-F]+);") { matchResult ->
+                val code = matchResult.groupValues[1].toIntOrNull(16)
+                if (code != null && code in 32..65535) { // Valid Char range, excluding control chars
+                    try {
+                        code.toChar().toString()
+                    } catch (e: Exception) {
+                        matchResult.value
+                    }
+                } else {
+                    matchResult.value
+                }
+            }
+
+            decoded
+        } catch (e: Exception) {
+            text
+        }
+    }
+
+    /**
+     * Safely replace regex with transform function.
+     */
+    private fun safeReplace(input: String, pattern: String, transform: (MatchResult) -> CharSequence): String {
+        return try {
+            input.replace(Regex(pattern), transform)
+        } catch (e: Exception) {
+            input
+        }
     }
 }
 

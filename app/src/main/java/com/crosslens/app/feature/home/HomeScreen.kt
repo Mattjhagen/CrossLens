@@ -321,11 +321,13 @@ private fun StoryCard(
                         .data(story.imageUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = null,
+                    contentDescription = story.title,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    error = null, // No error placeholder - just skip image on failure
+                    placeholder = null // No placeholder - image loads directly
                 )
             }
 

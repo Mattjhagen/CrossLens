@@ -322,4 +322,49 @@ class LiveStoryRepositoryTest {
         assertEquals(1, stories.size)
         assertEquals("Mock Story", stories[0].title)
     }
+
+    @Test
+    fun `refresh preserves article images through ingestion`() = runTest {
+        val successAdapter = mock<RssSourceAdapter>()
+
+        whenever(successAdapter.sourceId).thenReturn("test-source")
+        whenever(successAdapter.sourceName).thenReturn("Test Source")
+
+        val article = SourceArticleRecord(
+            url = "https://example.com/article",
+            publishedAt = Instant.now(),
+            languageTag = "en",
+            headline = "Test Article",
+            excerpt = "Test excerpt",
+            contentPermission = ContentPermission.EXPLICIT_EXCERPT,
+            imageUrl = "https://example.com/image.jpg"
+        )
+        whenever(successAdapter.fetchArticles()).thenReturn(listOf(article))
+        whenever(sourceDao.getSourcesByIds(any())).thenReturn(emptyList())
+
+        repository = LiveStoryRepository(
+            listOf(successAdapter),
+            storyDao,
+            articleDao,
+            sourceDao,
+            feedMetadataDao,
+            database,
+            mockRepository,
+            digestGenerator
+        )
+
+        val result = repository.refresh()
+
+        assertTrue(result.isSuccess)
+
+        // Verify article was inserted with imageUrl
+        verify(articleDao).insertArticles(argThat { articles ->
+            articles.isNotEmpty() && articles.first().imageUrl == "https://example.com/image.jpg"
+        })
+
+        // Verify story was created with imageUrl from primary article
+        verify(storyDao).insertStories(argThat { stories ->
+            stories.isNotEmpty() && stories.first().imageUrl == "https://example.com/image.jpg"
+        })
+    }
 }
