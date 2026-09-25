@@ -41,7 +41,16 @@ object IngestionModule {
 
     @Provides
     @Singleton
-    fun provideRssSourceAdapters(httpClient: OkHttpClient): List<RssSourceAdapter> {
-        return RssSourceAdapter.createApprovedSources(httpClient)
+    fun provideSourceHealthMonitor(): SourceHealthMonitor {
+        return SourceHealthMonitor()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRssSourceAdapters(
+        httpClient: OkHttpClient,
+        healthMonitor: SourceHealthMonitor
+    ): List<RssSourceAdapter> {
+        return RssSourceAdapter.createApprovedSources(httpClient, healthMonitor)
     }
 }
