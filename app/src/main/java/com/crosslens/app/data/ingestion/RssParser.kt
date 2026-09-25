@@ -41,6 +41,7 @@ class RssParser(
             }
 
             val factory = XmlPullParserFactory.newInstance()
+            factory.isNamespaceAware = true
             val parser = factory.newPullParser()
             parser.setInput(StringReader(xmlContent))
 
@@ -58,7 +59,10 @@ class RssParser(
             while (eventType != XmlPullParser.END_DOCUMENT && items.size < maxItems) {
                 when (eventType) {
                     XmlPullParser.START_TAG -> {
-                        when (parser.name?.lowercase()) {
+                        val tagName = parser.name?.lowercase()
+                        val namespace = parser.namespace
+
+                        when (tagName) {
                             "item" -> {
                                 inItem = true
                                 currentTitle = null
@@ -108,7 +112,10 @@ class RssParser(
                             }
                             "thumbnail" -> {
                                 // Media RSS thumbnail (media:thumbnail)
-                                if (inItem && currentImageUrl == null) {
+                                // Example: <media:thumbnail url="https://..."/>
+                                // Check if this is from the media namespace
+                                val isMediaNamespace = namespace != null && namespace.contains("search.yahoo.com/mrss")
+                                if (inItem && currentImageUrl == null && isMediaNamespace) {
                                     val url = parser.getAttributeValue(null, "url")
                                     if (url?.startsWith("https://") == true) {
                                         currentImageUrl = url
@@ -116,13 +123,24 @@ class RssParser(
                                 }
                             }
                             "content" -> {
-                                // Media RSS content (media:content) - check if it's an image
-                                if (inItem && currentImageUrl == null && parser.namespace?.contains("media") == true) {
-                                    val medium = parser.getAttributeValue(null, "medium")
-                                    val type = parser.getAttributeValue(null, "type")
-                                    if (medium == "image" || type?.startsWith("image/") == true) {
-                                        val url = parser.getAttributeValue(null, "url")
-                                        if (url?.startsWith("https://") == true) {
+                                // Media RSS content (media:content)
+                                // Examples:
+                                // - <media:content url="https://..." width="700"/> (Guardian)
+                                // - <media:content url="https://..." medium="image" height="1800"/> (NYTimes)
+                                // Check if this is from the media namespace
+                                val isMediaNamespace = namespace != null && namespace.contains("search.yahoo.com/mrss")
+                                if (inItem && currentImageUrl == null && isMediaNamespace) {
+                                    val url = parser.getAttributeValue(null, "url")
+                                    if (url?.startsWith("https://") == true) {
+                                        // Accept if explicitly marked as image, or if no type/medium specified
+                                        val medium = parser.getAttributeValue(null, "medium")
+                                        val type = parser.getAttributeValue(null, "type")
+
+                                        val isExplicitImage = medium == "image" || type?.startsWith("image/") == true
+                                        val hasNoTypeInfo = medium == null && type == null
+
+                                        // Accept media:content with url if it's explicitly image or has no type info
+                                        if (isExplicitImage || hasNoTypeInfo) {
                                             currentImageUrl = url
                                         }
                                     }

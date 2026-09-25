@@ -539,4 +539,113 @@ class RssParserTest {
         // Should use the first image found (enclosure is checked first)
         assertEquals("https://example.com/first.jpg", items[0].imageUrl)
     }
+
+    // Real-world feed format tests
+    @Test
+    fun `extract image from BBC RSS feed format`() {
+        // BBC uses media:thumbnail with width and height attributes
+        val bbcSample = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+                <channel>
+                    <item>
+                        <title><![CDATA[Man City sanctions could be significant]]></title>
+                        <description><![CDATA[Expert says sanctions will be significant.]]></description>
+                        <link>https://www.bbc.co.uk/sport/football/test</link>
+                        <pubDate>Fri, 25 Sep 2026 14:55:14 GMT</pubDate>
+                        <media:thumbnail width="240" height="135" url="https://ichef.bbci.co.uk/ace/standard/240/test.jpg"/>
+                    </item>
+                </channel>
+            </rss>
+        """.trimIndent()
+
+        val result = parser.parse(bbcSample, "bbc-test", "BBC News")
+
+        assertTrue("Parser should succeed with BBC format", result.isSuccess)
+        val items = result.getOrThrow()
+        assertEquals("Should have 1 item", 1, items.size)
+        assertEquals("Should extract BBC image", "https://ichef.bbci.co.uk/ace/standard/240/test.jpg", items[0].imageUrl)
+        assertEquals("Should extract BBC title", "Man City sanctions could be significant", items[0].title)
+    }
+
+    @Test
+    fun `extract image from Guardian RSS feed format`() {
+        // Guardian uses media:content with width attribute but no medium or type
+        val guardianSample = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <rss xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+              <channel>
+                <item>
+                  <title>Ethiopian rebel offensive</title>
+                  <link>https://www.theguardian.com/world/2026/test</link>
+                  <description>Fighting escalates in Ethiopia</description>
+                  <pubDate>Thu, 24 Sep 2026 15:29:42 GMT</pubDate>
+                  <media:content width="700" url="https://i.guim.co.uk/img/media/test.jpg"/>
+                </item>
+              </channel>
+            </rss>
+        """.trimIndent()
+
+        val result = parser.parse(guardianSample, "guardian-test", "The Guardian")
+
+        assertTrue("Parser should succeed with Guardian format", result.isSuccess)
+        val items = result.getOrThrow()
+        assertEquals("Should have 1 item", 1, items.size)
+        assertEquals("Should extract Guardian image", "https://i.guim.co.uk/img/media/test.jpg", items[0].imageUrl)
+        assertEquals("Should extract Guardian title", "Ethiopian rebel offensive", items[0].title)
+    }
+
+    @Test
+    fun `extract image from NYTimes RSS feed format`() {
+        // NYTimes uses media:content with medium="image" and width/height
+        val nytimesSample = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+              <channel>
+                <item>
+                  <title>Netanyahu Said to Have Been Warned</title>
+                  <link>https://www.nytimes.com/2026/09/25/test.html</link>
+                  <description>The warning from UAE never reached security chiefs.</description>
+                  <pubDate>Fri, 25 Sep 2026 17:15:17 +0000</pubDate>
+                  <media:content height="1800" medium="image" url="https://static01.nyt.com/images/2026/test.jpg" width="1800"></media:content>
+                </item>
+              </channel>
+            </rss>
+        """.trimIndent()
+
+        val result = parser.parse(nytimesSample, "nytimes-test", "The New York Times")
+
+        assertTrue("Parser should succeed with NYTimes format", result.isSuccess)
+        val items = result.getOrThrow()
+        assertEquals("Should have 1 item", 1, items.size)
+        assertEquals("Should extract NYTimes image", "https://static01.nyt.com/images/2026/test.jpg", items[0].imageUrl)
+        assertEquals("Should extract NYTimes title", "Netanyahu Said to Have Been Warned", items[0].title)
+    }
+
+    @Test
+    fun `parse feed with no images cleanly`() {
+        // Al Jazeera format - no image fields
+        val noImageSample = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss version="2.0">
+                <channel>
+                    <item>
+                        <title>Iraq halts Iranian flights</title>
+                        <link>https://www.aljazeera.com/news/2026/test</link>
+                        <description><![CDATA[Baghdad suspends flights after US sanctions.]]></description>
+                        <pubDate>Fri, 25 Sep 2026 18:30:20 +0000</pubDate>
+                    </item>
+                </channel>
+            </rss>
+        """.trimIndent()
+
+        val result = parser.parse(noImageSample, "aljazeera-test", "Al Jazeera")
+
+        assertTrue("Parser should succeed with no-image format", result.isSuccess)
+        val items = result.getOrThrow()
+        assertEquals("Should have 1 item", 1, items.size)
+        assertNull("Should have no image URL", items[0].imageUrl)
+        assertEquals("Should extract title", "Iraq halts Iranian flights", items[0].title)
+        assertTrue("Should extract description", items[0].description.contains("Baghdad"))
+    }
 }
