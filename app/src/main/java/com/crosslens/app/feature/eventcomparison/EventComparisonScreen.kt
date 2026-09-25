@@ -43,6 +43,7 @@ fun EventComparisonScreen(
     viewModel: EventComparisonViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val showReadAcrossSheet by viewModel.showReadAcrossSheet.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -127,6 +128,16 @@ fun EventComparisonScreen(
                         )
                     }
 
+                    // Read across coverage action
+                    if (state.recommendations.isNotEmpty()) {
+                        item {
+                            ReadAcrossCoverageAction(
+                                recommendationCount = state.recommendations.size,
+                                onClick = { viewModel.toggleReadAcrossCoverage() }
+                            )
+                        }
+                    }
+
                     // Article cards with "why this appears" explanations
                     items(state.articles) { articleWithMetadata ->
                         ArticleComparisonCard(
@@ -143,6 +154,14 @@ fun EventComparisonScreen(
                             articleCount = state.articles.size
                         )
                     }
+                }
+
+                // Read across coverage bottom sheet
+                if (showReadAcrossSheet && state.recommendations.isNotEmpty()) {
+                    ReadAcrossCoverageSheet(
+                        recommendations = state.recommendations,
+                        onDismiss = { viewModel.dismissReadAcrossCoverage() }
+                    )
                 }
             }
         }
@@ -409,6 +428,206 @@ private fun ComparisonExplanation(
                         "with documented provenance shown where available.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReadAcrossCoverageAction(
+    recommendationCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Read across coverage",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = "$recommendationCount additional source${if (recommendationCount > 1) "s" else ""} covering this event",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            Button(
+                onClick = onClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("View")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReadAcrossCoverageSheet(
+    recommendations: List<RecommendedArticle>,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            // Header
+            Text(
+                text = "Read across coverage",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Additional perspectives on the same event from diverse sources",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Recommendations
+            recommendations.forEach { recommendation ->
+                RecommendationCard(
+                    article = recommendation.article,
+                    metadata = recommendation.metadata,
+                    explanation = recommendation.explanation,
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(recommendation.article.originalUrl))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
+
+            // Explanation
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "About these recommendations",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    Text(
+                        text = "Articles are selected from the same event cluster based on documented source diversity: " +
+                                "different countries, languages, and source types. " +
+                                "We do not infer political ideology or claim any source is more truthful than another.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecommendationCard(
+    article: Article,
+    metadata: SourceMetadata?,
+    explanation: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            // Publisher and explanation
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = metadata?.publisherName ?: article.attribution,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (metadata != null) {
+                        Text(
+                            text = "${metadata.country} • ${metadata.primaryLanguage}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Text(
+                    text = formatPublicationTime(article.publishedTime),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Why this appears
+            Surface(
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = explanation,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Headline
+            Text(
+                text = article.originalHeadline,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                maxLines = 3
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Excerpt
+            Text(
+                text = article.originalExcerpt,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2
             )
         }
     }

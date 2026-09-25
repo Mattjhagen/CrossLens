@@ -27,12 +27,24 @@ class EventComparisonViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val storyId: String = checkNotNull(savedStateHandle["storyId"])
+    private val recommender = ReadAcrossCoverageRecommender()
 
     private val _uiState = MutableStateFlow<EventComparisonUiState>(EventComparisonUiState.Loading)
     val uiState: StateFlow<EventComparisonUiState> = _uiState.asStateFlow()
 
+    private val _showReadAcrossSheet = MutableStateFlow(false)
+    val showReadAcrossSheet: StateFlow<Boolean> = _showReadAcrossSheet.asStateFlow()
+
     init {
         loadEvent()
+    }
+
+    fun toggleReadAcrossCoverage() {
+        _showReadAcrossSheet.value = !_showReadAcrossSheet.value
+    }
+
+    fun dismissReadAcrossCoverage() {
+        _showReadAcrossSheet.value = false
     }
 
     private fun loadEvent() {
@@ -60,9 +72,17 @@ class EventComparisonViewModel @Inject constructor(
                     )
                 }
 
+                // Generate read-across recommendations
+                val recommendations = recommender.recommend(
+                    allArticles = articles,
+                    alreadyShownArticles = articles,
+                    articlesWithMetadata = articleWithMetadata
+                )
+
                 _uiState.value = EventComparisonUiState.Success(
                     story = story,
-                    articles = articleWithMetadata
+                    articles = articleWithMetadata,
+                    recommendations = recommendations
                 )
             } catch (e: Exception) {
                 _uiState.value = EventComparisonUiState.Error(
@@ -82,7 +102,8 @@ sealed interface EventComparisonUiState {
     data class Error(val message: String) : EventComparisonUiState
     data class Success(
         val story: Story,
-        val articles: List<ArticleWithMetadata>
+        val articles: List<ArticleWithMetadata>,
+        val recommendations: List<RecommendedArticle> = emptyList()
     ) : EventComparisonUiState
 }
 
