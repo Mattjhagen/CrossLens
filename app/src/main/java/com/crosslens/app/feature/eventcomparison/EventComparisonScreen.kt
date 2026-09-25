@@ -118,19 +118,22 @@ fun EventComparisonScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Event header
+                    // Event header with gap notices
                     item {
                         EventHeader(
                             title = state.story.title,
-                            sourceCount = state.articles.size
+                            sourceCount = state.articles.size,
+                            articles = state.articles
                         )
                     }
 
-                    // Article cards
+                    // Article cards with "why this appears" explanations
                     items(state.articles) { articleWithMetadata ->
                         ArticleComparisonCard(
                             article = articleWithMetadata.article,
-                            metadata = articleWithMetadata.metadata
+                            metadata = articleWithMetadata.metadata,
+                            totalPublishers = state.articles.size,
+                            allPublishers = state.articles.mapNotNull { it.metadata?.publisherName }
                         )
                     }
 
@@ -150,8 +153,13 @@ fun EventComparisonScreen(
 private fun EventHeader(
     title: String,
     sourceCount: Int,
+    articles: List<ArticleWithMetadata>,
     modifier: Modifier = Modifier
 ) {
+    // Compute coverage metadata for gap notices
+    val languages = articles.mapNotNull { it.metadata?.primaryLanguage }.distinct()
+    val countries = articles.mapNotNull { it.metadata?.country }.distinct()
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -161,6 +169,8 @@ private fun EventHeader(
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
+
+        // Coverage summary
         Text(
             text = "$sourceCount source${if (sourceCount > 1) "s" else ""} reporting this event",
             style = MaterialTheme.typography.bodyMedium,
@@ -169,7 +179,60 @@ private fun EventHeader(
                 contentDescription = "$sourceCount sources reporting this event"
             }
         )
+
+        // Coverage gap notices
+        if (sourceCount == 1) {
+            CoverageGapNotice(
+                text = "Single publisher - coverage may be incomplete"
+            )
+        }
+
+        if (languages.size == 1) {
+            CoverageGapNotice(
+                text = if (sourceCount == 1) {
+                    "One language represented"
+                } else {
+                    "$sourceCount publishers; one language represented"
+                }
+            )
+        }
+
+        if (sourceCount > 1 && countries.size == 1) {
+            CoverageGapNotice(
+                text = "All sources from ${countries.first()}"
+            )
+        }
+
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+    }
+}
+
+@Composable
+private fun CoverageGapNotice(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "⚠",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+        }
     }
 }
 
@@ -177,9 +240,12 @@ private fun EventHeader(
 private fun ArticleComparisonCard(
     article: Article,
     metadata: SourceMetadata?,
+    totalPublishers: Int,
+    allPublishers: List<String>,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val publisherName = metadata?.publisherName ?: article.attribution
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -196,7 +262,7 @@ private fun ArticleComparisonCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = metadata?.publisherName ?: article.attribution,
+                        text = publisherName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -214,6 +280,30 @@ private fun ArticleComparisonCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // "Why this appears" explanation
+            if (totalPublishers > 1) {
+                val otherPublishers = allPublishers.filter { it != publisherName }.take(2)
+                val explanation = if (otherPublishers.isNotEmpty()) {
+                    "Different publisher from ${otherPublishers.joinToString(", ")}"
+                } else {
+                    "One of $totalPublishers publishers reporting this event"
+                }
+
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = explanation,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

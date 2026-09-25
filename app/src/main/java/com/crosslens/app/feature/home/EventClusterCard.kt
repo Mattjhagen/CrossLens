@@ -98,6 +98,22 @@ fun EventClusterCard(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Coverage gap notice (if single source)
+                if (sourceCount == 1) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = "Single publisher - coverage may be incomplete",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
                 // Compare button/indicator
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
