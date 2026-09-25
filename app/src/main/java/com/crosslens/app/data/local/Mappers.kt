@@ -33,7 +33,8 @@ fun StoryEntity.toDomain(lensGapDetails: String? = null): Story {
         articleIds = articleIds,
         claimIds = claimIds,
         lensGapAssessment = lensGap,
-        imageUrl = imageUrl
+        imageUrl = imageUrl,
+        isEventCluster = lensGapStatus == "EVENT_CLUSTER"
     )
 }
 

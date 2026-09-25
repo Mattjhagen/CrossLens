@@ -36,6 +36,7 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun HomeScreen(
     onStoryClick: (String) -> Unit,
+    onEventClick: (String) -> Unit,
     onExploreClick: () -> Unit,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -278,10 +279,17 @@ fun HomeScreen(
                         }
 
                         items(state.stories) { story ->
-                            StoryCard(
-                                story = story,
-                                onClick = { onStoryClick(story.id) }
-                            )
+                            if (story.isEventCluster) {
+                                EventClusterCard(
+                                    story = story,
+                                    onClick = { onEventClick(story.id) }
+                                )
+                            } else {
+                                StoryCard(
+                                    story = story,
+                                    onClick = { onStoryClick(story.id) }
+                                )
+                            }
                         }
 
                         item {

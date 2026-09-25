@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.crosslens.app.feature.comparison.CrossLensScreen
 import com.crosslens.app.feature.editorial.EditorialReviewScreen
+import com.crosslens.app.feature.eventcomparison.EventComparisonScreen
 import com.crosslens.app.feature.explore.ExploreScreen
 import com.crosslens.app.feature.home.HomeScreen
 import com.crosslens.app.feature.settings.SettingsScreen
@@ -31,6 +32,9 @@ fun CrossLensNavHost(
             HomeScreen(
                 onStoryClick = { storyId ->
                     navController.navigate(CrossLensDestination.Story.createRoute(storyId))
+                },
+                onEventClick = { storyId ->
+                    navController.navigate(CrossLensDestination.EventComparison.createRoute(storyId))
                 },
                 onExploreClick = {
                     navController.navigate(CrossLensDestination.Explore.route)
@@ -103,6 +107,17 @@ fun CrossLensNavHost(
 
         composable(CrossLensDestination.EditorialReview.route) {
             EditorialReviewScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = CrossLensDestination.EventComparison.route,
+            arguments = listOf(navArgument("storyId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val storyId = backStackEntry.arguments?.getString("storyId") ?: return@composable
+            EventComparisonScreen(
+                storyId = storyId,
                 onBackClick = { navController.popBackStack() }
             )
         }
