@@ -70,8 +70,7 @@ class RssParser(
                             }
                             "title" -> {
                                 if (inItem) {
-                                    val rawTitle = readText(parser)
-                                    currentTitle = sanitizeHtml(rawTitle)
+                                    currentTitle = readText(parser)
                                 }
                             }
                             "link" -> {

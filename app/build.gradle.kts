@@ -260,6 +260,8 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.turbine)
     testImplementation(libs.androidx.room.testing)
+    // XML parser for JVM unit tests (Android XmlPullParser not available in pure JVM)
+    testImplementation("xpp3:xpp3:1.1.4c")
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
