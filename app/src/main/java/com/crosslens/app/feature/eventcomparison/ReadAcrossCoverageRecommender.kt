@@ -14,8 +14,21 @@ import com.crosslens.app.data.ingestion.SourceMetadata
  * - Claim sources are neutral, biased, true, or false
  * - Show unrelated articles
  * - Use user engagement history or political preferences
+ *
+ * ELIGIBILITY:
+ * - Event cluster must have at least 3 distinct publishers
+ * - At least 2 additional articles available after excluding currently viewed article(s)
+ * - All recommendations from the same confident event cluster
  */
 class ReadAcrossCoverageRecommender {
+
+    companion object {
+        /** Minimum distinct publishers required in cluster for Read Across Coverage */
+        const val MIN_DISTINCT_PUBLISHERS = 3
+
+        /** Minimum additional articles needed for recommendations */
+        const val MIN_RECOMMENDATIONS = 2
+    }
 
     /**
      * Recommend 2-4 additional articles from the same event for broader coverage.
@@ -30,12 +43,20 @@ class ReadAcrossCoverageRecommender {
         alreadyShownArticles: List<Article>,
         articlesWithMetadata: List<ArticleWithMetadata>
     ): List<RecommendedArticle> {
+        // Eligibility check 1: At least 3 distinct publishers in cluster
+        val distinctPublishers = articlesWithMetadata
+            .mapNotNull { it.metadata?.publisherName }
+            .distinct()
+        if (distinctPublishers.size < MIN_DISTINCT_PUBLISHERS) {
+            return emptyList()
+        }
         // Filter out already-shown articles
         val candidateArticles = articlesWithMetadata.filter { candidate ->
             alreadyShownArticles.none { shown -> shown.id == candidate.article.id }
         }
 
-        if (candidateArticles.isEmpty()) {
+        // Eligibility check 2: At least 2 additional articles available for recommendations
+        if (candidateArticles.size < MIN_RECOMMENDATIONS) {
             return emptyList()
         }
 

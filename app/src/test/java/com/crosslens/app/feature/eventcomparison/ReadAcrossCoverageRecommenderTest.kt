@@ -45,25 +45,29 @@ class ReadAcrossCoverageRecommenderTest {
         val article1 = createArticle(id = "1", sourceId = "bbc", language = "en-GB")
         val article2 = createArticle(id = "2", sourceId = "guardian", language = "en-GB")
         val article3 = createArticle(id = "3", sourceId = "lemonde", language = "fr")
+        val article4 = createArticle(id = "4", sourceId = "dw", language = "en")
 
         val metadata1 = createMetadata("BBC News", "United Kingdom", "English")
         val metadata2 = createMetadata("The Guardian", "United Kingdom", "English")
         val metadata3 = createMetadata("Le Monde", "France", "French")
+        val metadata4 = createMetadata("Deutsche Welle", "Germany", "English")
 
         val articlesWithMetadata = listOf(
             ArticleWithMetadata(article1, metadata1),
             ArticleWithMetadata(article2, metadata2),
-            ArticleWithMetadata(article3, metadata3)
+            ArticleWithMetadata(article3, metadata3),
+            ArticleWithMetadata(article4, metadata4)
         )
 
         val result = recommender.recommend(
-            allArticles = listOf(article1, article2, article3),
+            allArticles = listOf(article1, article2, article3, article4),
             alreadyShownArticles = listOf(article1, article2),
             articlesWithMetadata = articlesWithMetadata
         )
 
-        assertEquals(1, result.size)
+        assertEquals(2, result.size)
         assertEquals("3", result[0].article.id)
+        assertEquals("4", result[1].article.id)
     }
 
     @Test
@@ -206,47 +210,52 @@ class ReadAcrossCoverageRecommenderTest {
     @Test
     fun `recommend generates factual explanation for different country`() {
         val shownArticle = createArticle(id = "1", sourceId = "bbc", language = "en-GB")
-        val candidateArticle = createArticle(id = "2", sourceId = "lemonde", language = "fr")
+        val candidateArticle1 = createArticle(id = "2", sourceId = "lemonde", language = "fr")
+        val candidateArticle2 = createArticle(id = "3", sourceId = "dw", language = "en")
 
         val articlesWithMetadata = listOf(
             ArticleWithMetadata(shownArticle, createMetadata("BBC News", "United Kingdom", "English", "en-GB")),
-            ArticleWithMetadata(candidateArticle, createMetadata("Le Monde", "France", "French", "fr"))
+            ArticleWithMetadata(candidateArticle1, createMetadata("Le Monde", "France", "French", "fr")),
+            ArticleWithMetadata(candidateArticle2, createMetadata("Deutsche Welle", "Germany", "English", "en"))
         )
 
         val result = recommender.recommend(
-            allArticles = listOf(shownArticle, candidateArticle),
+            allArticles = listOf(shownArticle, candidateArticle1, candidateArticle2),
             alreadyShownArticles = listOf(shownArticle),
             articlesWithMetadata = articlesWithMetadata
         )
 
-        assertEquals(1, result.size)
-        assertTrue(result[0].explanation.contains("France"))
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.explanation.contains("France") })
     }
 
     @Test
     fun `recommend generates factual explanation for different language`() {
         val shownArticle = createArticle(id = "1", sourceId = "bbc", language = "en-GB")
-        val candidateArticle = createArticle(id = "2", sourceId = "lemonde", language = "fr")
+        val candidateArticle1 = createArticle(id = "2", sourceId = "lemonde", language = "fr")
+        val candidateArticle2 = createArticle(id = "3", sourceId = "dw", language = "en")
 
         val articlesWithMetadata = listOf(
             ArticleWithMetadata(shownArticle, createMetadata("BBC News", "United Kingdom", "English", "en-GB")),
-            ArticleWithMetadata(candidateArticle, createMetadata("Le Monde", "France", "French", "fr"))
+            ArticleWithMetadata(candidateArticle1, createMetadata("Le Monde", "France", "French", "fr")),
+            ArticleWithMetadata(candidateArticle2, createMetadata("Deutsche Welle", "Germany", "English", "en"))
         )
 
         val result = recommender.recommend(
-            allArticles = listOf(shownArticle, candidateArticle),
+            allArticles = listOf(shownArticle, candidateArticle1, candidateArticle2),
             alreadyShownArticles = listOf(shownArticle),
             articlesWithMetadata = articlesWithMetadata
         )
 
-        assertEquals(1, result.size)
-        assertTrue(result[0].explanation.contains("French"))
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.explanation.contains("French") })
     }
 
     @Test
     fun `recommend generates factual explanation for public broadcaster`() {
         val shownArticle = createArticle(id = "1", sourceId = "nyt", language = "en-US")
-        val candidateArticle = createArticle(id = "2", sourceId = "bbc", language = "en-GB")
+        val candidateArticle1 = createArticle(id = "2", sourceId = "bbc", language = "en-GB")
+        val candidateArticle2 = createArticle(id = "3", sourceId = "lemonde", language = "fr")
 
         val articlesWithMetadata = listOf(
             ArticleWithMetadata(
@@ -254,63 +263,73 @@ class ReadAcrossCoverageRecommenderTest {
                 createMetadata("New York Times", "United States", "English", "en-US", "American newspaper")
             ),
             ArticleWithMetadata(
-                candidateArticle,
+                candidateArticle1,
                 createMetadata("BBC News", "United Kingdom", "English", "en-GB", "British public service broadcaster")
+            ),
+            ArticleWithMetadata(
+                candidateArticle2,
+                createMetadata("Le Monde", "France", "French", "fr", "French newspaper")
             )
         )
 
         val result = recommender.recommend(
-            allArticles = listOf(shownArticle, candidateArticle),
+            allArticles = listOf(shownArticle, candidateArticle1, candidateArticle2),
             alreadyShownArticles = listOf(shownArticle),
             articlesWithMetadata = articlesWithMetadata
         )
 
-        assertEquals(1, result.size)
-        assertTrue(result[0].explanation.contains("Public broadcaster") ||
-                   result[0].explanation.contains("United Kingdom"))
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.explanation.contains("Public broadcaster") ||
+                   it.explanation.contains("United Kingdom") })
     }
 
     @Test
     fun `recommend never shows unrelated articles`() {
         val shownArticle = createArticle(id = "1", sourceId = "bbc", language = "en-GB", storyId = "story1")
-        val relatedArticle = createArticle(id = "2", sourceId = "guardian", language = "en-GB", storyId = "story1")
-        val unrelatedArticle = createArticle(id = "3", sourceId = "lemonde", language = "fr", storyId = "story2")
+        val relatedArticle1 = createArticle(id = "2", sourceId = "guardian", language = "en-GB", storyId = "story1")
+        val relatedArticle2 = createArticle(id = "3", sourceId = "dw", language = "en", storyId = "story1")
+        val unrelatedArticle = createArticle(id = "4", sourceId = "lemonde", language = "fr", storyId = "story2")
 
         val articlesWithMetadata = listOf(
             ArticleWithMetadata(shownArticle, createMetadata("BBC News", "United Kingdom", "English")),
-            ArticleWithMetadata(relatedArticle, createMetadata("The Guardian", "United Kingdom", "English")),
+            ArticleWithMetadata(relatedArticle1, createMetadata("The Guardian", "United Kingdom", "English")),
+            ArticleWithMetadata(relatedArticle2, createMetadata("Deutsche Welle", "Germany", "English")),
             ArticleWithMetadata(unrelatedArticle, createMetadata("Le Monde", "France", "French"))
         )
 
         // Only related articles should be in the pool
         val result = recommender.recommend(
-            allArticles = listOf(shownArticle, relatedArticle), // Exclude unrelated
+            allArticles = listOf(shownArticle, relatedArticle1, relatedArticle2), // Exclude unrelated
             alreadyShownArticles = listOf(shownArticle),
             articlesWithMetadata = articlesWithMetadata.filter { it.article.storyId == "story1" }
         )
 
-        assertEquals(1, result.size)
-        assertEquals("story1", result[0].article.storyId)
+        assertEquals(2, result.size)
+        assertTrue(result.all { it.article.storyId == "story1" })
     }
 
     @Test
     fun `recommend handles missing metadata gracefully`() {
         val shownArticle = createArticle(id = "1", sourceId = "bbc", language = "en-GB")
-        val candidateArticle = createArticle(id = "2", sourceId = "unknown", language = "en-US")
+        val candidateArticle1 = createArticle(id = "2", sourceId = "unknown", language = "en-US")
+        val candidateArticle2 = createArticle(id = "3", sourceId = "guardian", language = "en-GB")
+        val candidateArticle3 = createArticle(id = "4", sourceId = "lemonde", language = "fr")
 
         val articlesWithMetadata = listOf(
             ArticleWithMetadata(shownArticle, createMetadata("BBC News", "United Kingdom", "English")),
-            ArticleWithMetadata(candidateArticle, null) // Missing metadata
+            ArticleWithMetadata(candidateArticle1, null), // Missing metadata
+            ArticleWithMetadata(candidateArticle2, createMetadata("The Guardian", "United Kingdom", "English")),
+            ArticleWithMetadata(candidateArticle3, createMetadata("Le Monde", "France", "French"))
         )
 
         val result = recommender.recommend(
-            allArticles = listOf(shownArticle, candidateArticle),
+            allArticles = listOf(shownArticle, candidateArticle1, candidateArticle2, candidateArticle3),
             alreadyShownArticles = listOf(shownArticle),
             articlesWithMetadata = articlesWithMetadata
         )
 
-        assertEquals(1, result.size)
-        assertNotNull(result[0].explanation) // Should still have explanation
+        assertEquals(3, result.size)
+        assertTrue(result.all { it.explanation.isNotEmpty() }) // Should still have explanations
     }
 
     @Test
@@ -340,6 +359,123 @@ class ReadAcrossCoverageRecommenderTest {
 
         // Order should be stable
         assertEquals(result1.map { it.article.id }, result2.map { it.article.id })
+    }
+
+    @Test
+    fun `recommend returns empty for two-source cluster - below minimum threshold`() {
+        val article1 = createArticle(id = "1", sourceId = "bbc", language = "en-GB")
+        val article2 = createArticle(id = "2", sourceId = "guardian", language = "en-GB")
+
+        val articlesWithMetadata = listOf(
+            ArticleWithMetadata(article1, createMetadata("BBC News", "United Kingdom", "English")),
+            ArticleWithMetadata(article2, createMetadata("The Guardian", "United Kingdom", "English"))
+        )
+
+        val result = recommender.recommend(
+            allArticles = listOf(article1, article2),
+            alreadyShownArticles = listOf(article1),
+            articlesWithMetadata = articlesWithMetadata
+        )
+
+        // Should be empty - only 2 distinct publishers (need 3+)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `recommend works for three-source cluster - minimum threshold`() {
+        val article1 = createArticle(id = "1", sourceId = "bbc", language = "en-GB")
+        val article2 = createArticle(id = "2", sourceId = "guardian", language = "en-GB")
+        val article3 = createArticle(id = "3", sourceId = "lemonde", language = "fr")
+
+        val articlesWithMetadata = listOf(
+            ArticleWithMetadata(article1, createMetadata("BBC News", "United Kingdom", "English")),
+            ArticleWithMetadata(article2, createMetadata("The Guardian", "United Kingdom", "English")),
+            ArticleWithMetadata(article3, createMetadata("Le Monde", "France", "French"))
+        )
+
+        val result = recommender.recommend(
+            allArticles = listOf(article1, article2, article3),
+            alreadyShownArticles = listOf(article1),
+            articlesWithMetadata = articlesWithMetadata
+        )
+
+        // Should have 2 recommendations (Guardian + Le Monde)
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.article.id == "2" })
+        assertTrue(result.any { it.article.id == "3" })
+    }
+
+    @Test
+    fun `recommend works for four-source cluster`() {
+        val article1 = createArticle(id = "1", sourceId = "bbc", language = "en-GB")
+        val article2 = createArticle(id = "2", sourceId = "guardian", language = "en-GB")
+        val article3 = createArticle(id = "3", sourceId = "lemonde", language = "fr")
+        val article4 = createArticle(id = "4", sourceId = "dw", language = "en")
+
+        val articlesWithMetadata = listOf(
+            ArticleWithMetadata(article1, createMetadata("BBC News", "United Kingdom", "English")),
+            ArticleWithMetadata(article2, createMetadata("The Guardian", "United Kingdom", "English")),
+            ArticleWithMetadata(article3, createMetadata("Le Monde", "France", "French")),
+            ArticleWithMetadata(article4, createMetadata("Deutsche Welle", "Germany", "English"))
+        )
+
+        val result = recommender.recommend(
+            allArticles = listOf(article1, article2, article3, article4),
+            alreadyShownArticles = listOf(article1),
+            articlesWithMetadata = articlesWithMetadata
+        )
+
+        // Should have 3 recommendations (all except article1)
+        assertEquals(3, result.size)
+        assertTrue(result.any { it.article.id == "2" })
+        assertTrue(result.any { it.article.id == "3" })
+        assertTrue(result.any { it.article.id == "4" })
+    }
+
+    @Test
+    fun `recommend returns empty when only one additional article available`() {
+        val article1 = createArticle(id = "1", sourceId = "bbc", language = "en-GB")
+        val article2 = createArticle(id = "2", sourceId = "guardian", language = "en-GB")
+        val article3 = createArticle(id = "3", sourceId = "lemonde", language = "fr")
+
+        val articlesWithMetadata = listOf(
+            ArticleWithMetadata(article1, createMetadata("BBC News", "United Kingdom", "English")),
+            ArticleWithMetadata(article2, createMetadata("The Guardian", "United Kingdom", "English")),
+            ArticleWithMetadata(article3, createMetadata("Le Monde", "France", "French"))
+        )
+
+        // Pass two articles as already shown, leaving only 1 candidate
+        val result = recommender.recommend(
+            allArticles = listOf(article1, article2, article3),
+            alreadyShownArticles = listOf(article1, article2),
+            articlesWithMetadata = articlesWithMetadata
+        )
+
+        // Should be empty - only 1 additional article (need 2+)
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `recommend excludes current article from candidates`() {
+        val article1 = createArticle(id = "1", sourceId = "bbc", language = "en-GB")
+        val article2 = createArticle(id = "2", sourceId = "guardian", language = "en-GB")
+        val article3 = createArticle(id = "3", sourceId = "lemonde", language = "fr")
+
+        val articlesWithMetadata = listOf(
+            ArticleWithMetadata(article1, createMetadata("BBC News", "United Kingdom", "English")),
+            ArticleWithMetadata(article2, createMetadata("The Guardian", "United Kingdom", "English")),
+            ArticleWithMetadata(article3, createMetadata("Le Monde", "France", "French"))
+        )
+
+        val result = recommender.recommend(
+            allArticles = listOf(article1, article2, article3),
+            alreadyShownArticles = listOf(article1),
+            articlesWithMetadata = articlesWithMetadata
+        )
+
+        // Should not include article1 in recommendations
+        assertFalse(result.any { it.article.id == "1" })
+        assertEquals(2, result.size)
     }
 
     @Test

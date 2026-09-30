@@ -73,9 +73,11 @@ class EventComparisonViewModel @Inject constructor(
                 }
 
                 // Generate read-across recommendations
+                // Pass only the first article as "already shown" since comparison screen
+                // displays all articles initially. Recommender will find additional perspectives.
                 val recommendations = recommender.recommend(
                     allArticles = articles,
-                    alreadyShownArticles = articles,
+                    alreadyShownArticles = articles.take(1), // Only first article is "primary"
                     articlesWithMetadata = articleWithMetadata
                 )
 
