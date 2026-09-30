@@ -39,6 +39,7 @@ fun HomeScreen(
     onEventClick: (String) -> Unit,
     onExploreClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onArticleNavigatorClick: (String) -> Unit = onStoryClick, // Default to story click for backwards compat
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -282,12 +283,12 @@ fun HomeScreen(
                             if (story.isEventCluster) {
                                 EventClusterCard(
                                     story = story,
-                                    onClick = { onEventClick(story.id) }
+                                    onClick = { onArticleNavigatorClick(story.id) }
                                 )
                             } else {
                                 StoryCard(
                                     story = story,
-                                    onClick = { onStoryClick(story.id) }
+                                    onClick = { onArticleNavigatorClick(story.id) }
                                 )
                             }
                         }
