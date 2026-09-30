@@ -81,7 +81,8 @@ class RssSourceAdapter(
                             headline = item.title,
                             excerpt = item.description,
                             contentPermission = ContentPermission.EXPLICIT_EXCERPT,
-                            imageUrl = item.imageUrl
+                            imageUrl = item.imageUrl,
+                            sourceId = sourceId  // ✅ SET SOURCE ID
                         )
                     }
                 }

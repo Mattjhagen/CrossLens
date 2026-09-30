@@ -37,6 +37,8 @@ class LiveStoryRepository @Inject constructor(
     private val clusteringService: EventClusteringService
 ) : StoryRepository {
 
+    private val clusteringAuditor = com.crosslens.app.data.clustering.ClusteringAuditor(clusteringService)
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     companion object {
@@ -242,6 +244,10 @@ class LiveStoryRepository @Inject constructor(
 
                 // Convert to SourceArticleRecord for clustering
                 val articleRecords = balancedItems.map { (adapter, article) -> article }
+
+                // Audit clustering run (logs detailed information)
+                val auditReport = clusteringAuditor.auditClusteringRun(articleRecords)
+                android.util.Log.i("LiveFeedCluster", "Audit: ${auditReport.clustersFormed} clusters from ${auditReport.totalArticles} articles (${auditReport.distinctPublishers} publishers)")
 
                 // Use EventClusteringService for intelligent grouping
                 val clusters = clusteringService.clusterArticles(articleRecords)
