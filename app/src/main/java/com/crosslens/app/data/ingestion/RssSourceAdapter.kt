@@ -173,7 +173,8 @@ class RssSourceAdapter(
 
         /**
          * Create the approved RSS source adapters with global coverage and health monitoring.
-         * Currently: 22 active sources (Korea Herald disabled due to broken feed).
+         * Currently: 20 active sources (3 disabled: Korea Herald, Asahi Shimbun, SCMP).
+         * See docs/SOURCE_HEALTH_AUDIT_RESULTS.md for disable reasons.
          */
         fun createApprovedSources(
             httpClient: OkHttpClient,
@@ -282,14 +283,18 @@ class RssSourceAdapter(
                     httpClient = httpClient,
                     healthMonitor = healthMonitor
                 ),
-                RssSourceAdapter(
-                    sourceId = "asahi-rss",
-                    sourceName = "朝日新聞 (Asahi Shimbun)",
-                    feedUrl = "https://www.asahi.com/rss/asahi/newsheadlines.rdf",
-                    httpClient = httpClient,
-                    healthMonitor = healthMonitor
-                ),
-                // Batch 1 Expansion - Additional international coverage (7 active, 1 disabled)
+                // Asahi Shimbun DISABLED - RDF 1.0 format (not RSS 2.0), parser incompatible
+                // Japan coverage maintained via The Japan Times
+                // Diagnosis: HTTP 200 but uses <rdf:RDF> format instead of <rss> format
+                // See: docs/SOURCE_HEALTH_AUDIT_RESULTS.md
+                // RssSourceAdapter(
+                //     sourceId = "asahi-rss",
+                //     sourceName = "朝日新聞 (Asahi Shimbun)",
+                //     feedUrl = "https://www.asahi.com/rss/asahi/newsheadlines.rdf",
+                //     httpClient = httpClient,
+                //     healthMonitor = healthMonitor
+                // ),
+                // Batch 1 Expansion - Additional international coverage (7 active, 2 disabled)
                 RssSourceAdapter(
                     sourceId = "irishtimes-rss",
                     sourceName = "The Irish Times",
@@ -333,13 +338,18 @@ class RssSourceAdapter(
                     httpClient = httpClient,
                     healthMonitor = healthMonitor
                 ),
-                RssSourceAdapter(
-                    sourceId = "scmp-rss",
-                    sourceName = "South China Morning Post",
-                    feedUrl = "http://www.scmp.com/rss/91/feed", // HTTP: HTTPS redirects to HTTP, blocked by OkHttp
-                    httpClient = httpClient,
-                    healthMonitor = healthMonitor
-                ),
+                // SCMP DISABLED - HTTPS not supported (redirect loop), security policy blocks HTTP
+                // HTTP URL redirects to HTTPS, HTTPS redirects back to HTTP (infinite loop)
+                // App security policy requires HTTPS-only sources
+                // Consider alternative Hong Kong source in Batch 2
+                // See: docs/SOURCE_HEALTH_AUDIT_RESULTS.md
+                // RssSourceAdapter(
+                //     sourceId = "scmp-rss",
+                //     sourceName = "South China Morning Post",
+                //     feedUrl = "http://www.scmp.com/rss/91/feed",
+                //     httpClient = httpClient,
+                //     healthMonitor = healthMonitor
+                // ),
                 RssSourceAdapter(
                     sourceId = "lemonde-rss",
                     sourceName = "Le Monde",
