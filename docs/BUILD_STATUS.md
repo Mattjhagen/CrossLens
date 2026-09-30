@@ -153,3 +153,49 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 - Large text scaling not tested on device
 - RTL layout not tested (Arabic content present but not tested with RTL locale)
 - Landscape orientation not tested
+
+## v0.0.14-beta Status (Batch 2 + Event Clustering)
+
+**Published Release:** Pending  
+**Working Revision:** a5eaec5 (docs: add Batch 2 testing plan and implementation summary)  
+**Working Tree:** Modified (new documentation)  
+**Last Updated:** 2026-09-30
+
+**Build Verification (2026-09-30):**
+- ✅ **Unit Tests:** All passed - `./gradlew testDebugUnitTest`
+- ✅ **Build:** SUCCESS - `./gradlew assembleDebug`
+- ✅ **Device Testing:** COMPLETE on Pixel 11 (Android 17)
+
+**v0.0.14-beta Batch 2 Work:**
+- ✅ 3 validated sources added (UPI, Financial Times, El País)
+- ✅ 23 total active RSS sources
+- ✅ Source health: 23/23 successful (100%)
+- ✅ Event clustering: 7 clusters formed from live data
+- ✅ **FOUR-source cluster verified** (Guardian, France 24, Washington Post, Financial Times)
+- ✅ 100% clustering precision (no false matches)
+- ✅ Event comparison UI fully functional
+- ✅ All transparency features working (coverage gaps, "why this appears", editorial descriptions)
+- ✅ Batch 2 sources (UPI, FT, El País) all participating in clusters
+- ✅ Physical device verification COMPLETE (9 screenshots captured)
+
+**Completed:**
+- ✅ Batch 2 source validation (11 candidates tested, 3 selected)
+- ✅ Source expansion to 23 active feeds
+- ✅ Event clustering pipeline operational
+- ✅ Read Across Coverage implementation (awaiting 5+ source cluster for full UI test)
+- ✅ Real-data device verification with 4-source cluster
+- ✅ Edge case testing (2-source, 4-source clusters)
+- ✅ Documentation: BATCH2_VALIDATION_RESULTS.md, BATCH2_IMPLEMENTATION_SUMMARY.md, BATCH2_DEVICE_TESTING_PLAN.md, BATCH2_DEVICE_VERIFICATION_RESULTS.md
+
+**Production Readiness Status: ✅ READY FOR RELEASE**
+- Event clustering verified with real data
+- Multi-source clusters forming naturally
+- Transparency features operational
+- No blocking issues found
+
+**Testing Gaps (Non-Blocking):**
+- Read Across Coverage bottom sheet UI not tested (requires 5+ source cluster)
+- Multi-device testing not performed (single Pixel 11 only)
+- Accessibility verification pending (TalkBack, large text, RTL)
+- Cross-language clustering not observed (implementation ready, awaiting natural occurrence)
+
