@@ -34,7 +34,8 @@ class LiveStoryRepository @Inject constructor(
     private val database: CrossLensDatabase,
     private val mockRepository: MockStoryRepository,
     private val digestGenerator: SourceDigestGenerator,
-    private val clusteringService: EventClusteringService
+    private val clusteringService: EventClusteringService,
+    private val debugFixtureProvider: com.crosslens.app.data.fixture.DebugEventFixtureProvider
 ) : StoryRepository {
 
     private val clusteringAuditor = com.crosslens.app.data.clustering.ClusteringAuditor(clusteringService)
@@ -245,17 +246,31 @@ class LiveStoryRepository @Inject constructor(
                 // Convert to SourceArticleRecord for clustering
                 val articleRecords = balancedItems.map { (adapter, article) -> article }
 
+                // Add debug fixture articles (debug builds only, release returns empty list)
+                val fixtureArticles = debugFixtureProvider.getReadAcrossFixture()
+                val allArticleRecords = articleRecords + fixtureArticles
+
                 // Audit clustering run (logs detailed information)
-                val auditReport = clusteringAuditor.auditClusteringRun(articleRecords)
+                val auditReport = clusteringAuditor.auditClusteringRun(allArticleRecords)
                 android.util.Log.i("LiveFeedCluster", "Audit: ${auditReport.clustersFormed} clusters from ${auditReport.totalArticles} articles (${auditReport.distinctPublishers} publishers)")
 
-                // Use EventClusteringService for intelligent grouping
-                val clusters = clusteringService.clusterArticles(articleRecords)
+                // Use EventClusteringService for intelligent grouping (includes fixture in debug builds)
+                val clusters = clusteringService.clusterArticles(allArticleRecords)
 
                 // Create a map from article URL to adapter for later lookup
-                val articleToAdapter = balancedItems.associate { (adapter, article) ->
-                    article.url to adapter
+                // For fixture articles, create synthetic adapters to preserve source attribution
+                val fixtureAdapters = fixtureArticles.associate { fixtureArticle ->
+                    fixtureArticle.url to RssSourceAdapter(
+                        sourceId = fixtureArticle.sourceId,
+                        sourceName = getSourceName(fixtureArticle.sourceId),
+                        feedUrl = "https://test.crosslens.fixture/feed",
+                        httpClient = okhttp3.OkHttpClient()
+                    )
                 }
+
+                val articleToAdapter = (balancedItems.associate { (adapter, article) ->
+                    article.url to adapter
+                } + fixtureAdapters)
 
                 // Create story and article entities from clusters
                 val storiesToInsert = mutableListOf<StoryEntity>()
@@ -413,5 +428,20 @@ class LiveStoryRepository @Inject constructor(
         val lastFetch = metadata.lastSuccessfulFetch ?: return false
         val ageMinutes = java.time.Duration.between(lastFetch, Instant.now()).toMinutes()
         return ageMinutes < CACHE_FRESHNESS_THRESHOLD_MINUTES
+    }
+
+    /**
+     * Get display name for source ID (used for debug fixture attribution).
+     */
+    private fun getSourceName(sourceId: String): String {
+        return when (sourceId) {
+            "bbc-news-rss" -> "BBC News"
+            "nytimes-rss" -> "The New York Times"
+            "dw-rss" -> "Deutsche Welle"
+            "guardian-rss" -> "The Guardian"
+            "aljazeera-rss" -> "Al Jazeera"
+            "lemonde-rss" -> "Le Monde"
+            else -> sourceId.replace("-rss", "").replace("-", " ").replaceFirstChar { it.uppercase() }
+        }
     }
 }

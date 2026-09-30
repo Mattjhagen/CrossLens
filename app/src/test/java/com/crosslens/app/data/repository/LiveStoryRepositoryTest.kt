@@ -30,6 +30,7 @@ class LiveStoryRepositoryTest {
     private lateinit var mockRepository: MockStoryRepository
     private lateinit var digestGenerator: SourceDigestGenerator
     private lateinit var clusteringService: EventClusteringService
+    private lateinit var debugFixtureProvider: com.crosslens.app.data.fixture.DebugEventFixtureProvider
     private lateinit var repository: LiveStoryRepository
 
     @Before
@@ -44,6 +45,9 @@ class LiveStoryRepositoryTest {
         mockRepository = mock()
         digestGenerator = mock()
         clusteringService = EventClusteringService()
+        debugFixtureProvider = object : com.crosslens.app.data.fixture.DebugEventFixtureProvider {
+            override fun getReadAcrossFixture() = emptyList<com.crosslens.app.data.ingestion.SourceArticleRecord>()
+        }
 
         // Setup database mock
         whenever(database.storyDao()).thenReturn(storyDao)
@@ -70,7 +74,8 @@ class LiveStoryRepositoryTest {
             database,
             mockRepository,
             digestGenerator,
-            clusteringService
+            clusteringService,
+            debugFixtureProvider
         )
 
         val metadata = repository.getFeedMetadata()
@@ -119,7 +124,8 @@ class LiveStoryRepositoryTest {
             database,
             mockRepository,
             digestGenerator,
-            clusteringService
+            clusteringService,
+            debugFixtureProvider
         )
 
         val feedMeta = repository.getFeedMetadata()
@@ -168,7 +174,8 @@ class LiveStoryRepositoryTest {
             database,
             mockRepository,
             digestGenerator,
-            clusteringService
+            clusteringService,
+            debugFixtureProvider
         )
 
         val feedMeta = repository.getFeedMetadata()
@@ -210,7 +217,8 @@ class LiveStoryRepositoryTest {
             database,
             mockRepository,
             digestGenerator,
-            clusteringService
+            clusteringService,
+            debugFixtureProvider
         )
 
         val result = repository.refresh()
@@ -264,7 +272,8 @@ class LiveStoryRepositoryTest {
             database,
             mockRepository,
             digestGenerator,
-            clusteringService
+            clusteringService,
+            debugFixtureProvider
         )
 
         val result = repository.refresh()
@@ -318,7 +327,8 @@ class LiveStoryRepositoryTest {
             database,
             mockRepository,
             digestGenerator,
-            clusteringService
+            clusteringService,
+            debugFixtureProvider
         )
 
         val stories = repository.observeStories().first()
@@ -356,7 +366,8 @@ class LiveStoryRepositoryTest {
             database,
             mockRepository,
             digestGenerator,
-            clusteringService
+            clusteringService,
+            debugFixtureProvider
         )
 
         val stories = repository.observeStories().first()
@@ -406,7 +417,8 @@ class LiveStoryRepositoryTest {
             database,
             mockRepository,
             digestGenerator,
-            clusteringService
+            clusteringService,
+            debugFixtureProvider
         )
 
         val result = repository.refresh()
