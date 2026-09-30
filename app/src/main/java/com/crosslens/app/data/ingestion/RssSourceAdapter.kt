@@ -153,6 +153,9 @@ class RssSourceAdapter(
             sourceId.contains("arabnews") -> "en"
             sourceId.contains("scmp") -> "en"
             sourceId.contains("lemonde") -> "fr"
+            sourceId.contains("upi") -> "en-US"
+            sourceId.contains("ft") -> "en-GB"
+            sourceId.contains("elpais") -> "es"
             else -> "en"
         }
     }
@@ -173,8 +176,9 @@ class RssSourceAdapter(
 
         /**
          * Create the approved RSS source adapters with global coverage and health monitoring.
-         * Currently: 20 active sources (3 disabled: Korea Herald, Asahi Shimbun, SCMP).
-         * See docs/SOURCE_HEALTH_AUDIT_RESULTS.md for disable reasons.
+         * Currently: 23 active sources (3 disabled: Korea Herald, Asahi Shimbun, SCMP).
+         * Batch 2 adds: UPI (wire service), Financial Times, El País.
+         * See docs/SOURCE_HEALTH_AUDIT_RESULTS.md and docs/BATCH2_VALIDATION_RESULTS.md.
          */
         fun createApprovedSources(
             httpClient: OkHttpClient,
@@ -354,6 +358,28 @@ class RssSourceAdapter(
                     sourceId = "lemonde-rss",
                     sourceName = "Le Monde",
                     feedUrl = "https://www.lemonde.fr/rss/une.xml",
+                    httpClient = httpClient,
+                    healthMonitor = healthMonitor
+                ),
+                // Batch 2 Expansion - Wire service + high-overlap international sources (3)
+                RssSourceAdapter(
+                    sourceId = "upi-rss",
+                    sourceName = "UPI",
+                    feedUrl = "https://rss.upi.com/news/news.rss",
+                    httpClient = httpClient,
+                    healthMonitor = healthMonitor
+                ),
+                RssSourceAdapter(
+                    sourceId = "ft-rss",
+                    sourceName = "Financial Times",
+                    feedUrl = "https://www.ft.com/rss/home/international",
+                    httpClient = httpClient,
+                    healthMonitor = healthMonitor
+                ),
+                RssSourceAdapter(
+                    sourceId = "elpais-rss",
+                    sourceName = "El País",
+                    feedUrl = "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",
                     httpClient = httpClient,
                     healthMonitor = healthMonitor
                 )
