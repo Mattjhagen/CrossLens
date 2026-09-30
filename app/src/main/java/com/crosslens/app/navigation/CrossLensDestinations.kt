@@ -17,4 +17,13 @@ sealed class CrossLensDestination(val route: String) {
     data object EventComparison : CrossLensDestination("eventcomparison/{storyId}") {
         fun createRoute(storyId: String) = "eventcomparison/$storyId"
     }
+    data object ArticleNavigator : CrossLensDestination("articlenavigator/{storyId}?articleId={articleId}") {
+        fun createRoute(storyId: String, articleId: String? = null): String {
+            return if (articleId != null) {
+                "articlenavigator/$storyId?articleId=$articleId"
+            } else {
+                "articlenavigator/$storyId"
+            }
+        }
+    }
 }
