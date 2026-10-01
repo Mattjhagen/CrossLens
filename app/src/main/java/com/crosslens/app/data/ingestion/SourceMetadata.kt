@@ -346,6 +346,67 @@ object SourceMetadataRegistry {
             editorialDescription = "DEMO: Fictional test content",
             descriptionProvenance = "CrossLens test fixture",
             homepage = "https://aljazeera.example"
+        ),
+
+        // Short-key aliases for mock data compatibility
+        "bbc" to SourceMetadata(
+            publisherName = "BBC News",
+            country = "United Kingdom",
+            primaryLanguage = "English",
+            languageCode = "en-GB",
+            editorialDescription = "British public service broadcaster",
+            descriptionProvenance = "BBC Royal Charter",
+            homepage = "https://www.bbc.co.uk/news"
+        ),
+
+        "nyt" to SourceMetadata(
+            publisherName = "The New York Times",
+            country = "United States",
+            primaryLanguage = "English",
+            languageCode = "en-US",
+            editorialDescription = "American newspaper owned by The New York Times Company",
+            descriptionProvenance = "NYT corporate structure",
+            homepage = "https://www.nytimes.com"
+        ),
+
+        "lemonde" to SourceMetadata(
+            publisherName = "Le Monde",
+            country = "France",
+            primaryLanguage = "French",
+            languageCode = "fr",
+            editorialDescription = "French daily newspaper owned by Le Monde Group",
+            descriptionProvenance = "Le Monde corporate structure",
+            homepage = "https://www.lemonde.fr"
+        ),
+
+        "aljazeera" to SourceMetadata(
+            publisherName = "Al Jazeera",
+            country = "Qatar",
+            primaryLanguage = "English",
+            languageCode = "en",
+            editorialDescription = "State-funded international news service",
+            descriptionProvenance = "Al Jazeera corporate profile",
+            homepage = "https://www.aljazeera.com"
+        ),
+
+        "globe" to SourceMetadata(
+            publisherName = "The Globe and Mail",
+            country = "Canada",
+            primaryLanguage = "English",
+            languageCode = "en-CA",
+            editorialDescription = "Canadian national newspaper",
+            descriptionProvenance = "Globe and Mail corporate profile",
+            homepage = "https://www.theglobeandmail.com"
+        ),
+
+        "yomiuri" to SourceMetadata(
+            publisherName = "読売新聞 (Yomiuri Shimbun)",
+            country = "Japan",
+            primaryLanguage = "Japanese",
+            languageCode = "ja",
+            editorialDescription = "Japanese daily newspaper",
+            descriptionProvenance = "Yomiuri Shimbun corporate profile",
+            homepage = "https://www.yomiuri.co.jp"
         )
     )
 
