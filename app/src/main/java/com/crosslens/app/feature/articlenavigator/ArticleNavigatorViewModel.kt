@@ -17,6 +17,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
+ * Minimum distinct publishers required for horizontal navigation.
+ * Aligned with Read Across Coverage eligibility (MIN_DISTINCT_PUBLISHERS = 3).
+ */
+private const val MIN_DISTINCT_PUBLISHERS_FOR_NAVIGATION = 3
+
+/**
  * ViewModel for full-screen article navigator with Flipboard-inspired swipe navigation.
  *
  * Navigation model:
@@ -121,8 +127,9 @@ class ArticleNavigatorViewModel @Inject constructor(
             return
         }
 
-        // Check if horizontal navigation is available (only for confident clusters with 2+ sources)
-        val hasHorizontalNavigation = story.isEventCluster && currentClusterArticles.size >= 2
+        // Check if horizontal navigation is available (only for confident clusters with 3+ distinct publishers)
+        // Aligned with Read Across Coverage eligibility threshold
+        val hasHorizontalNavigation = story.isEventCluster && currentClusterArticles.size >= MIN_DISTINCT_PUBLISHERS_FOR_NAVIGATION
 
         // Determine distinct publisher count for eligibility
         val distinctPublishers = currentClusterArticles
@@ -130,14 +137,17 @@ class ArticleNavigatorViewModel @Inject constructor(
             .distinct()
             .size
 
+        // Require minimum distinct publishers (not just article count)
+        val meetsPublisherThreshold = distinctPublishers >= MIN_DISTINCT_PUBLISHERS_FOR_NAVIGATION
+
         _navigationState.value = NavigationState(
             currentFeedPosition = currentFeedIndex,
             totalFeedItems = feedStories.size,
             currentClusterPosition = currentArticleIndex,
             totalClusterItems = currentClusterArticles.size,
-            hasHorizontalNavigation = hasHorizontalNavigation && distinctPublishers >= 2,
-            hasPreviousInCluster = hasHorizontalNavigation && currentArticleIndex > 0,
-            hasNextInCluster = hasHorizontalNavigation && currentArticleIndex < currentClusterArticles.size - 1,
+            hasHorizontalNavigation = hasHorizontalNavigation && meetsPublisherThreshold,
+            hasPreviousInCluster = hasHorizontalNavigation && meetsPublisherThreshold && currentArticleIndex > 0,
+            hasNextInCluster = hasHorizontalNavigation && meetsPublisherThreshold && currentArticleIndex < currentClusterArticles.size - 1,
             hasPreviousInFeed = currentFeedIndex > 0,
             hasNextInFeed = currentFeedIndex < feedStories.size - 1
         )

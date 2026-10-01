@@ -34,7 +34,7 @@ fun EventClusterCard(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .semantics {
-                contentDescription = "Event with $sourceCount sources: ${story.title}. Tap to compare coverage."
+                contentDescription = "Event with $sourceCount sources: ${story.title}. Tap to read coverage."
             },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -114,13 +114,13 @@ fun EventClusterCard(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                // Compare button/indicator
+                // Read action indicator
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Tap to compare coverage",
+                        text = "Tap to read coverage",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Medium

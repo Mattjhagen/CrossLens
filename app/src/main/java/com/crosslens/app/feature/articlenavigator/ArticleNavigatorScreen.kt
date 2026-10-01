@@ -15,7 +15,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -27,12 +27,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +53,26 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import kotlin.math.abs
+
+/**
+ * Gesture constants for article navigator.
+ */
+private object NavigationGestures {
+    /** Minimum horizontal drag distance (in dp) to trigger source navigation */
+    const val HORIZONTAL_SWIPE_THRESHOLD_DP = 100
+
+    /** Minimum vertical velocity (in dp/s) to trigger feed navigation at scroll boundaries */
+    const val VERTICAL_FLING_THRESHOLD_DP = 400
+
+    /** Animation duration for all transitions (in milliseconds) */
+    const val ANIMATION_DURATION_MS = 300
+
+    /** Auto-dismiss delay for boundary feedback overlay (in milliseconds) */
+    const val BOUNDARY_FEEDBACK_DELAY_MS = 1000L
+
+    /** Top navigation bar height (in dp) */
+    const val TOP_BAR_HEIGHT_DP = 72
+}
 
 /**
  * Full-screen article navigator with Flipboard-inspired swipe gestures.
@@ -144,69 +171,109 @@ private fun ArticleNavigatorContent(
     var lastGestureDirection by remember { mutableStateOf<GestureDirection?>(null) }
     var showBoundaryFeedback by remember { mutableStateOf<BoundaryType?>(null) }
 
+    // Track scroll state for boundary detection
+    val scrollState = rememberScrollState()
+
+    // Convert dp thresholds to pixels
+    val density = LocalDensity.current
+    val horizontalThresholdPx = with(density) { NavigationGestures.HORIZONTAL_SWIPE_THRESHOLD_DP.dp.toPx() }
+    val verticalFlingThresholdPx = with(density) { NavigationGestures.VERTICAL_FLING_THRESHOLD_DP.dp.toPx() }
+
+    // Check system reduced-motion setting (animation scale)
+    val context = LocalContext.current
+    val animationScale = remember {
+        android.provider.Settings.Global.getFloat(
+            context.contentResolver,
+            android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f
+        )
+    }
+    val reducedMotionEnabled = animationScale == 0f
+
     // Clear boundary feedback after delay
     LaunchedEffect(showBoundaryFeedback) {
         if (showBoundaryFeedback != null) {
-            kotlinx.coroutines.delay(1000)
+            kotlinx.coroutines.delay(NavigationGestures.BOUNDARY_FEEDBACK_DELAY_MS)
             showBoundaryFeedback = null
+        }
+    }
+
+    // Nested scroll connection for vertical feed navigation at boundaries
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // Don't intercept - let scroll happen normally
+                return Offset.Zero
+            }
+
+            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                // At scroll boundaries, check if we should navigate feed
+                val scrollAtTop = scrollState.value == 0
+                val scrollAtBottom = scrollState.value >= scrollState.maxValue
+
+                // Require significant vertical fling velocity to trigger feed navigation
+                if (abs(available.y) > verticalFlingThresholdPx) {
+                    if (available.y < 0 && scrollAtBottom) {
+                        // Fling up at bottom: next story in feed
+                        if (navigationState?.hasNextInFeed == true) {
+                            lastGestureDirection = GestureDirection.UP
+                            onSwipeUp()
+                        } else {
+                            showBoundaryFeedback = BoundaryType.LAST_IN_FEED
+                        }
+                        return available // Consume the fling
+                    } else if (available.y > 0 && scrollAtTop) {
+                        // Fling down at top: previous story in feed
+                        if (navigationState?.hasPreviousInFeed == true) {
+                            lastGestureDirection = GestureDirection.DOWN
+                            onSwipeDown()
+                        } else {
+                            showBoundaryFeedback = BoundaryType.FIRST_IN_FEED
+                        }
+                        return available // Consume the fling
+                    }
+                }
+
+                return Velocity.Zero
+            }
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .nestedScroll(nestedScrollConnection)
+            // Horizontal swipe for source navigation (doesn't interfere with vertical scroll)
             .pointerInput(navigationState) {
-                detectDragGestures(
+                var accumulatedDrag = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { accumulatedDrag = 0f },
                     onDragEnd = {
-                        // Gesture completed - animation handled by AnimatedContent
-                    }
-                ) { change, dragAmount ->
-                    change.consume()
-
-                    val horizontalDrag = dragAmount.x
-                    val verticalDrag = dragAmount.y
-
-                    // Determine primary direction (horizontal vs vertical)
-                    if (abs(horizontalDrag) > abs(verticalDrag)) {
-                        // Horizontal swipe
-                        if (abs(horizontalDrag) > 50) { // Threshold for swipe detection
-                            if (horizontalDrag < 0 && navigationState?.hasNextInCluster == true) {
+                        // Check if accumulated drag exceeds threshold
+                        if (abs(accumulatedDrag) > horizontalThresholdPx) {
+                            if (accumulatedDrag < 0 && navigationState?.hasNextInCluster == true) {
                                 // Swipe left: next article in cluster
                                 lastGestureDirection = GestureDirection.LEFT
                                 onSwipeLeft()
-                            } else if (horizontalDrag > 0 && navigationState?.hasPreviousInCluster == true) {
+                            } else if (accumulatedDrag > 0 && navigationState?.hasPreviousInCluster == true) {
                                 // Swipe right: previous article in cluster
                                 lastGestureDirection = GestureDirection.RIGHT
                                 onSwipeRight()
-                            } else if (horizontalDrag < 0 && navigationState?.hasNextInCluster == false) {
+                            } else if (accumulatedDrag < 0 && navigationState?.hasNextInCluster == false) {
                                 // At boundary - show feedback
                                 showBoundaryFeedback = BoundaryType.LAST_IN_CLUSTER
-                            } else if (horizontalDrag > 0 && navigationState?.hasPreviousInCluster == false) {
+                            } else if (accumulatedDrag > 0 && navigationState?.hasPreviousInCluster == false) {
                                 // At boundary - show feedback
                                 showBoundaryFeedback = BoundaryType.FIRST_IN_CLUSTER
                             }
                         }
-                    } else {
-                        // Vertical swipe
-                        if (abs(verticalDrag) > 50) { // Threshold for swipe detection
-                            if (verticalDrag < 0 && navigationState?.hasNextInFeed == true) {
-                                // Swipe up: next story in feed
-                                lastGestureDirection = GestureDirection.UP
-                                onSwipeUp()
-                            } else if (verticalDrag > 0 && navigationState?.hasPreviousInFeed == true) {
-                                // Swipe down: previous story in feed
-                                lastGestureDirection = GestureDirection.DOWN
-                                onSwipeDown()
-                            } else if (verticalDrag < 0 && navigationState?.hasNextInFeed == false) {
-                                // At boundary - show feedback
-                                showBoundaryFeedback = BoundaryType.LAST_IN_FEED
-                            } else if (verticalDrag > 0 && navigationState?.hasPreviousInFeed == false) {
-                                // At boundary - show feedback
-                                showBoundaryFeedback = BoundaryType.FIRST_IN_FEED
-                            }
-                        }
+                    },
+                    onHorizontalDrag = { change, dragAmount ->
+                        // Accumulate horizontal drag amount
+                        accumulatedDrag += dragAmount
+                        change.consume()
                     }
-                }
+                )
             }
     ) {
         // Top navigation area - tap to return to first and refresh
@@ -214,7 +281,7 @@ private fun ArticleNavigatorContent(
             onClick = onTopTap,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp)
+                .height(NavigationGestures.TOP_BAR_HEIGHT_DP.dp)
                 .semantics {
                     contentDescription = "CrossLens. Story ${navigationState?.currentFeedPosition?.plus(1) ?: 1} of ${navigationState?.totalFeedItems ?: 1}. Tap to return to first story and refresh feed."
                 },
@@ -250,47 +317,55 @@ private fun ArticleNavigatorContent(
             BoundaryFeedbackOverlay(boundaryType = showBoundaryFeedback!!)
         }
 
-        // Article content with animated transitions
+        // Article content with animated transitions (respects reduced motion)
         AnimatedContent(
             targetState = article.id,
             transitionSpec = {
-                val direction = lastGestureDirection
-                when (direction) {
-                    GestureDirection.LEFT -> {
-                        (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
-                            slideOutHorizontally { width -> -width } + fadeOut()
-                        )
-                    }
-                    GestureDirection.RIGHT -> {
-                        (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
-                            slideOutHorizontally { width -> width } + fadeOut()
-                        )
-                    }
-                    GestureDirection.UP -> {
-                        (slideInVertically { height -> height } + fadeIn()).togetherWith(
-                            slideOutVertically { height -> -height } + fadeOut()
-                        )
-                    }
-                    GestureDirection.DOWN -> {
-                        (slideInVertically { height -> -height } + fadeIn()).togetherWith(
-                            slideOutVertically { height -> height } + fadeOut()
-                        )
-                    }
-                    null -> {
-                        // No gesture - just fade
-                        fadeIn(animationSpec = tween(300)).togetherWith(
-                            fadeOut(animationSpec = tween(300))
-                        )
+                // Use minimal fade when reduced motion is enabled
+                if (reducedMotionEnabled) {
+                    fadeIn(animationSpec = tween(100)).togetherWith(
+                        fadeOut(animationSpec = tween(100))
+                    )
+                } else {
+                    // Full slide animations when motion is enabled
+                    val direction = lastGestureDirection
+                    when (direction) {
+                        GestureDirection.LEFT -> {
+                            (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
+                                slideOutHorizontally { width -> -width } + fadeOut()
+                            )
+                        }
+                        GestureDirection.RIGHT -> {
+                            (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
+                                slideOutHorizontally { width -> width } + fadeOut()
+                            )
+                        }
+                        GestureDirection.UP -> {
+                            (slideInVertically { height -> height } + fadeIn()).togetherWith(
+                                slideOutVertically { height -> -height } + fadeOut()
+                            )
+                        }
+                        GestureDirection.DOWN -> {
+                            (slideInVertically { height -> -height } + fadeIn()).togetherWith(
+                                slideOutVertically { height -> height } + fadeOut()
+                            )
+                        }
+                        null -> {
+                            // No gesture - just fade
+                            fadeIn(animationSpec = tween(NavigationGestures.ANIMATION_DURATION_MS)).togetherWith(
+                                fadeOut(animationSpec = tween(NavigationGestures.ANIMATION_DURATION_MS))
+                            )
+                        }
                     }
                 }.using(SizeTransform(clip = false))
             },
             label = "Article transition"
         ) { articleId ->
-            // Article content - scrollable
+            // Article content - scrollable (uses scrollState for boundary detection)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(16.dp)
                     .semantics {
                         contentDescription = "Article: ${article.originalHeadline}"
