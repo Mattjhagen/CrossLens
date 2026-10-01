@@ -214,9 +214,26 @@ class ArticleNavigatorViewModel @Inject constructor(
             _uiState.value = ArticleNavigatorUiState.Loading
             try {
                 repository.refresh()
-                currentFeedIndex = 0
-                currentArticleIndex = 0
-                loadNavigator()
+
+                // Reload stories from repository
+                repository.observeStories().collect { stories ->
+                    feedStories = stories
+
+                    // Navigate to first story and first article
+                    currentFeedIndex = 0
+                    currentArticleIndex = 0
+
+                    if (feedStories.isEmpty()) {
+                        _uiState.value = ArticleNavigatorUiState.Error("No stories available")
+                        return@collect
+                    }
+
+                    // Load first story's articles
+                    loadCurrentStoryAndArticles()
+
+                    // Stop after first emission
+                    return@collect
+                }
             } catch (e: Exception) {
                 _uiState.value = ArticleNavigatorUiState.Error(
                     e.message ?: "Failed to refresh feed"

@@ -410,7 +410,29 @@ object SourceMetadataRegistry {
         )
     )
 
-    fun getMetadata(sourceId: String): SourceMetadata? = metadata[sourceId]
+    // Mutable registry for testing - only written to by test methods
+    private val testMetadata = mutableMapOf<String, SourceMetadata>()
+
+    fun getMetadata(sourceId: String): SourceMetadata? =
+        testMetadata[sourceId] ?: metadata[sourceId]
 
     fun getAllMetadata(): List<Pair<String, SourceMetadata>> = metadata.toList()
+
+    /**
+     * TEST ONLY: Register metadata for testing.
+     * This allows tests to inject mock metadata without modifying production registry.
+     */
+    @androidx.annotation.VisibleForTesting
+    fun registerForTesting(sourceId: String, metadata: SourceMetadata) {
+        testMetadata[sourceId] = metadata
+    }
+
+    /**
+     * TEST ONLY: Clear all test registrations.
+     * Must be called in test teardown to prevent test pollution.
+     */
+    @androidx.annotation.VisibleForTesting
+    fun clearTestMetadata() {
+        testMetadata.clear()
+    }
 }

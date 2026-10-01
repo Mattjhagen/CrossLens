@@ -61,7 +61,7 @@ class ArticleNavigatorViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
-        SourceMetadataRegistry.clearForTesting()
+        SourceMetadataRegistry.clearTestMetadata()
     }
 
     @Test
@@ -340,14 +340,4 @@ class ArticleNavigatorViewModelTest {
             createTestArticle("article$index", storyId, "live_publisher$index")
         }
     }
-}
-
-// Extension for testing
-private fun SourceMetadataRegistry.registerForTesting(sourceId: String, metadata: SourceMetadata) {
-    // Access via reflection if needed, or add a test-only method
-    // For now, assume getMetadata() will work with the sourceId format
-}
-
-private fun SourceMetadataRegistry.clearForTesting() {
-    // Clear any test registrations
 }
