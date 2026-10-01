@@ -283,7 +283,7 @@ fun HomeScreen(
                             if (story.isEventCluster) {
                                 EventClusterCard(
                                     story = story,
-                                    onClick = { onArticleNavigatorClick(story.id) }
+                                    onClick = { onEventClick(story.id) }
                                 )
                             } else {
                                 StoryCard(
