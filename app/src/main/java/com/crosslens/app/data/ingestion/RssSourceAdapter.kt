@@ -123,7 +123,8 @@ class RssSourceAdapter(
                 },
                 fetchDurationMs = System.currentTimeMillis() - startTime,
                 errorMessage = errorMessage
-            )
+            ),
+            sourceName = sourceName
         )
     }
 

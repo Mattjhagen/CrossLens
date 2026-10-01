@@ -6,9 +6,12 @@ import com.crosslens.app.core.model.ContentUseMetadata
 import com.crosslens.app.core.model.Story
 import com.crosslens.app.data.ingestion.SourceMetadata
 import com.crosslens.app.data.ingestion.SourceMetadataRegistry
+import com.crosslens.app.data.repository.SourceHealthRepository
+import com.crosslens.app.data.repository.SourceHealthUiModel
 import com.crosslens.app.data.repository.StoryRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -41,6 +44,7 @@ import java.time.temporal.ChronoUnit
 class CoverageDetailsViewModelTest {
 
     private lateinit var repository: StoryRepository
+    private lateinit var healthRepository: SourceHealthRepository
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: CoverageDetailsViewModel
 
@@ -50,6 +54,13 @@ class CoverageDetailsViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         repository = mock()
+        healthRepository = mock()
+
+        // Mock health repository to return empty health data by default
+        whenever(healthRepository.observeAllSourceHealth()).thenReturn(
+            flowOf(emptyList<SourceHealthUiModel>())
+        )
+
         mockSourceMetadata()
     }
 
@@ -75,7 +86,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Coverage details show correct counts
@@ -102,7 +113,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Limitation notice for 2 publishers
@@ -130,7 +141,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Single publisher limitation shown
@@ -162,7 +173,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Coverage details load successfully with null metadata
@@ -195,7 +206,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Language diversity limitation shown
@@ -225,7 +236,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Geographic diversity limitation shown
@@ -258,7 +269,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Temporal coverage shows correct span
@@ -286,7 +297,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Temporal limitation shown for recent coverage
@@ -317,7 +328,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Clustering rationale mentions diversity
@@ -344,7 +355,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Rationale indicates single-source
@@ -375,7 +386,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Sources are sorted oldest first
@@ -403,7 +414,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Editorial descriptions preserved
@@ -423,7 +434,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getStory("missing")).thenReturn(null)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "missing"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: NotFound state
@@ -439,7 +450,7 @@ class CoverageDetailsViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(emptyList())
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = CoverageDetailsViewModel(repository, savedStateHandle)
+        viewModel = CoverageDetailsViewModel(repository, healthRepository, savedStateHandle)
         advanceUntilIdle()
 
         // Then: Error state
