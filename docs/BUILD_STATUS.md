@@ -1,8 +1,8 @@
 # CrossLens Build Status
 
-**Working Revision:** 0c59430 (fix: increase editorial signature perspective pane visibility)  
+**Working Revision:** 3650a8f (Merge feature/source-health-visibility)  
 **Working Tree:** Clean  
-**Last Updated:** 2026-09-23
+**Last Updated:** 2026-09-30
 
 ## Environment
 
@@ -218,8 +218,9 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 
 ## Feature: Source Health & Coverage Status (2026-09-30)
 
-**Branch:** `feature/source-health-visibility`  
-**Status:** ✅ COMPLETE - Ready for merge
+**Branch:** `feature/source-health-visibility` → **MERGED TO MAIN**  
+**Merge Commit:** 3650a8f  
+**Status:** ✅ SHIPPED TO GITHUB
 
 ### Implementation Summary
 - Source Health & Coverage Status screen accessible from Settings
@@ -277,6 +278,134 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 - Hard rules compliance verification
 
 ### Release Blockers
-✅ All blockers resolved - feature ready for merge
+✅ All blockers resolved - feature shipped
 
-**Recommendation:** ✅ APPROVED FOR MERGE TO MAIN
+**Status:** ✅ MERGED AND PUSHED TO ORIGIN/MAIN
+
+---
+
+## End-of-Night Handoff (2026-09-30 21:38 CDT)
+
+### Shipped to GitHub
+
+**Merge Commit:** `3650a8f3d4e6473c75b194420402ad3875433761`  
+**Remote:** `origin/main` @ `3650a8f` (confirmed in sync)  
+**Branch:** `feature/source-health-visibility` merged via non-fast-forward merge
+
+**Commits Merged:**
+1. `66040de` - feat: add Source Health & Coverage Status screen with persistence
+2. `f0b3651` - feat: complete Source Health with tests, coverage integration, and device verification
+3. `6916c3f` - docs: add comprehensive Source Health implementation report and status
+4. `5d1168b` - docs: add final report for Source Health feature
+
+**Files Changed:** 34 files (+2,774 / -30 lines)
+
+### Validated Features
+
+**Source Health & Coverage Status:**
+- Settings → Source Health navigation working
+- Tracks technical health of 23 RSS sources
+- Persists via Room database (schema v10: `source_health` table)
+- Manual refresh with progress indicator
+- Coverage Details integration shows factual limitations
+- Error categorization: NETWORK, HTTP, PARSE, STALE, DUPLICATE, ATTRIBUTION
+- Health thresholds: 3 failures = DEGRADED, 10 = DISABLED
+- Recovery: any success resets failures to 0
+
+**Hard Rules Compliance:**
+- ✅ Health determined by technical evidence only (fetch/parse/freshness/attribution)
+- ✅ Never uses ideology, location, popularity, engagement
+- ✅ Factual limitation language (non-alarmist)
+- ✅ No raw errors or stack traces in UI
+
+### Test/Build/Device Evidence
+
+**Unit Tests:**
+- **Total:** 273 tests
+- **Passed:** 273 (100%)
+- **Failed:** 0
+- **New Tests:** 21 (SourceHealthRepositoryTest: 9, SourceHealthErrorCategoryTest: 12)
+- **Command:** `./gradlew testDebugUnitTest`
+- **Result:** BUILD SUCCESSFUL
+
+**Builds:**
+- **Debug APK:** 61 MB at `app/build/outputs/apk/debug/app-debug.apk`
+- **Release APK:** 4.8 MB at `app/build/outputs/apk/release/app-release.apk`
+- **Release SHA-256:** `51684c2e56833419669cb5d32a53093062ffab8027771157a7cfe40c29290129`
+- **Both builds:** BUILD SUCCESSFUL
+
+**Device Verification (Pixel 11):**
+- **Device:** Google Pixel 11, Android 17, ADB ID: 66020DLKY0006U
+- **APK Installed:** Sep 30 21:21
+- **Testing Completed:** Sep 30 21:26
+- **Screenshots:** 11 files in `docs/screenshots/source-health-verification/`
+  - `01_home_screen.png` through `11_back_to_settings.png`
+  - Total: 9.4 MB, all PNG 1080x2424
+- **Scenarios Verified:** 10/10 PASS
+  - Navigation, summary card, source list, expandable cards
+  - Manual refresh, progress indicator, success notification
+  - Offline mode with categorized errors
+  - Back navigation, about section
+  - No raw errors in UI
+
+**Documentation:**
+- `SOURCE_HEALTH_IMPLEMENTATION.md` (429 lines) - technical architecture, thresholds, tests
+- `SOURCE_HEALTH_FINAL_REPORT.md` (458 lines) - complete verification report
+- `BUILD_STATUS.md` updated with merge status
+
+### Known Limitations
+
+**By Design (Non-Blocking):**
+- Health state resets on database recreation (prototype mode with `fallbackToDestructiveMigration`)
+- No deep link to Source Health screen
+- No export of health report
+- No push notifications for degraded sources
+- No per-source historical health chart
+
+**Not Tested on Device:**
+- Dark mode (structure supports it, not verified on device)
+- Landscape orientation (responsive layouts present)
+- Large text accessibility (semantic descriptions present)
+- TalkBack screen reader (accessibility controls used)
+
+**Safe for Production:**
+- Database migration safe (destructive fallback appropriate for prototype)
+- All user-facing text is factual and non-alarmist
+- Error handling prevents crashes on health check failures
+- Coverage Details gracefully skips health limitations if check fails
+
+### Recommended First Task for Tomorrow
+
+**Task:** Verify Source Health behavior with natural feed failures in production-like conditions.
+
+**Steps:**
+1. Install debug APK on Pixel 11 (`app/build/outputs/apk/debug/app-debug.apk`)
+2. Navigate to Settings → Source Health
+3. Observe initial state (should show 23 sources as ACTIVE if all feeds healthy)
+4. Enable airplane mode on device
+5. Trigger manual refresh via "Refresh All Sources" button
+6. Verify:
+   - Progress indicator displays during refresh
+   - Network errors categorized as "NETWORK_ERROR"
+   - Sources transition to DEGRADED after 3 failures
+   - Error messages are user-friendly (no stack traces)
+   - Summary card updates counts correctly
+7. Disable airplane mode
+8. Trigger refresh again
+9. Verify:
+   - Sources recover to ACTIVE on successful fetch
+   - Consecutive failures reset to 0
+   - Health persists after app restart
+10. Navigate to an event with sources that were degraded
+11. Open Coverage Details
+12. Verify SOURCE_HEALTH limitation appears with factual language
+
+**Expected Outcome:** All behaviors work as documented, no crashes, user-friendly errors only.
+
+**Alternative Task (if device unavailable):** Review live RSS feed health logs to identify sources experiencing natural failures, document patterns for stale-feed and duplicate-only detection (future enhancements).
+
+---
+
+**Session Complete:** 2026-09-30 21:38 CDT  
+**Status:** Source Health & Coverage Status shipped to GitHub on `main` @ `3650a8f`  
+**Next Session:** Begin with recommended task above or continue with next feature priority
