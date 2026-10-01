@@ -110,6 +110,9 @@ enum class LimitationType {
     /** Temporal limitation (recent coverage only) */
     TEMPORAL_SPAN,
 
+    /** Source health technical limitation (degraded/disabled sources) */
+    SOURCE_HEALTH,
+
     /** No additional coverage available */
     NO_ADDITIONAL_COVERAGE,
 

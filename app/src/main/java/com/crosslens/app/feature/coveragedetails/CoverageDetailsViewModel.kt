@@ -4,11 +4,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.crosslens.app.data.ingestion.SourceMetadataRegistry
+import com.crosslens.app.data.repository.SourceHealthRepository
+import com.crosslens.app.data.repository.SourceHealthStatus
 import com.crosslens.app.data.repository.StoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
@@ -20,10 +23,12 @@ import javax.inject.Inject
 /**
  * ViewModel for coverage details screen.
  * Loads story and article metadata, maps to coverage details model.
+ * Includes technical source health limitations when applicable.
  */
 @HiltViewModel
 class CoverageDetailsViewModel @Inject constructor(
     private val repository: StoryRepository,
+    private val healthRepository: SourceHealthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -150,6 +155,10 @@ class CoverageDetailsViewModel @Inject constructor(
                     )
                 }
 
+                // Check for degraded/disabled sources affecting this story
+                val healthLimitations = checkSourceHealthLimitations(sources)
+                limitations.addAll(healthLimitations)
+
                 // General completeness warning
                 limitations.add(
                     CoverageLimitation(
@@ -235,6 +244,58 @@ class CoverageDetailsViewModel @Inject constructor(
                 "Coverage spans $days ${if (days == 1L) "day" else "days"}"
             }
         }
+    }
+
+    /**
+     * Check if any sources in this story are degraded or disabled.
+     * Returns technical limitations based on source health evidence.
+     */
+    private suspend fun checkSourceHealthLimitations(sources: List<CoverageSource>): List<CoverageLimitation> {
+        val limitations = mutableListOf<CoverageLimitation>()
+
+        try {
+            // Get current health state for all sources
+            val allHealth = healthRepository.observeAllSourceHealth().first()
+            val healthByPublisher = allHealth.associateBy { it.sourceName }
+
+            // Check each source in this story
+            val degradedSources = sources.mapNotNull { source ->
+                val health = healthByPublisher[source.publisherName]
+                when {
+                    health == null -> null
+                    health.status == SourceHealthStatus.DEGRADED -> {
+                        Triple(source.publisherName, health.consecutiveFailures, health.lastErrorCategory)
+                    }
+                    health.status == SourceHealthStatus.DISABLED -> {
+                        Triple(source.publisherName, health.consecutiveFailures, health.lastErrorCategory)
+                    }
+                    else -> null
+                }
+            }
+
+            // Add limitation for each degraded/disabled source
+            degradedSources.forEach { (publisher, failures, errorCategory) ->
+                val categoryText = when (errorCategory) {
+                    "NETWORK_ERROR" -> "network issue"
+                    "HTTP_ERROR" -> "server error"
+                    "PARSE_ERROR" -> "feed format issue"
+                    "STALE_FEED" -> "stale feed"
+                    else -> "technical issue"
+                }
+
+                limitations.add(
+                    CoverageLimitation(
+                        type = LimitationType.SOURCE_HEALTH,
+                        description = "$publisher temporarily unavailable ($failures consecutive failures, $categoryText)"
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            // Don't fail the whole screen if health check fails
+            // Just skip adding health limitations
+        }
+
+        return limitations
     }
 }
 
