@@ -107,59 +107,91 @@ fun StoryScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    item {
-                        Text(
-                            text = state.story.title,
-                            style = MaterialTheme.typography.headlineLarge
-                        )
+                    // Story image at the top (if available)
+                    if (state.story.imageUrl != null) {
+                        item {
+                            coil.compose.AsyncImage(
+                                model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                                    .data(state.story.imageUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = state.story.title,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(250.dp),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                error = null, // No error placeholder - just skip image
+                                placeholder = null // No placeholder - just skip image
+                            )
+                        }
                     }
 
                     item {
-                        Text(
-                            text = state.story.summary,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            Text(
+                                text = state.story.title,
+                                style = MaterialTheme.typography.headlineLarge
+                            )
+                        }
                     }
 
                     item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
-                            onClick = { onCompareClick(storyId) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(stringResource(R.string.compare_perspectives))
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            Text(
+                                text = state.story.summary,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+
+                    item {
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = { onCompareClick(storyId) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.compare_perspectives))
+                            }
                         }
                     }
 
                     if (state.claims.isNotEmpty()) {
                         item {
-                            Text(
-                                text = stringResource(R.string.claims_label),
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.padding(top = 16.dp)
-                            )
+                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                Text(
+                                    text = stringResource(R.string.claims_label),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(top = 16.dp)
+                                )
+                            }
                         }
                         items(state.claims) { claim ->
-                            ClaimCard(claim)
+                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                ClaimCard(claim)
+                            }
                         }
                     }
 
                     item {
-                        Text(
-                            text = stringResource(R.string.sources_label),
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(top = 16.dp)
-                        )
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            Text(
+                                text = stringResource(R.string.sources_label),
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(top = 16.dp)
+                            )
+                        }
                     }
 
                     items(state.articles) { article ->
-                        ArticleCard(
-                            article = article,
-                            onClick = { onArticleClick(article.id) }
-                        )
+                        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            ArticleCard(
+                                article = article,
+                                onClick = { onArticleClick(article.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -219,24 +251,46 @@ private fun ArticleCard(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = article.originalHeadline,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = article.attribution,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (article.contentUseMetadata.isDemo) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            // Article thumbnail image (if available)
+            if (article.imageUrl != null) {
+                coil.compose.AsyncImage(
+                    model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                        .data(article.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = article.originalHeadline,
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(100.dp),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    error = null, // No error placeholder - just skip image
+                    placeholder = null // No placeholder - just skip image
+                )
+            }
+
+            Column(modifier = Modifier
+                .weight(1f)
+                .padding(12.dp)
+            ) {
+                Text(
+                    text = article.originalHeadline,
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = stringResource(R.string.demo_link_notice),
+                    text = article.attribution,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (article.contentUseMetadata.isDemo) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.demo_link_notice),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }

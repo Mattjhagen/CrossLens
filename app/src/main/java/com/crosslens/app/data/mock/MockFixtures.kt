@@ -162,7 +162,7 @@ object MockFixtures {
             articleIds = listOf("climate-bbc", "climate-lemonde", "climate-aljazeera", "climate-nyt"),
             claimIds = listOf("claim-climate-1", "claim-climate-2"),
             lensGapScore = 68,
-            lensGapStatus = "AVAILABLE",
+            lensGapStatus = "EVENT_CLUSTER",
             lensGapIsDemo = true
         ),
         StoryEntity(
@@ -176,7 +176,7 @@ object MockFixtures {
             articleIds = listOf("tech-bbc", "tech-lemonde", "tech-nyt"),
             claimIds = listOf("claim-tech-1"),
             lensGapScore = 42,
-            lensGapStatus = "AVAILABLE",
+            lensGapStatus = "EVENT_CLUSTER",
             lensGapIsDemo = true
         ),
         StoryEntity(

@@ -3,10 +3,12 @@ package com.crosslens.app.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.crosslens.app.core.model.DemoLocalLocations
+import com.crosslens.app.core.model.FeedMetadata
 import com.crosslens.app.core.model.LocalLocation
 import com.crosslens.app.core.model.PersonalizedRecommendation
 import com.crosslens.app.core.model.Story
 import com.crosslens.app.data.recommendation.PersonalizedRecommendationEngine
+import com.crosslens.app.data.repository.LiveStoryRepository
 import com.crosslens.app.data.repository.StoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -49,6 +51,9 @@ class HomeViewModel @Inject constructor(
     private val _forYouEligible = MutableStateFlow(false)
     val forYouEligible: StateFlow<Boolean> = _forYouEligible.asStateFlow()
 
+    private val _feedMetadata = MutableStateFlow<FeedMetadata?>(null)
+    val feedMetadata: StateFlow<FeedMetadata?> = _feedMetadata.asStateFlow()
+
     init {
         // Initialize filter state from preferences
         viewModelScope.launch {
@@ -57,6 +62,19 @@ class HomeViewModel @Inject constructor(
             }
         }
         loadStories()
+        loadFeedMetadata()
+    }
+
+    private fun loadFeedMetadata() {
+        viewModelScope.launch {
+            if (storyRepository is LiveStoryRepository) {
+                // Poll metadata every 30 seconds for freshness indicator
+                while (true) {
+                    _feedMetadata.value = storyRepository.getFeedMetadata()
+                    kotlinx.coroutines.delay(30_000)
+                }
+            }
+        }
     }
 
     private fun loadStories() {
@@ -119,10 +137,14 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                // Reload deterministic demo data from Room
+                // Reload data (live or demo fallback)
                 storyRepository.refresh()
                 // Update the timestamp to now
                 userPreferencesRepository.updateLastRefreshedTime(Instant.now())
+                // Immediately update feed metadata after refresh
+                if (storyRepository is LiveStoryRepository) {
+                    _feedMetadata.value = storyRepository.getFeedMetadata()
+                }
             } finally {
                 _isRefreshing.value = false
             }

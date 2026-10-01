@@ -50,8 +50,8 @@ android {
         applicationId = "com.crosslens.app"
         minSdk = 29
         targetSdk = 34
-        versionCode = 13
-        versionName = "0.0.13-beta"
+        versionCode = 15
+        versionName = "0.0.15-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -260,6 +260,8 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.turbine)
     testImplementation(libs.androidx.room.testing)
+    // XML parser for JVM unit tests (Android XmlPullParser not available in pure JVM)
+    testImplementation("xpp3:xpp3:1.1.4c")
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)

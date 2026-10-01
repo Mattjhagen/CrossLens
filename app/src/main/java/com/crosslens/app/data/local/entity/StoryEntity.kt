@@ -17,5 +17,6 @@ data class StoryEntity(
     val claimIds: List<String>,
     val lensGapScore: Int?,
     val lensGapStatus: String,
-    val lensGapIsDemo: Boolean
+    val lensGapIsDemo: Boolean,
+    val imageUrl: String? = null // Representative image from first article
 )

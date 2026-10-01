@@ -12,7 +12,9 @@ data class Story(
     val eventCountryCodes: List<String>,
     val articleIds: List<String>,
     val claimIds: List<String>,
-    val lensGapAssessment: LensGapAssessment?
+    val lensGapAssessment: LensGapAssessment?,
+    val imageUrl: String? = null, // Representative image from articles
+    val isEventCluster: Boolean = false // True if this story is an event cluster (2+ sources)
 )
 
 data class LensGapAssessment(

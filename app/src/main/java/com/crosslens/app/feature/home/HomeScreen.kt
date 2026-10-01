@@ -36,8 +36,10 @@ import java.time.temporal.ChronoUnit
 @Composable
 fun HomeScreen(
     onStoryClick: (String) -> Unit,
+    onEventClick: (String) -> Unit,
     onExploreClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onArticleNavigatorClick: (String) -> Unit = onStoryClick, // Default to story click for backwards compat
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -49,6 +51,7 @@ fun HomeScreen(
     val showForYou by viewModel.showForYou.collectAsStateWithLifecycle()
     val forYouRecommendations by viewModel.forYouRecommendations.collectAsStateWithLifecycle()
     val forYouEligible by viewModel.forYouEligible.collectAsStateWithLifecycle()
+    val feedMetadata by viewModel.feedMetadata.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -211,18 +214,46 @@ fun HomeScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
+
+                                // Feed state indicator
+                                val currentFeedMetadata = feedMetadata
+                                val feedStateLabel = when (currentFeedMetadata?.state) {
+                                    com.crosslens.app.core.model.FeedState.LIVE -> "Live Feed"
+                                    com.crosslens.app.core.model.FeedState.CACHED -> "Cached Feed"
+                                    com.crosslens.app.core.model.FeedState.DEMO_FALLBACK -> stringResource(R.string.mock_edition_label)
+                                    com.crosslens.app.core.model.FeedState.LOADING -> "Updating..."
+                                    com.crosslens.app.core.model.FeedState.ERROR -> "Feed Unavailable"
+                                    null -> stringResource(R.string.mock_edition_label)
+                                }
                                 Text(
-                                    text = stringResource(R.string.mock_edition_label),
+                                    text = feedStateLabel,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = when (currentFeedMetadata?.state) {
+                                        com.crosslens.app.core.model.FeedState.LIVE -> MaterialTheme.colorScheme.tertiary
+                                        com.crosslens.app.core.model.FeedState.CACHED -> MaterialTheme.colorScheme.secondary
+                                        else -> MaterialTheme.colorScheme.primary
+                                    }
                                 )
-                                if (lastRefreshedTime != null) {
+
+                                // Show last updated time for live/cached feeds
+                                val displayTime = currentFeedMetadata?.lastUpdated ?: lastRefreshedTime
+                                if (displayTime != null) {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = stringResource(
                                             R.string.last_refreshed,
-                                            formatRefreshTime(lastRefreshedTime)
+                                            formatRefreshTime(displayTime)
                                         ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                // Show source count for live feeds
+                                if (currentFeedMetadata != null && currentFeedMetadata.successfulSourceCount > 0) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "${currentFeedMetadata.successfulSourceCount} source${if (currentFeedMetadata.successfulSourceCount > 1) "s" else ""}",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -249,10 +280,17 @@ fun HomeScreen(
                         }
 
                         items(state.stories) { story ->
-                            StoryCard(
-                                story = story,
-                                onClick = { onStoryClick(story.id) }
-                            )
+                            if (story.isEventCluster) {
+                                EventClusterCard(
+                                    story = story,
+                                    onClick = { onArticleNavigatorClick(story.id) }
+                                )
+                            } else {
+                                StoryCard(
+                                    story = story,
+                                    onClick = { onArticleNavigatorClick(story.id) }
+                                )
+                            }
                         }
 
                         item {
@@ -284,17 +322,35 @@ private fun StoryCard(
             containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = story.title,
-                style = MaterialTheme.typography.headlineSmall
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = story.summary,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Column {
+            // Display image if available
+            if (story.imageUrl != null) {
+                coil.compose.AsyncImage(
+                    model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                        .data(story.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = story.title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    error = null, // No error placeholder - just skip image on failure
+                    placeholder = null // No placeholder - image loads directly
+                )
+            }
+
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = story.title,
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = story.summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             Spacer(modifier = Modifier.height(12.dp))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -323,6 +379,7 @@ private fun StoryCard(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            }
         }
     }
 }

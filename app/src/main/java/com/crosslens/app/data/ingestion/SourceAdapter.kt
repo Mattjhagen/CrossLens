@@ -43,7 +43,13 @@ data class SourceArticleRecord(
     val excerpt: String,
 
     /** Optional: content use permission details */
-    val contentPermission: ContentPermission = ContentPermission.EXPLICIT_EXCERPT
+    val contentPermission: ContentPermission = ContentPermission.EXPLICIT_EXCERPT,
+
+    /** Optional: HTTPS URL to article image from source (enclosure, media RSS) */
+    val imageUrl: String? = null,
+
+    /** Source identifier for event clustering (populated at ingestion time) */
+    val sourceId: String = ""
 )
 
 /**
