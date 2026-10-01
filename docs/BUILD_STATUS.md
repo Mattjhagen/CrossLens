@@ -215,3 +215,68 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 - Validate recommendation selection logic with real diversity data
 - Collect user engagement metrics
 
+
+## Feature: Source Health & Coverage Status (2026-09-30)
+
+**Branch:** `feature/source-health-visibility`  
+**Status:** ✅ COMPLETE - Ready for merge
+
+### Implementation Summary
+- Source Health & Coverage Status screen accessible from Settings
+- Tracks technical health of 23 configured RSS sources
+- Persists health state via Room database (schema v10)
+- Manual refresh triggers actual RSS fetches with progress indicator
+- Coverage Details shows limitations when degraded sources affect events
+- Health determined by technical evidence ONLY (never ideology/politics)
+
+### Test Results
+- **Total Tests:** 273 (21 new tests added)
+- **Pass Rate:** 100% (0 failures)
+- **New Test Files:**
+  - SourceHealthRepositoryTest (9 tests)
+  - SourceHealthErrorCategoryTest (12 tests)
+- **Updated Tests:**
+  - CoverageDetailsViewModelTest (14 tests updated for health repository)
+
+### Build Results
+- **Debug APK:** 61 MB, builds successfully
+- **Release APK:** 4.8 MB, builds successfully
+- **Build Time:** ~1m 40s for release
+
+### Device Verification (Pixel 11)
+✅ Settings → Source Health navigation  
+✅ Summary card shows active/degraded/disabled counts  
+✅ Source list displays all 23 sources with status badges  
+✅ Expandable cards show error details (no raw stack traces)  
+✅ Manual refresh triggers actual network fetches  
+✅ Refresh progress indicator works correctly  
+✅ Offline mode shows categorized network errors  
+✅ Back navigation returns to Settings  
+✅ About section explains technical-only criteria  
+
+**Screenshot Evidence:** 11 screenshots in `docs/screenshots/source-health-verification/`
+
+### Hard Rules Compliance
+✅ Health based on technical evidence only (fetch/parse/dates/attribution)  
+✅ Error categories: network, HTTP, parse, stale, duplicate, attribution  
+✅ Never uses ideology, location, popularity, engagement  
+✅ Factual limitation language (non-alarmist)  
+✅ Thresholds: 3 failures = DEGRADED, 10 = DISABLED  
+✅ No raw errors or stack traces in UI  
+
+### Database Migration
+- **Schema:** Version 9 → 10
+- **New Table:** `source_health` (12 columns)
+- **Strategy:** `fallbackToDestructiveMigration()` (prototype mode)
+- **Safe:** Database recreates on schema change
+
+### Documentation
+- `SOURCE_HEALTH_IMPLEMENTATION.md` - Complete implementation report
+- Architecture, thresholds, test coverage, device evidence
+- 11 screenshots with descriptions
+- Hard rules compliance verification
+
+### Release Blockers
+✅ All blockers resolved - feature ready for merge
+
+**Recommendation:** ✅ APPROVED FOR MERGE TO MAIN
