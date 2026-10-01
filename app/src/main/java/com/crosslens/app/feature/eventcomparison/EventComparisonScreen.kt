@@ -39,6 +39,7 @@ import java.time.temporal.ChronoUnit
 fun EventComparisonScreen(
     storyId: String,
     onBackClick: () -> Unit,
+    onCoverageDetailsClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: EventComparisonViewModel = hiltViewModel()
 ) {
@@ -125,6 +126,14 @@ fun EventComparisonScreen(
                             title = state.story.title,
                             sourceCount = state.articles.size,
                             articles = state.articles
+                        )
+                    }
+
+                    // Coverage details action
+                    item {
+                        CoverageDetailsAction(
+                            publisherCount = state.articles.size,
+                            onClick = { onCoverageDetailsClick(storyId) }
                         )
                     }
 
@@ -429,6 +438,50 @@ private fun ComparisonExplanation(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )
+        }
+    }
+}
+
+@Composable
+private fun CoverageDetailsAction(
+    publisherCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Coverage details",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Text(
+                    text = "View source diversity, timing, and coverage limitations",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+            Button(
+                onClick = onClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                Text("View")
+            }
         }
     }
 }
