@@ -22,6 +22,7 @@ import com.crosslens.app.core.model.Theme
 fun SettingsScreen(
     onBackClick: () -> Unit,
     onEditorialReviewClick: () -> Unit = {},
+    onSourceHealthClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -266,6 +267,34 @@ fun SettingsScreen(
                                 Text(
                                     text = stringResource(R.string.editorial_review_demo_notice)
                                         .take(80) + "…",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2
+                                )
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    Card(
+                        onClick = onSourceHealthClick,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Source Health & Coverage",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = "View technical health status of RSS sources and manual refresh",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 2

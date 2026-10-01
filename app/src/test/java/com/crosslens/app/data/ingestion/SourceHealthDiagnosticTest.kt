@@ -1,5 +1,9 @@
 package com.crosslens.app.data.ingestion
 
+import com.crosslens.app.data.local.dao.SourceHealthDao
+import com.crosslens.app.data.local.entity.SourceHealthEntity
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.junit.Test
@@ -30,7 +34,8 @@ class SourceHealthDiagnosticTest {
         println()
 
         val httpClient = RssSourceAdapter.createHttpClient()
-        val healthMonitor = SourceHealthMonitor()
+        val fakeDao = FakeSourceHealthDao()
+        val healthMonitor = SourceHealthMonitor(fakeDao)
         val sources = RssSourceAdapter.createApprovedSources(httpClient, healthMonitor)
 
         println("Testing ${sources.size} configured sources...")
@@ -168,4 +173,35 @@ class SourceHealthDiagnosticTest {
         val fetchTimeMs: Long,
         val errorMessage: String?
     )
+}
+
+/**
+ * Fake DAO for testing - doesn't persist anything, just keeps in memory.
+ */
+private class FakeSourceHealthDao : SourceHealthDao {
+    private val storage = mutableMapOf<String, SourceHealthEntity>()
+
+    override suspend fun upsert(health: SourceHealthEntity) {
+        storage[health.sourceId] = health
+    }
+
+    override suspend fun getHealth(sourceId: String): SourceHealthEntity? {
+        return storage[sourceId]
+    }
+
+    override suspend fun getAllHealth(): List<SourceHealthEntity> {
+        return storage.values.toList()
+    }
+
+    override fun observeAllHealth(): Flow<List<SourceHealthEntity>> {
+        return flowOf(storage.values.toList())
+    }
+
+    override suspend fun getProblematicSourcesCount(): Int {
+        return storage.values.count { it.status != "ACTIVE" }
+    }
+
+    override suspend fun deleteAll() {
+        storage.clear()
+    }
 }

@@ -39,11 +39,7 @@ object IngestionModule {
         return RssSourceAdapter.createHttpClient()
     }
 
-    @Provides
-    @Singleton
-    fun provideSourceHealthMonitor(): SourceHealthMonitor {
-        return SourceHealthMonitor()
-    }
+    // SourceHealthMonitor is now auto-provided by Hilt via @Inject constructor (with DAO dependency)
 
     @Provides
     @Singleton

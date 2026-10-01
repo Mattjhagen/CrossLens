@@ -106,6 +106,9 @@ fun CrossLensNavHost(
                 onBackClick = { navController.popBackStack() },
                 onEditorialReviewClick = {
                     navController.navigate(CrossLensDestination.EditorialReview.route)
+                },
+                onSourceHealthClick = {
+                    navController.navigate(CrossLensDestination.SourceHealth.route)
                 }
             )
         }
@@ -138,6 +141,12 @@ fun CrossLensNavHost(
             CoverageDetailsScreen(
                 storyId = storyId,
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(CrossLensDestination.SourceHealth.route) {
+            com.crosslens.app.feature.sourcehealth.SourceHealthScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

@@ -57,4 +57,7 @@ object DatabaseModule {
 
     @Provides
     fun provideEventClusterDao(database: CrossLensDatabase) = database.eventClusterDao()
+
+    @Provides
+    fun provideSourceHealthDao(database: CrossLensDatabase) = database.sourceHealthDao()
 }
