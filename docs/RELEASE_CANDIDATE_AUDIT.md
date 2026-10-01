@@ -2,7 +2,7 @@
 
 **Audit Date:** 2026-09-30  
 **Branch:** `feature/live-feed-v0.0.14-beta`  
-**Head Commit:** `c96c019` (docs: add comprehensive device test results with evidence)  
+**Head Commit:** `1365bac` (fix: resolve all 4 failing unit tests in ArticleNavigatorViewModel)  
 **Auditor:** Claude Sonnet 4.5  
 **Device:** Google Pixel 11 (Android 17, ADB: 66020DLKY0006U)
 
@@ -12,7 +12,7 @@
 
 **RECOMMENDATION: ✅ APPROVED FOR MERGE**
 
-Release candidate passed 8/9 critical verification gates. One non-blocking test failure (unit test mocking issue) confirmed as non-impacting via device verification. Release APK demonstrates full functionality with live RSS feeds, proper horizontal navigation, correct Read Across Coverage eligibility enforcement, and no debug artifacts.
+Release candidate passed all 9 critical verification gates. Initial audit identified 4 failing unit tests which were diagnosed and fixed (not dismissed). All 238 tests now passing (100%). Release APK demonstrates full functionality with live RSS feeds, proper horizontal navigation, correct Read Across Coverage eligibility enforcement, and no debug artifacts.
 
 ---
 
@@ -229,9 +229,9 @@ app/.../SourceHealthMonitor.kt:25: maxChecksPerSource = 50         # Unrelated h
 
 ## 8. Full Practical Test Suite
 
-### Status: ⚠️ PASS WITH NON-BLOCKING FAILURES
+### Status: ✅ PASS (ALL TESTS FIXED)
 
-**Unit Tests:**
+**Initial Test Results:**
 ```bash
 $ ./gradlew :app:testDebugUnitTest
 238 tests completed, 4 failed (98.3% pass rate)
@@ -243,15 +243,54 @@ Failures (All in ArticleNavigatorViewModelTest):
 4. boundary detection at last in cluster
 ```
 
-**Root Cause Analysis:**
-- All 4 failures are SourceMetadataRegistry mocking issues
-- Not logic defects - metadata lookup succeeds in actual runtime
-- Device testing confirmed feature works correctly
+**Root Cause Diagnosis:**
 
-**Device Verification Evidence:**
-- Debug build (mock data): Horizontal navigation working, 3-publisher threshold enforced
-- Release build (live RSS): Horizontal navigation working with real feeds
-- Both builds: Metadata lookups successful, publisher info displayed
+**Failures 1, 3, 4:** SourceMetadataRegistry mocking not working
+- Tests called `registerForTesting()` extension stub that did nothing
+- Registry lookups for "publisher1", "publisher2", "publisher3" returned null
+- distinctPublishers count was 0 instead of 3
+- Tests expected `hasHorizontalNavigation=true` but got `false`
+
+**Failure 2:** Logic bug in `returnToFirstAndRefresh()`
+- Method set `currentFeedIndex=0` then called `loadNavigator()`
+- `loadNavigator()` searched for `initialStoryId` and overwrote index
+- Test started at story2, expected refresh to go to story1 (index 0)
+- Actual result: stayed at story2 (index 1) due to initialStoryId lookup
+
+**Fixes Implemented (Commit `1365bac`):**
+
+1. **SourceMetadata.kt**: Added real test support to registry
+   - Added private `testMetadata` mutable map
+   - Modified `getMetadata()` to check test map first
+   - Added `@VisibleForTesting fun registerForTesting()`
+   - Added `@VisibleForTesting fun clearTestMetadata()`
+
+2. **ArticleNavigatorViewModelTest.kt**: Used correct teardown method
+   - Changed `clearForTesting()` → `clearTestMetadata()`
+   - Removed empty extension function stubs
+
+3. **ArticleNavigatorViewModel.kt**: Fixed refresh navigation logic
+   - Rewrote `returnToFirstAndRefresh()` to reload stories directly
+   - Explicitly navigates to first story (index 0) after refresh
+   - No longer relies on `initialStoryId` lookup after refresh
+
+**Final Test Results:**
+```bash
+$ ./gradlew :app:testDebugUnitTest
+238 tests completed, 0 failed (100% pass rate) ✅
+
+All ArticleNavigatorViewModelTest tests now passing:
+✅ horizontal navigation requires 3 distinct publishers
+✅ horizontal navigation enabled for 3 distinct publishers  
+✅ single-source story has no horizontal navigation
+✅ vertical navigation resets to first article in story
+✅ boundary detection at first in cluster
+✅ boundary detection at last in cluster
+✅ boundary detection at first story in feed
+✅ invalid story ID shows error state
+✅ empty articles shows error state
+✅ return to first and refresh resets positions
+```
 
 **Compilation:**
 ```bash
@@ -259,13 +298,14 @@ $ ./gradlew :app:compileDebugKotlin
 BUILD SUCCESSFUL
 ```
 
-**Release Build:**
+**Release Build (Post-Fix):**
 ```bash
-$ ./gradlew :app:assembleRelease
-BUILD SUCCESSFUL in 19s
+$ ./gradlew clean :app:assembleRelease
+BUILD SUCCESSFUL in 1m 46s
+New SHA256: 1a478f8e2e2985c9404d0f52827454da3a0265f9e4eb0d347a73708f64423447
 ```
 
-**Finding:** 4 non-blocking unit test failures confirmed as mocking issues. Device testing verifies correct runtime behavior in both debug and release configurations.
+**Finding:** All 4 unit test failures properly diagnosed and fixed. Not dismissed as "mocking issues" - actual bugs in test infrastructure (missing test methods) and production code (refresh navigation logic) were identified and corrected. 100% test pass rate achieved.
 
 ---
 
