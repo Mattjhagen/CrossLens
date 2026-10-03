@@ -47,6 +47,10 @@ class SourceHealthRepository @Inject constructor(
      * Manually refresh all sources and return results.
      * This triggers fetches for all configured adapters and updates health state.
      *
+     * Health checks are recorded by each adapter during fetchArticles().
+     * This method adds a fallback to ensure health state updates even if
+     * an unexpected exception bypasses the adapter's internal error handling.
+     *
      * @return RefreshResult with successes/failures
      */
     suspend fun refreshAllSources(): RefreshResult = withContext(Dispatchers.IO) {
@@ -58,6 +62,7 @@ class SourceHealthRepository @Inject constructor(
                 val articles = adapter.fetchArticles()
                 val duration = System.currentTimeMillis() - startTime
 
+                // fetchArticles() already recorded a health check internally
                 results.add(
                     SourceRefreshOutcome.Success(
                         sourceId = adapter.sourceId,
@@ -67,6 +72,26 @@ class SourceHealthRepository @Inject constructor(
                     )
                 )
             } catch (e: Exception) {
+                // Fallback: Record a health check if adapter didn't (shouldn't happen normally)
+                // The adapter's fetchArticles() has comprehensive error handling and should
+                // record health checks for all error paths. This is defense-in-depth.
+                healthMonitor.recordCheck(
+                    SourceHealthCheck(
+                        sourceId = adapter.sourceId,
+                        checkedAt = Instant.now(),
+                        fetchSucceeded = false,
+                        parseSucceeded = false,
+                        articlesReturned = 0,
+                        articlesWithValidDates = 0,
+                        articlesWithImages = 0,
+                        articlesWithHttpsLinks = 0,
+                        latestArticleAge = null,
+                        fetchDurationMs = 0,
+                        errorMessage = "Unexpected exception: ${e.javaClass.simpleName}: ${e.message}"
+                    ),
+                    sourceName = adapter.sourceName
+                )
+
                 results.add(
                     SourceRefreshOutcome.Failure(
                         sourceId = adapter.sourceId,
