@@ -157,6 +157,10 @@ class RssSourceAdapter(
             sourceId.contains("upi") -> "en-US"
             sourceId.contains("ft") -> "en-GB"
             sourceId.contains("elpais") -> "es"
+            sourceId.contains("dailymaverick") -> "en"  // South Africa
+            sourceId.contains("euronews") -> "en"  // Pan-European English service
+            sourceId.contains("rfi") -> "en"  // France (English service)
+            sourceId.contains("themoscowtimes") -> "en"  // Russia (English)
             else -> "en"
         }
     }
@@ -177,9 +181,10 @@ class RssSourceAdapter(
 
         /**
          * Create the approved RSS source adapters with global coverage and health monitoring.
-         * Currently: 23 active sources (3 disabled: Korea Herald, Asahi Shimbun, SCMP).
+         * Currently: 28 active sources (5 disabled: Korea Herald, Asahi Shimbun, original SCMP URL).
          * Batch 2 adds: UPI (wire service), Financial Times, El País.
-         * See docs/SOURCE_HEALTH_AUDIT_RESULTS.md and docs/BATCH2_VALIDATION_RESULTS.md.
+         * Batch 3 adds: Daily Maverick (Africa), Euronews, RFI English, SCMP (new URL), Moscow Times.
+         * See docs/BATCH3_VALIDATION_RESULTS.md.
          */
         fun createApprovedSources(
             httpClient: OkHttpClient,
@@ -381,6 +386,43 @@ class RssSourceAdapter(
                     sourceId = "elpais-rss",
                     sourceName = "El País",
                     feedUrl = "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",
+                    httpClient = httpClient,
+                    healthMonitor = healthMonitor
+                ),
+                // Batch 3 Expansion - Geographic diversification (5 active)
+                // Fills gaps: Africa, Eastern Europe, additional European coverage, East Asia recovery
+                RssSourceAdapter(
+                    sourceId = "dailymaverick-rss",
+                    sourceName = "Daily Maverick",
+                    feedUrl = "https://www.dailymaverick.co.za/dmrss/",
+                    httpClient = httpClient,
+                    healthMonitor = healthMonitor
+                ),
+                RssSourceAdapter(
+                    sourceId = "euronews-rss",
+                    sourceName = "Euronews",
+                    feedUrl = "https://www.euronews.com/rss",
+                    httpClient = httpClient,
+                    healthMonitor = healthMonitor
+                ),
+                RssSourceAdapter(
+                    sourceId = "rfi-rss",
+                    sourceName = "RFI English",
+                    feedUrl = "https://www.rfi.fr/en/rss",
+                    httpClient = httpClient,
+                    healthMonitor = healthMonitor
+                ),
+                RssSourceAdapter(
+                    sourceId = "scmp-rss",
+                    sourceName = "South China Morning Post",
+                    feedUrl = "https://www.scmp.com/rss/4/feed",
+                    httpClient = httpClient,
+                    healthMonitor = healthMonitor
+                ),
+                RssSourceAdapter(
+                    sourceId = "themoscowtimes-rss",
+                    sourceName = "The Moscow Times",
+                    feedUrl = "https://www.themoscowtimes.com/rss/news",
                     httpClient = httpClient,
                     healthMonitor = healthMonitor
                 )
