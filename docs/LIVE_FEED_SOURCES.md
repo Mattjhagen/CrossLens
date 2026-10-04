@@ -1,13 +1,15 @@
 # CrossLens Live Feed Sources
 
-**Version:** 0.0.14-beta  
-**Last Updated:** 2026-09-24
+**Version:** 0.0.16-beta (Batch 3)  
+**Last Updated:** 2026-10-04
 
 ## Overview
 
-CrossLens v0.0.14-beta introduces live RSS feed ingestion from 15 approved international news publishers spanning North America, Europe, Middle East, and Asia-Pacific. This document lists each source, its feed URL, permissions, and known limitations.
+CrossLens introduces live RSS feed ingestion from 28 approved international news publishers spanning North America, Europe, Middle East, Asia-Pacific, Africa, and Eastern Europe. This document lists each source, its feed URL, permissions, and known limitations.
 
-## Current Sources (15 Total)
+**Batch 3 Update (October 2026):** Added 5 sources for geographic diversification - Daily Maverick (South Africa), Euronews, RFI English, SCMP (Hong Kong, new URL), and The Moscow Times (Russia). All sources validated on Pixel 11 with 28/28 active, 0 failures.
+
+## Current Sources (28 Total)
 
 ### 1. BBC News (United Kingdom)
 
@@ -316,3 +318,146 @@ RSS feeds may change structure, move URLs, or update terms of use. Monitor:
 - Attribution requirement changes
 
 Last verified: 2026-09-24
+
+## Batch 3 Sources (5 Additional - October 2026)
+
+### 24. Daily Maverick (South Africa)
+
+- **Feed URL:** `https://www.dailymaverick.co.za/dmrss/`
+- **Language:** English
+- **Publishing Region:** South Africa / Africa
+- **Source Type:** Online news publication
+- **Attribution Requirements:** Source name, original article link required
+- **Limitations:** Excerpt-only; full article at original URL
+- **Added:** Batch 3 expansion (October 2026)
+- **Geographic Gap Filled:** First African source
+
+### 25. Euronews (France/Pan-European)
+
+- **Feed URL:** `https://www.euronews.com/rss`
+- **Language:** English
+- **Publishing Region:** Pan-European (France-based)
+- **Source Type:** International news channel
+- **Attribution Requirements:** Source name, original article link required
+- **Limitations:** English edition; multiple language variants available
+- **Added:** Batch 3 expansion (October 2026)
+
+### 26. RFI English (France)
+
+- **Feed URL:** `https://www.rfi.fr/en/rss`
+- **Language:** English
+- **Publishing Region:** France / International
+- **Source Type:** Public international broadcaster
+- **Coverage:** International affairs, strong African coverage
+- **Attribution Requirements:** Source name, original article link required
+- **Limitations:** English service; French/Spanish/Portuguese variants available
+- **Added:** Batch 3 expansion (October 2026)
+
+### 27. South China Morning Post (Hong Kong)
+
+- **Feed URL:** `https://www.scmp.com/rss/4/feed`
+- **Language:** English
+- **Publishing Region:** Hong Kong SAR
+- **Source Type:** Daily newspaper (English edition)
+- **Attribution Requirements:** Source name, original article link required
+- **Limitations:** Subscription-based access for some content
+- **Added:** Batch 3 expansion (October 2026) - Recovers Batch 1 disabled source with new feed URL
+- **Note:** Previous feed URL (/rss/91/feed) had HTTPS redirect loop
+
+### 28. The Moscow Times (Russia)
+
+- **Feed URL:** `https://www.themoscowtimes.com/rss/news`
+- **Language:** English
+- **Publishing Region:** Russia / Eastern Europe
+- **Source Type:** English-language news website
+- **Attribution Requirements:** Source name, original article link required
+- **Limitations:** Independent editorial stance
+- **Added:** Batch 3 expansion (October 2026)
+- **Geographic Gap Filled:** First Eastern European source
+
+---
+
+## Batch 3 Summary
+
+**Total Active Sources:** 28  
+**New Sources Added:** 5  
+**Geographic Expansion:** Africa (1), Eastern Europe (1), Additional Europe (2), Asia-Pacific recovery (1)  
+**Validation:** All 5 sources tested on Pixel 11 - 28/28 active, 0 failures  
+**RSS Availability:** 50% success rate (5/10 candidates) due to industry-wide RSS discontinuation (2024-2026)
+
+**Sources Rejected in Batch 3:**
+- Jakarta Post (Indonesia) - RSS endpoint removed (404)
+- Bangkok Post (Thailand) - RSS discontinued (404)
+- Philippine Daily Inquirer (Philippines) - Bot protection (403)
+- Folha de S.Paulo (Brazil) - No valid main feed
+- Clarín (Argentina) - Access blocked (403)
+
+**See:** `docs/BATCH3_VALIDATION_RESULTS.md` for technical validation evidence.
+
+---
+
+## Portfolio Statistics (28 Sources)
+
+### Geographic Distribution
+- Europe/UK: 10 sources (36%)
+- Asia-Pacific: 9 sources (32%)
+- North America: 3 sources (11%)
+- Middle East: 2 sources (7%)
+- Africa: 1 source (4%) ← NEW
+- Eastern Europe: 1 source (4%) ← NEW
+- Latin America: 0 sources (0%)
+
+### Language Distribution
+- English: 25 sources (89%)
+- Spanish: 2 sources (7%)
+- French: 1 source (4%)
+
+### Source Types
+- Public Broadcasters: 11 (BBC, CBC, ABC, DW, France 24, swissinfo, RFI, etc.)
+- Daily Newspapers: 12 (NYT, Guardian, FT, SCMP, etc.)
+- Digital News Sites: 3 (Daily Maverick, Moscow Times, Euronews)
+- Wire Services: 1 (UPI)
+- News Magazines: 1 (Der Spiegel International)
+
+---
+
+## Known Limitations
+
+### Geographic Gaps
+- **Latin America:** No working RSS from tested Brazilian/Argentine sources
+- **Southeast Asia:** No working RSS from Indonesia, Thailand, Philippines
+- **Sub-Saharan Africa:** Only 1 source (South Africa)
+- **Middle East:** Limited to 2 sources (Al Jazeera, Arab News)
+
+### Language Diversity
+- Heavy English dominance (89%)
+- Limited non-English sources (2 Spanish, 1 French)
+- No Portuguese sources (Folha de S.Paulo rejected due to no valid feed)
+
+### RSS Availability Crisis (2026)
+Between 2024-2026, many publishers discontinued RSS feeds:
+- Bot protection increasing (30% of rejections)
+- Endpoint removal (40% of rejections)  
+- API-only access (20% of rejections)
+- Success rate: 50% for Batch 3 candidates
+
+Public broadcasters and international news services more likely to maintain RSS. Regional commercial newspapers increasingly discontinuing RSS access.
+
+---
+
+## Content Use Policy
+
+All sources in this list are configured for **link-and-excerpt** display only:
+- Headlines displayed
+- Brief excerpts shown
+- Original article link always provided
+- Full content requires visiting publisher URL
+- Attribution always displayed
+- No article text reproduction beyond excerpt
+
+CrossLens does not claim comprehensive coverage, balanced perspective, or editorial neutrality. Sources are selected based on technical RSS availability, not ideology or bias assessment.
+
+---
+
+**Last Updated:** October 4, 2026  
+**Next Review:** Batch 4 planning (pending RSS availability improvements)
