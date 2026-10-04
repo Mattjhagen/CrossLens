@@ -233,7 +233,15 @@ private fun RefreshButton(
     onRefresh: () -> Unit
 ) {
     Button(
-        onClick = onRefresh,
+        onClick = {
+            // DIAGNOSTIC: Log button click
+            android.util.Log.wtf("SourceHealth:Debug", "╔═══════════════════════════════════════")
+            android.util.Log.wtf("SourceHealth:Debug", "║ REFRESH BUTTON CLICKED!!!")
+            android.util.Log.wtf("SourceHealth:Debug", "║ Thread: ${Thread.currentThread().name}")
+            android.util.Log.wtf("SourceHealth:Debug", "║ Time: ${System.currentTimeMillis()}")
+            android.util.Log.wtf("SourceHealth:Debug", "╚═══════════════════════════════════════")
+            onRefresh()
+        },
         enabled = !isRefreshing,
         modifier = Modifier.fillMaxWidth()
     ) {

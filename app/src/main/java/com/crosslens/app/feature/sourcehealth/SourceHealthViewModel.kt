@@ -6,6 +6,7 @@ import com.crosslens.app.data.repository.RefreshResult
 import com.crosslens.app.data.repository.SourceHealthRepository
 import com.crosslens.app.data.repository.SourceHealthStatus
 import com.crosslens.app.data.repository.SourceHealthUiModel
+import com.crosslens.app.util.SourceHealthDiagnostics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,10 @@ class SourceHealthViewModel @Inject constructor(
     private val _refreshResult = MutableStateFlow<RefreshResult?>(null)
 
     init {
+        // DIAGNOSTIC: Verify logging works
+        android.util.Log.d("SourceHealth:Debug", "═══ ViewModel CREATED ═══")
+        android.util.Log.d("SourceHealth:Debug", "  Time: ${System.currentTimeMillis()}")
+
         loadSourceHealth()
     }
 
@@ -41,6 +46,12 @@ class SourceHealthViewModel @Inject constructor(
 
                 // Observe health data and combine with refresh state
                 repository.observeAllSourceHealth().collect { sources ->
+                    // DIAGNOSTIC: Log Flow emission
+                    SourceHealthDiagnostics.logViewModelFlowEmission(
+                        sourceCount = sources.size,
+                        lastRefreshTimestamp = sources.maxOfOrNull { it.updatedAt }?.toEpochMilli()
+                    )
+
                     val activeCount = sources.count { it.status == SourceHealthStatus.ACTIVE }
                     val degradedCount = sources.count { it.status == SourceHealthStatus.DEGRADED }
                     val disabledCount = sources.count { it.status == SourceHealthStatus.DISABLED }
@@ -60,6 +71,15 @@ class SourceHealthViewModel @Inject constructor(
                         isRefreshing = _isRefreshing.value,
                         refreshResult = _refreshResult.value
                     )
+
+                    // DIAGNOSTIC: Log UI state update
+                    SourceHealthDiagnostics.logViewModelStateUpdate(
+                        activeCount = activeCount,
+                        degradedCount = degradedCount,
+                        disabledCount = disabledCount,
+                        lastRefreshTimestamp = lastRefresh?.toEpochMilli(),
+                        isRefreshing = _isRefreshing.value
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.value = SourceHealthUiState.Error(
@@ -78,10 +98,20 @@ class SourceHealthViewModel @Inject constructor(
      * source data, counts, and timestamps.
      */
     fun refreshAllSources() {
+        // CRITICAL TEST: Direct log to verify method is called
+        android.util.Log.wtf("SourceHealth:Debug", "╔═══════════════════════════════════════")
+        android.util.Log.wtf("SourceHealth:Debug", "║ refreshAllSources() CALLED!!!")
+        android.util.Log.wtf("SourceHealth:Debug", "║ Thread: ${Thread.currentThread().name}")
+        android.util.Log.wtf("SourceHealth:Debug", "╚═══════════════════════════════════════")
+
         viewModelScope.launch {
             if (_isRefreshing.value) {
+                android.util.Log.wtf("SourceHealth:Debug", "  Already refreshing, aborting")
                 return@launch // Already refreshing
             }
+
+            // DIAGNOSTIC: Log refresh start
+            SourceHealthDiagnostics.logViewModelRefreshStart()
 
             // Set refreshing state
             _isRefreshing.value = true
@@ -90,6 +120,12 @@ class SourceHealthViewModel @Inject constructor(
 
             try {
                 val result = repository.refreshAllSources()
+
+                // DIAGNOSTIC: Log refresh end
+                SourceHealthDiagnostics.logViewModelRefreshEnd(
+                    successCount = result.successCount,
+                    failureCount = result.failureCount
+                )
 
                 // Store refresh result; Flow will update source data automatically
                 _refreshResult.value = result

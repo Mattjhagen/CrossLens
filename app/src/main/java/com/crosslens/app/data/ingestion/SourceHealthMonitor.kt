@@ -2,6 +2,7 @@ package com.crosslens.app.data.ingestion
 
 import com.crosslens.app.data.local.dao.SourceHealthDao
 import com.crosslens.app.data.local.entity.SourceHealthEntity
+import com.crosslens.app.util.SourceHealthDiagnostics
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Duration
@@ -38,6 +39,13 @@ class SourceHealthMonitor @Inject constructor(
      * Record a health check for a source and persist to database.
      */
     suspend fun recordCheck(check: SourceHealthCheck, sourceName: String) = mutex.withLock {
+        // DIAGNOSTIC: Log record check start
+        SourceHealthDiagnostics.logMonitorRecordCheckStart(
+            sourceId = check.sourceId,
+            fetchSucceeded = check.fetchSucceeded,
+            parseSucceeded = check.parseSucceeded
+        )
+
         val checks = healthChecks.getOrPut(check.sourceId) { mutableListOf() }
         checks.add(check)
 
@@ -76,11 +84,62 @@ class SourceHealthMonitor @Inject constructor(
     }
 
     /**
+     * Initialize database with entries for all configured sources.
+     * Creates ACTIVE entries for sources that don't have a record yet.
+     *
+     * Call this on app startup AFTER loadPersistedState() to ensure
+     * all configured sources have database entries.
+     *
+     * @param configuredSources List of (sourceId, sourceName) pairs
+     */
+    suspend fun initializeSourceHealth(
+        configuredSources: List<Pair<String, String>>
+    ) = mutex.withLock {
+        // DIAGNOSTIC: Log initialization start
+        SourceHealthDiagnostics.logDatabaseInitialization(sourceCount = configuredSources.size)
+
+        val now = Instant.now().toEpochMilli()
+        var createdCount = 0
+
+        for ((sourceId, sourceName) in configuredSources) {
+            // Check if this source already has a database entry
+            val existing = healthDao.getHealth(sourceId)
+            if (existing == null) {
+                // Create initial ACTIVE entry
+                val initialEntity = SourceHealthEntity(
+                    sourceId = sourceId,
+                    sourceName = sourceName,
+                    status = SourceHealthStatus.ACTIVE.name,
+                    lastSuccessAt = null,
+                    lastFailureAt = null,
+                    consecutiveFailures = 0,
+                    last24hSuccessRate = 1.0, // Assume healthy until proven otherwise
+                    last24hArticleCount = 0,
+                    lastErrorMessage = null,
+                    lastErrorCategory = null,
+                    disabledReason = null,
+                    updatedAt = now
+                )
+                healthDao.upsert(initialEntity)
+                sourceStatuses[sourceId] = SourceHealthStatus.ACTIVE
+                createdCount++
+            }
+        }
+
+        // DIAGNOSTIC: Log initialization complete
+        SourceHealthDiagnostics.logDatabaseInitializationComplete(sourceCount = createdCount)
+    }
+
+    /**
      * Load persisted health state from database on initialization.
      * Call this after app startup to restore health state.
      */
     suspend fun loadPersistedState() = mutex.withLock {
         val allHealth = healthDao.getAllHealth()
+
+        // DIAGNOSTIC: Log persisted state load
+        SourceHealthDiagnostics.logLoadPersistedState(rowsLoaded = allHealth.size)
+
         for (entity in allHealth) {
             sourceStatuses[entity.sourceId] = SourceHealthStatus.valueOf(entity.status)
             entity.disabledReason?.let { disabledReasons[entity.sourceId] = it }
@@ -181,6 +240,14 @@ class SourceHealthMonitor @Inject constructor(
             else -> SourceHealthStatus.ACTIVE
         }
 
+        // DIAGNOSTIC: Log status update
+        SourceHealthDiagnostics.logMonitorStatusUpdate(
+            sourceId = sourceId,
+            sourceName = sourceName,
+            consecutiveFailures = consecutiveFailures,
+            newStatus = newStatus.name
+        )
+
         sourceStatuses[sourceId] = newStatus
 
         // Auto-disable reason for persistent failures
@@ -205,6 +272,8 @@ class SourceHealthMonitor @Inject constructor(
 
         val totalArticles = recent24h.sumOf { it.articlesReturned }
 
+        val updatedAtMs = Instant.now().toEpochMilli()
+
         // Persist to database
         val entity = SourceHealthEntity(
             sourceId = sourceId,
@@ -218,10 +287,20 @@ class SourceHealthMonitor @Inject constructor(
             lastErrorMessage = lastFailure?.errorMessage,
             lastErrorCategory = lastErrorCategories[sourceId]?.name,
             disabledReason = disabledReasons[sourceId],
-            updatedAt = Instant.now().toEpochMilli()
+            updatedAt = updatedAtMs
+        )
+
+        // DIAGNOSTIC: Log database write
+        SourceHealthDiagnostics.logMonitorDatabaseWrite(
+            sourceId = sourceId,
+            status = newStatus.name,
+            updatedAtMs = updatedAtMs
         )
 
         healthDao.upsert(entity)
+
+        // DIAGNOSTIC: Log database write complete
+        SourceHealthDiagnostics.logMonitorDatabaseWriteComplete(sourceId = sourceId)
     }
 
     private fun countConsecutiveFailures(checks: List<SourceHealthCheck>): Int {
