@@ -284,6 +284,44 @@ From ANDROID_BUILD_GUIDE.md acceptance checklist:
 
 ---
 
+## Source Health Recovery Hardening (2026-10-04)
+
+**Branch:** `feature/source-health-recovery-hardening`  
+**Status:** ❌ **BLOCKED** - Manual refresh non-functional, offline recovery not validated
+
+### Bugs Found & Fixed
+1. **Repository Fallback** (Commit 9b547f7): Added defense-in-depth health check recording in catch block
+2. **ViewModel Race Condition** (Commit 869450a): Fixed state management to prevent Flow updates being overwritten
+
+### Blocking Issues
+❌ Manual refresh does not update UI despite fixes applied  
+❌ Cannot validate 3-failure → DEGRADED transition  
+❌ Cannot validate offline recovery → ACTIVE  
+❌ Root cause unknown, requires debugging with logging
+
+### Evidence Collected
+- **Screenshots**: 16 files in `docs/screenshots/source-health-recovery-complete-20261004/`
+- **Baseline**: 23 Active sources at Oct 04, 10:52
+- **Attempted**: 3 offline refreshes + 1 online refresh
+- **Result**: No UI updates, timestamp frozen, state unchanged
+
+### Test Status
+- **Existing Tests**: 21 tests, 100% pass (SourceHealthRepositoryTest, SourceHealthErrorCategoryTest)
+- **Build**: ✅ SUCCESS (both commits)
+- **Device Validation**: ❌ FAILED (refresh not updating state)
+
+### Merge Recommendation
+**DO NOT MERGE** - Feature is non-functional despite bug fixes. See `SOURCE_HEALTH_RECOVERY_FINAL_REPORT.md` for complete analysis and required next steps.
+
+### Required Before Merge
+1. Add database initialization for source health entities
+2. Add comprehensive logging to debug refresh flow
+3. Identify and fix root cause of non-functional refresh
+4. Complete full offline recovery validation
+5. Add integration tests for degradation sequence
+
+---
+
 ## End-of-Night Handoff (2026-09-30 21:38 CDT)
 
 ### Shipped to GitHub
