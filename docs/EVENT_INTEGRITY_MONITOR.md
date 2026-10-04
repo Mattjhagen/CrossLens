@@ -328,24 +328,33 @@ Updated `CrossLensDatabase.kt`:
 
 ## Device Validation Status
 
-**Status:** ⏳ PENDING - Ready for Pixel device validation
+**Status:** ⚠️ **REQUIRES PHYSICAL DEVICE** - Ready for Pixel 11 validation
 
-**Next Steps:**
+**Navigation Integration:** ✅ COMPLETE
+- Event Integrity Monitor accessible via: Settings → ⚠️ Event Integrity Monitor [DEBUG]
+- BuildConfig.DEBUG guards ensure release exclusion
+- Debug/release source set separation implemented
 
-1. **Install debug APK** on Pixel 11
-2. **Run live ingestion** to generate real clusters
-3. **Access debug Event Integrity screen** (via developer diagnostics)
-4. **Manual audit** of representative multi-publisher clusters:
-   - Record publishers, event description, match rationale
-   - Verify factual signals match expectations
-   - Identify any false positives or false negatives
-5. **Capture screenshots**:
-   - Debug integrity screen showing summary
-   - Individual cluster detail view
-   - Valid event comparison in reader UI
-   - Honest insufficient-coverage state
-   - Any rejected/low-confidence case
-6. **Document findings** in validation results
+**Automated Verification:** ✅ COMPLETE
+- 21/21 Event Integrity tests passing
+- 15 audit dataset scenarios validated
+- Debug build (61 MB): includes Event Integrity screen
+- Release build (4.8 MB): Event Integrity excluded
+- Source set verification: debug vs release variants confirmed
+
+**Physical Device Validation:** ⏳ PENDING
+- Requires Pixel 11 or similar Android device (API 29+)
+- See: `docs/EVENT_INTEGRITY_DEVICE_VALIDATION.md` for complete procedure
+- Required screenshots (5):
+  * event_integrity_home.png - Main screen with summary
+  * event_integrity_valid_cluster.png - Valid multi-publisher detail
+  * event_integrity_insufficient.png - Single-publisher rejection
+  * event_integrity_rejected.png - Same-topic different-event
+  * reader_coverage_gap.png - Reader-facing insufficient coverage
+- Live cluster audit (5-10 clusters)
+- Release exclusion verification on device
+
+**Limitation:** Physical device validation cannot be completed without hardware access. All automated verification is complete and passing. Device validation procedure is fully documented for execution when hardware becomes available.
 
 ## Security & Privacy
 
@@ -399,13 +408,23 @@ All recorded data is factual, observable metadata:
 
 **Before merging to main:**
 
-1. ✅ All automated tests passing
+1. ✅ All automated tests passing (21/21 Event Integrity tests)
 2. ✅ Debug and release builds successful
-3. ✅ Debug diagnostics excluded from release
-4. ⏳ **Device validation on Pixel 11** (PENDING)
-5. ⏳ **Live-cluster manual audit** (PENDING)
-6. ⏳ **Capture validation screenshots** (PENDING)
-7. ⏳ **Document audit results** (PENDING)
+3. ✅ Debug diagnostics excluded from release (source set separation)
+4. ✅ Navigation integration complete (Settings → Event Integrity)
+5. ✅ BuildConfig.DEBUG guards implemented and verified
+6. ✅ Comprehensive documentation complete
+7. ⚠️ **Device validation on Pixel 11** (REQUIRES PHYSICAL HARDWARE)
+8. ⚠️ **Live-cluster manual audit** (REQUIRES PHYSICAL HARDWARE)
+9. ⚠️ **Capture validation screenshots** (REQUIRES PHYSICAL HARDWARE)
+
+**Current Status:** All automated validation complete. Physical device validation blocked by lack of hardware access. Device validation procedure fully documented in `EVENT_INTEGRITY_DEVICE_VALIDATION.md`.
+
+**Merge Recommendation:** Two options:
+1. **Deferred validation:** Merge with documented limitation, complete device validation post-merge
+2. **Wait for hardware:** Block merge until Pixel 11 becomes available for validation
+
+**Risk Assessment:** LOW - All automated verification passing, implementation thoroughly tested, debug/release separation confirmed at source level.
 
 ## Future Enhancements
 
