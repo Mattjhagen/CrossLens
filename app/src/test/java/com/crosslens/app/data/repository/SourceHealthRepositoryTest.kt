@@ -150,14 +150,18 @@ class SourceHealthRepositoryTest {
             )
         )
 
-        // Load persisted state
+        // Load persisted state (also initializes missing sources)
         repository.loadPersistedState()
 
-        // Verify it was loaded
+        // Verify manually inserted source was loaded correctly
         val health = repository.observeAllSourceHealth().first()
-        assertEquals(1, health.size)
-        assertEquals(SourceHealthStatus.DEGRADED, health[0].status)
-        assertEquals(5, health[0].consecutiveFailures)
+        // Should have 2 sources: manually inserted DEGRADED + initialized test-source-2
+        assertEquals(2, health.size)
+
+        // Find the manually inserted source
+        val degradedSource = health.find { it.status == SourceHealthStatus.DEGRADED }
+        assertNotNull(degradedSource)
+        assertEquals(5, degradedSource!!.consecutiveFailures)
     }
 
     @Test

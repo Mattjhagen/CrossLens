@@ -7,6 +7,7 @@ import com.crosslens.app.data.ingestion.SourceHealthMonitor
 import com.crosslens.app.data.ingestion.SourceHealthSummary
 import com.crosslens.app.data.local.dao.SourceHealthDao
 import com.crosslens.app.data.local.entity.SourceHealthEntity
+import com.crosslens.app.util.SourceHealthDiagnostics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -47,17 +48,38 @@ class SourceHealthRepository @Inject constructor(
      * Manually refresh all sources and return results.
      * This triggers fetches for all configured adapters and updates health state.
      *
+     * Health checks are recorded by each adapter during fetchArticles().
+     * This method adds a fallback to ensure health state updates even if
+     * an unexpected exception bypasses the adapter's internal error handling.
+     *
      * @return RefreshResult with successes/failures
      */
     suspend fun refreshAllSources(): RefreshResult = withContext(Dispatchers.IO) {
+        // DIAGNOSTIC: Log refresh start
+        SourceHealthDiagnostics.logRepositoryRefreshStart(adapterCount = rssAdapters.size)
+
         val results = mutableListOf<SourceRefreshOutcome>()
 
         for (adapter in rssAdapters) {
+            // DIAGNOSTIC: Log adapter start
+            SourceHealthDiagnostics.logRepositoryAdapterStart(
+                sourceId = adapter.sourceId,
+                sourceName = adapter.sourceName
+            )
+
             try {
                 val startTime = System.currentTimeMillis()
                 val articles = adapter.fetchArticles()
                 val duration = System.currentTimeMillis() - startTime
 
+                // DIAGNOSTIC: Log adapter success
+                SourceHealthDiagnostics.logRepositoryAdapterSuccess(
+                    sourceId = adapter.sourceId,
+                    articleCount = articles.size,
+                    durationMs = duration
+                )
+
+                // fetchArticles() already recorded a health check internally
                 results.add(
                     SourceRefreshOutcome.Success(
                         sourceId = adapter.sourceId,
@@ -67,6 +89,32 @@ class SourceHealthRepository @Inject constructor(
                     )
                 )
             } catch (e: Exception) {
+                // DIAGNOSTIC: Log adapter failure
+                SourceHealthDiagnostics.logRepositoryAdapterFailure(
+                    sourceId = adapter.sourceId,
+                    error = "${e.javaClass.simpleName}: ${e.message}"
+                )
+
+                // Fallback: Record a health check if adapter didn't (shouldn't happen normally)
+                // The adapter's fetchArticles() has comprehensive error handling and should
+                // record health checks for all error paths. This is defense-in-depth.
+                healthMonitor.recordCheck(
+                    SourceHealthCheck(
+                        sourceId = adapter.sourceId,
+                        checkedAt = Instant.now(),
+                        fetchSucceeded = false,
+                        parseSucceeded = false,
+                        articlesReturned = 0,
+                        articlesWithValidDates = 0,
+                        articlesWithImages = 0,
+                        articlesWithHttpsLinks = 0,
+                        latestArticleAge = null,
+                        fetchDurationMs = 0,
+                        errorMessage = "Unexpected exception: ${e.javaClass.simpleName}: ${e.message}"
+                    ),
+                    sourceName = adapter.sourceName
+                )
+
                 results.add(
                     SourceRefreshOutcome.Failure(
                         sourceId = adapter.sourceId,
@@ -79,6 +127,12 @@ class SourceHealthRepository @Inject constructor(
 
         val successCount = results.count { it is SourceRefreshOutcome.Success }
         val failureCount = results.count { it is SourceRefreshOutcome.Failure }
+
+        // DIAGNOSTIC: Log refresh end
+        SourceHealthDiagnostics.logRepositoryRefreshEnd(
+            successCount = successCount,
+            failureCount = failureCount
+        )
 
         RefreshResult(
             totalSources = rssAdapters.size,
@@ -97,10 +151,16 @@ class SourceHealthRepository @Inject constructor(
     }
 
     /**
-     * Load persisted health state on app startup.
+     * Load persisted health state on app startup and initialize database
+     * if needed. This ensures all configured sources have database entries.
      */
     suspend fun loadPersistedState() {
+        // First, load any existing persisted state
         healthMonitor.loadPersistedState()
+
+        // Then, initialize database for any sources that don't have entries yet
+        val configuredSources = rssAdapters.map { it.sourceId to it.sourceName }
+        healthMonitor.initializeSourceHealth(configuredSources)
     }
 }
 

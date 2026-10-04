@@ -6,6 +6,7 @@ import com.crosslens.app.data.repository.RefreshResult
 import com.crosslens.app.data.repository.SourceHealthRepository
 import com.crosslens.app.data.repository.SourceHealthStatus
 import com.crosslens.app.data.repository.SourceHealthUiModel
+import com.crosslens.app.util.SourceHealthDiagnostics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,9 @@ class SourceHealthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<SourceHealthUiState>(SourceHealthUiState.Loading)
     val uiState: StateFlow<SourceHealthUiState> = _uiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    private val _refreshResult = MutableStateFlow<RefreshResult?>(null)
+
     init {
         loadSourceHealth()
     }
@@ -36,8 +40,14 @@ class SourceHealthViewModel @Inject constructor(
                 // Load persisted state first
                 repository.loadPersistedState()
 
-                // Observe health data
+                // Observe health data and combine with refresh state
                 repository.observeAllSourceHealth().collect { sources ->
+                    // DIAGNOSTIC: Log Flow emission
+                    SourceHealthDiagnostics.logViewModelFlowEmission(
+                        sourceCount = sources.size,
+                        lastRefreshTimestamp = sources.maxOfOrNull { it.updatedAt }?.toEpochMilli()
+                    )
+
                     val activeCount = sources.count { it.status == SourceHealthStatus.ACTIVE }
                     val degradedCount = sources.count { it.status == SourceHealthStatus.DEGRADED }
                     val disabledCount = sources.count { it.status == SourceHealthStatus.DISABLED }
@@ -54,8 +64,17 @@ class SourceHealthViewModel @Inject constructor(
                             compareBy<SourceHealthUiModel> { it.status.ordinal }
                                 .thenBy { it.sourceName }
                         ),
-                        isRefreshing = false,
-                        refreshResult = null
+                        isRefreshing = _isRefreshing.value,
+                        refreshResult = _refreshResult.value
+                    )
+
+                    // DIAGNOSTIC: Log UI state update
+                    SourceHealthDiagnostics.logViewModelStateUpdate(
+                        activeCount = activeCount,
+                        degradedCount = degradedCount,
+                        disabledCount = disabledCount,
+                        lastRefreshTimestamp = lastRefresh?.toEpochMilli(),
+                        isRefreshing = _isRefreshing.value
                     )
                 }
             } catch (e: Exception) {
@@ -68,38 +87,58 @@ class SourceHealthViewModel @Inject constructor(
 
     /**
      * Trigger manual refresh of all sources.
+     *
+     * This method sets refresh state flags and calls repository.refreshAllSources(),
+     * which updates the database. The Flow collection in loadSourceHealth() will
+     * automatically pick up database changes and update the UI state with fresh
+     * source data, counts, and timestamps.
      */
     fun refreshAllSources() {
         viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState is SourceHealthUiState.Success && currentState.isRefreshing) {
+            if (_isRefreshing.value) {
                 return@launch // Already refreshing
             }
 
+            // DIAGNOSTIC: Log refresh start
+            SourceHealthDiagnostics.logViewModelRefreshStart()
+
             // Set refreshing state
-            if (currentState is SourceHealthUiState.Success) {
-                _uiState.value = currentState.copy(isRefreshing = true, refreshResult = null)
-            }
+            _isRefreshing.value = true
+            _refreshResult.value = null
+            updateRefreshFlags()
 
             try {
                 val result = repository.refreshAllSources()
 
-                // Update UI with result
-                if (currentState is SourceHealthUiState.Success) {
-                    _uiState.value = currentState.copy(
-                        isRefreshing = false,
-                        refreshResult = result,
-                        lastRefreshAt = result.completedAt
-                    )
-                }
+                // DIAGNOSTIC: Log refresh end
+                SourceHealthDiagnostics.logViewModelRefreshEnd(
+                    successCount = result.successCount,
+                    failureCount = result.failureCount
+                )
+
+                // Store refresh result; Flow will update source data automatically
+                _refreshResult.value = result
+                _isRefreshing.value = false
+                updateRefreshFlags()
             } catch (e: Exception) {
-                if (currentState is SourceHealthUiState.Success) {
-                    _uiState.value = currentState.copy(
-                        isRefreshing = false,
-                        refreshResult = null
-                    )
-                }
+                _isRefreshing.value = false
+                _refreshResult.value = null
+                updateRefreshFlags()
             }
+        }
+    }
+
+    /**
+     * Update UI state with current refresh flags without changing source data.
+     * Called after refresh state changes to propagate isRefreshing/refreshResult.
+     */
+    private fun updateRefreshFlags() {
+        val currentState = _uiState.value
+        if (currentState is SourceHealthUiState.Success) {
+            _uiState.value = currentState.copy(
+                isRefreshing = _isRefreshing.value,
+                refreshResult = _refreshResult.value
+            )
         }
     }
 
