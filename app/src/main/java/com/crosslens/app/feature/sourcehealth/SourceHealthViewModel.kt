@@ -26,6 +26,9 @@ class SourceHealthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<SourceHealthUiState>(SourceHealthUiState.Loading)
     val uiState: StateFlow<SourceHealthUiState> = _uiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    private val _refreshResult = MutableStateFlow<RefreshResult?>(null)
+
     init {
         loadSourceHealth()
     }
@@ -36,7 +39,7 @@ class SourceHealthViewModel @Inject constructor(
                 // Load persisted state first
                 repository.loadPersistedState()
 
-                // Observe health data
+                // Observe health data and combine with refresh state
                 repository.observeAllSourceHealth().collect { sources ->
                     val activeCount = sources.count { it.status == SourceHealthStatus.ACTIVE }
                     val degradedCount = sources.count { it.status == SourceHealthStatus.DEGRADED }
@@ -54,8 +57,8 @@ class SourceHealthViewModel @Inject constructor(
                             compareBy<SourceHealthUiModel> { it.status.ordinal }
                                 .thenBy { it.sourceName }
                         ),
-                        isRefreshing = false,
-                        refreshResult = null
+                        isRefreshing = _isRefreshing.value,
+                        refreshResult = _refreshResult.value
                     )
                 }
             } catch (e: Exception) {
@@ -68,38 +71,49 @@ class SourceHealthViewModel @Inject constructor(
 
     /**
      * Trigger manual refresh of all sources.
+     *
+     * This method sets refresh state flags and calls repository.refreshAllSources(),
+     * which updates the database. The Flow collection in loadSourceHealth() will
+     * automatically pick up database changes and update the UI state with fresh
+     * source data, counts, and timestamps.
      */
     fun refreshAllSources() {
         viewModelScope.launch {
-            val currentState = _uiState.value
-            if (currentState is SourceHealthUiState.Success && currentState.isRefreshing) {
+            if (_isRefreshing.value) {
                 return@launch // Already refreshing
             }
 
             // Set refreshing state
-            if (currentState is SourceHealthUiState.Success) {
-                _uiState.value = currentState.copy(isRefreshing = true, refreshResult = null)
-            }
+            _isRefreshing.value = true
+            _refreshResult.value = null
+            updateRefreshFlags()
 
             try {
                 val result = repository.refreshAllSources()
 
-                // Update UI with result
-                if (currentState is SourceHealthUiState.Success) {
-                    _uiState.value = currentState.copy(
-                        isRefreshing = false,
-                        refreshResult = result,
-                        lastRefreshAt = result.completedAt
-                    )
-                }
+                // Store refresh result; Flow will update source data automatically
+                _refreshResult.value = result
+                _isRefreshing.value = false
+                updateRefreshFlags()
             } catch (e: Exception) {
-                if (currentState is SourceHealthUiState.Success) {
-                    _uiState.value = currentState.copy(
-                        isRefreshing = false,
-                        refreshResult = null
-                    )
-                }
+                _isRefreshing.value = false
+                _refreshResult.value = null
+                updateRefreshFlags()
             }
+        }
+    }
+
+    /**
+     * Update UI state with current refresh flags without changing source data.
+     * Called after refresh state changes to propagate isRefreshing/refreshResult.
+     */
+    private fun updateRefreshFlags() {
+        val currentState = _uiState.value
+        if (currentState is SourceHealthUiState.Success) {
+            _uiState.value = currentState.copy(
+                isRefreshing = _isRefreshing.value,
+                refreshResult = _refreshResult.value
+            )
         }
     }
 
