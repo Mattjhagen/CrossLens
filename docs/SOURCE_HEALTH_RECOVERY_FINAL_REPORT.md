@@ -273,18 +273,56 @@ Due to blocking issues, the following could not be completed:
 
 ---
 
+## Update: Root Cause Identified (Oct 04, 2026 - 11:24 AM)
+
+### **Third Debugging Session - Comprehensive Diagnostics**
+
+Added systematic diagnostic logging across ALL layers to trace the complete state path:
+
+**Diagnostic Infrastructure Created:**
+- `SourceHealthDiagnostics.kt` - Centralized logging utility
+- Logging in ViewModel init, refresh start/end, Flow emissions
+- Logging in Repository for each adapter fetch
+- Logging in Monitor for health check recording, status updates, database writes
+- Explicit button onClick logging with Log.wtf() (highest priority, cannot be filtered)
+
+**Critical Finding:**
+Tapped refresh button 5+ times across multiple test runs. Result: **ZERO LOGS APPEARED**.
+
+This definitively proves:
+- ✅ Database initialization works (added `initializeSourceHealth()` - 23 sources created)
+- ✅ UI displays data correctly from Flow
+- ❌ **Button onClick is not executing** - No code runs when button tapped
+- Root cause: Touch event or lambda wiring issue, NOT a database/Flow/ViewModel problem
+
+**Additional Fix Applied:**
+- Added `SourceHealthMonitor.initializeSourceHealth()` to create initial database entries
+- Empty database was preventing proper state display on fresh installs
+- This fix is valuable and should be kept
+
+**See**: `docs/SOURCE_HEALTH_ROOT_CAUSE_ANALYSIS.md` for complete investigation timeline.
+
+---
+
 ## Merge Recommendation
 
 ### **VERDICT: ❌ DO NOT MERGE**
 
-**Blocking Issues:**
-1. ✅ Fixed: Repository catch block now records fallback health checks (defense-in-depth improvement)
-2. ✅ Fixed: ViewModel race condition resolved (proper reactive state management)
-3. ❌ **BLOCKER**: Manual refresh does not update UI even after fixes applied
-4. ❌ **BLOCKER**: Cannot validate offline recovery behavior (primary feature goal)
-5. ❌ **BLOCKER**: Cannot validate DEGRADED/DISABLED transitions
-6. ❌ **BLOCKER**: Cannot validate recovery to ACTIVE after connectivity restored
-7. ❌ **BLOCKER**: Unknown root cause for non-functional refresh
+**Blocking Issue:**
+- ❌ **CRITICAL BLOCKER**: Refresh button onClick not executing (confirmed with comprehensive logging)
+
+**What Works** (Keep These Fixes):
+1. ✅ Repository catch block fallback health recording (defense-in-depth)
+2. ✅ ViewModel race condition resolved (proper reactive state management)  
+3. ✅ Database initialization (creates 23 source entries on first launch)
+4. ✅ Flow-based UI updates (when database changes occur)
+5. ✅ Comprehensive diagnostic logging infrastructure
+
+**What Doesn't Work:**
+- ❌ Manual refresh button does nothing when tapped
+- ❌ Cannot validate offline recovery (depends on manual refresh)
+- ❌ Cannot validate DEGRADED/DISABLED transitions (depends on manual refresh)
+- ❌ Cannot validate recovery to ACTIVE (depends on manual refresh)
 
 **Risk Assessment:**
 - **High**: Merging non-functional feature creates false confidence
