@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.crosslens.app.BuildConfig
 import com.crosslens.app.feature.articlenavigator.ArticleNavigatorScreen
 import com.crosslens.app.feature.comparison.CrossLensScreen
 import com.crosslens.app.feature.coveragedetails.CoverageDetailsScreen
@@ -109,6 +110,11 @@ fun CrossLensNavHost(
                 },
                 onSourceHealthClick = {
                     navController.navigate(CrossLensDestination.SourceHealth.route)
+                },
+                onEventIntegrityClick = if (BuildConfig.DEBUG) {
+                    { navController.navigate(CrossLensDestination.EventIntegrity.route) }
+                } else {
+                    null
                 }
             )
         }
@@ -149,6 +155,9 @@ fun CrossLensNavHost(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+
+        // DEBUG-ONLY destinations (implemented in debug/release source sets)
+        addDebugDestinations(onBackClick = { navController.popBackStack() })
 
         composable(
             route = CrossLensDestination.ArticleNavigator.route,

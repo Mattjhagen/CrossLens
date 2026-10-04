@@ -30,4 +30,5 @@ sealed class CrossLensDestination(val route: String) {
         fun createRoute(storyId: String) = "coveragedetails/$storyId"
     }
     data object SourceHealth : CrossLensDestination("sourcehealth")
+    data object EventIntegrity : CrossLensDestination("eventintegrity")
 }
