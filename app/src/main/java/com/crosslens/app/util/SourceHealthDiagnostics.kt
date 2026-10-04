@@ -5,14 +5,13 @@ import android.util.Log
 /**
  * Diagnostic logging for Source Health state path debugging.
  *
- * TEMPORARY: These logs are for debugging only and should be removed
- * or gated behind BuildConfig.DEBUG before release.
+ * Only enabled in debug builds. No-op in release builds.
  */
 object SourceHealthDiagnostics {
     private const val TAG = "SourceHealth:Debug"
 
-    // Enable/disable all diagnostic logs
-    var enabled = true
+    // Enable only in debug builds
+    var enabled = com.crosslens.app.BuildConfig.DEBUG
 
     fun logViewModelRefreshStart() {
         if (!enabled) return

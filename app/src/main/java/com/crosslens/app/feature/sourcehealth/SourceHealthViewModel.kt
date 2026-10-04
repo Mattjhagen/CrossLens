@@ -31,10 +31,6 @@ class SourceHealthViewModel @Inject constructor(
     private val _refreshResult = MutableStateFlow<RefreshResult?>(null)
 
     init {
-        // DIAGNOSTIC: Verify logging works
-        android.util.Log.d("SourceHealth:Debug", "═══ ViewModel CREATED ═══")
-        android.util.Log.d("SourceHealth:Debug", "  Time: ${System.currentTimeMillis()}")
-
         loadSourceHealth()
     }
 
@@ -98,15 +94,8 @@ class SourceHealthViewModel @Inject constructor(
      * source data, counts, and timestamps.
      */
     fun refreshAllSources() {
-        // CRITICAL TEST: Direct log to verify method is called
-        android.util.Log.wtf("SourceHealth:Debug", "╔═══════════════════════════════════════")
-        android.util.Log.wtf("SourceHealth:Debug", "║ refreshAllSources() CALLED!!!")
-        android.util.Log.wtf("SourceHealth:Debug", "║ Thread: ${Thread.currentThread().name}")
-        android.util.Log.wtf("SourceHealth:Debug", "╚═══════════════════════════════════════")
-
         viewModelScope.launch {
             if (_isRefreshing.value) {
-                android.util.Log.wtf("SourceHealth:Debug", "  Already refreshing, aborting")
                 return@launch // Already refreshing
             }
 
