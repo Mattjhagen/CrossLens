@@ -60,4 +60,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSourceHealthDao(database: CrossLensDatabase) = database.sourceHealthDao()
+
+    @Provides
+    fun provideEventIntegrityDao(database: CrossLensDatabase) = database.eventIntegrityDao()
 }

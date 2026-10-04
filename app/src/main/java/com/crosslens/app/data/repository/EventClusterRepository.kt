@@ -3,6 +3,7 @@ package com.crosslens.app.data.repository
 import com.crosslens.app.core.model.EventCluster
 import com.crosslens.app.core.model.ClusterConfidence
 import com.crosslens.app.data.clustering.EventClusteringService
+import com.crosslens.app.data.clustering.EventIntegrityMonitor
 import com.crosslens.app.data.ingestion.SourceArticleRecord
 import com.crosslens.app.data.local.dao.EventClusterDao
 import com.crosslens.app.data.local.entity.EventClusterEntity
@@ -20,12 +21,15 @@ import javax.inject.Singleton
 @Singleton
 class EventClusterRepository @Inject constructor(
     private val clusterDao: EventClusterDao,
-    private val clusteringService: EventClusteringService
+    private val clusteringService: EventClusteringService,
+    private val integrityMonitor: EventIntegrityMonitor
 ) {
 
     /**
      * Cluster articles and persist the results.
      * Returns the list of persisted clusters.
+     *
+     * Also records integrity metadata for each cluster.
      */
     suspend fun clusterAndPersist(articles: List<SourceArticleRecord>): List<EventCluster> {
         // Clear old clusters (older than 7 days)
@@ -52,6 +56,9 @@ class EventClusterRepository @Inject constructor(
         }
 
         clusterDao.insertClusters(entities)
+
+        // Record integrity metadata for all clusters
+        integrityMonitor.recordIntegrityMetadataForAll(clusters)
 
         return clusters
     }
