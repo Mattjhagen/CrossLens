@@ -18,12 +18,13 @@ import com.crosslens.app.data.local.entity.*
         EditorialReviewEntity::class,
         FeedMetadataEntity::class,
         EventClusterEntity::class,
-        SourceHealthEntity::class
+        SourceHealthEntity::class,
+        EventIntegrityEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true
 )
-@TypeConverters(Converters::class)
+@TypeConverters(Converters::class, EventIntegrityConverters::class)
 abstract class CrossLensDatabase : RoomDatabase() {
     abstract fun storyDao(): StoryDao
     abstract fun sourceDao(): SourceDao
@@ -36,4 +37,5 @@ abstract class CrossLensDatabase : RoomDatabase() {
     abstract fun feedMetadataDao(): FeedMetadataDao
     abstract fun eventClusterDao(): EventClusterDao
     abstract fun sourceHealthDao(): SourceHealthDao
+    abstract fun eventIntegrityDao(): EventIntegrityDao
 }

@@ -23,6 +23,7 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onEditorialReviewClick: () -> Unit = {},
     onSourceHealthClick: () -> Unit = {},
+    onEventIntegrityClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -299,6 +300,41 @@ fun SettingsScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 2
                                 )
+                            }
+                        }
+                    }
+                }
+
+                // DEBUG-ONLY: Event Integrity Monitor
+                if (onEventIntegrityClick != null) {
+                    item {
+                        Card(
+                            onClick = onEventIntegrityClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "⚠️ Event Integrity Monitor [DEBUG]",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Inspect factual clustering signals and integrity checks (debug-only diagnostics)",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 2
+                                    )
+                                }
                             }
                         }
                     }
