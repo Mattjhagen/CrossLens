@@ -1,3 +1,19 @@
+## 2026-11-01: free premium / remove normal demo flows
+
+Scope: temporary `PLUS_FREE` entitlement in debug/release; remove Settings preview,
+local demo and editorial demo entry points; no automatic demo seeding/fallback or
+fixture injection. Existing saves/preferences and billing implementation retained.
+No separate onboarding route exists at this revision.
+
+Toolchain: JDK 17.0.20.1, checked-in Gradle 8.11.1, AGP 8.10.1,
+Android platform 36 / build-tools 35.0.0. Device inventory is empty.
+Debug/release assembly, debug Android-test compilation, and unit tests passed. Debug lint
+identifies an existing Compose animation error outside this scoped change. Full results are
+in `FREE_PREMIUM_VERIFICATION.md`.
+Device screenshots, accessibility and on-device navigation remain blocked without a device.
+
+---
+
 > Historical beta report. Current production status and actual verification results are recorded in [PRODUCTION_READINESS_REPORT.md](PRODUCTION_READINESS_REPORT.md). Earlier passing claims below do not describe the current candidate.
 
 # CrossLens Build Status

@@ -27,36 +27,23 @@ class DataStoreEntitlementRepositoryTest {
     @Test fun `release refuses stored preview and malformed tiers fail closed`() {
         assertEquals(AccessTier.FREE, PreviewEntitlementPolicy.resolve("PLUS_DEMO", false))
         assertEquals(AccessTier.FREE, PreviewEntitlementPolicy.resolve("unknown", true))
+        assertEquals(AccessTier.FREE, PreviewEntitlementPolicy.resolve("PLUS_FREE", true))
         assertEquals(AccessTier.FREE, PreviewEntitlementPolicy.resolve(null, true))
     }
 
-    @Test
-    fun `default entitlement is FREE`() = runTest {
-        whenever(dataStore.data).thenReturn(flowOf(preferencesOf()))
-        repository = DataStoreEntitlementRepository(dataStore)
-
-        val entitlement = repository.entitlementFlow.first()
-        assertEquals(AccessTier.FREE, entitlement.activeTier)
-    }
-
-    @Test
-    fun `hasAccess returns false for FREE tier`() = runTest {
-        whenever(dataStore.data).thenReturn(flowOf(preferencesOf()))
-        repository = DataStoreEntitlementRepository(dataStore)
-
-        val hasAccess = repository.hasAccess(PlusFeature.ALL_SOURCES).first()
-        assertEquals(false, hasAccess)
-    }
-
-    @Test
-    fun `hasAccess returns true for PLUS_DEMO tier`() = runTest {
-        val prefs = preferencesOf(
-            stringPreferencesKey("access_tier") to AccessTier.PLUS_DEMO.name
-        )
-        whenever(dataStore.data).thenReturn(flowOf(prefs))
-        repository = DataStoreEntitlementRepository(dataStore)
-
-        val hasAccess = repository.hasAccess(PlusFeature.ALL_SOURCES).first()
-        assertEquals(true, hasAccess)
+    @Test fun `all features are free for fresh legacy and malformed states in both builds`() = runTest {
+        for (stored in listOf(null, "FREE", "PLUS_DEMO", "unknown")) {
+            for (debug in listOf(false, true)) {
+                assertEquals(AccessTier.PLUS_FREE, PremiumAccessPolicy.resolve(stored, debug))
+            }
+            val prefs = stored?.let { preferencesOf(stringPreferencesKey("access_tier") to it) }
+                ?: preferencesOf()
+            whenever(dataStore.data).thenReturn(flowOf(prefs))
+            repository = DataStoreEntitlementRepository(dataStore)
+            assertEquals("free_promotion", repository.entitlementFlow.first().accessStateSource)
+            for (feature in PlusFeature.values()) {
+                assertTrue(repository.hasAccess(feature).first())
+            }
+        }
     }
 }

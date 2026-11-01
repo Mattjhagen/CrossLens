@@ -25,7 +25,7 @@ import javax.inject.Singleton
  * - Shows cached results immediately on launch
  * - Background refresh when cache > 15 minutes old
  * - Pull-to-refresh forces refresh
- * - Falls back to mock only when no live cache AND all sources fail
+ * - Shows an empty retryable feed when no real reporting is cached
  */
 @Singleton
 class LiveStoryRepository @Inject constructor(
@@ -53,22 +53,12 @@ class LiveStoryRepository @Inject constructor(
         private const val MAX_ARTICLES_PER_PUBLISHER = 5
     }
 
-    /** Called after fallback seeding by the application, never from a constructor. */
+    /** Called by the application, never from a constructor. */
     suspend fun refreshIfStale(): Result<Unit> = refreshLiveFeed(isUserTriggered = false)
 
     override fun observeStories(): Flow<List<Story>> {
-        return combine(
-            storyDao.observeAllStories(),
-            feedMetadataDao.observeFeedMetadata()
-        ) { stories, metadata ->
-            // Return stories, preferring live over mock
-            val liveStories = stories.filter { it.id.startsWith(LIVE_FEED_MARKER) }
-            if (liveStories.isNotEmpty()) {
-                liveStories.map { it.toDomain() }
-            } else {
-                // No live cache, return mock fallback
-                stories.filter { !it.id.startsWith(LIVE_FEED_MARKER) }.map { it.toDomain() }
-            }
+        return storyDao.observeAllStories().map { stories ->
+            stories.filter { it.id.startsWith(LIVE_FEED_MARKER) }.map { it.toDomain() }
         }
     }
 
@@ -77,9 +67,8 @@ class LiveStoryRepository @Inject constructor(
     }
 
     override fun observeLocalStories(locationId: String): Flow<List<Story>> {
-        // For v0.0.14, live feed doesn't support local stories filtering yet
-        // Delegate to mock repository for local stories
-        return mockRepository.observeLocalStories(locationId)
+        // Live local filtering is unavailable; retired demo locations never select fixtures.
+        return flowOf(emptyList())
     }
 
     override suspend fun getStory(storyId: String): Story? {
@@ -132,16 +121,18 @@ class LiveStoryRepository @Inject constructor(
         val metadata = feedMetadataDao.getFeedMetadata()
         val hasLiveCache = storyDao.getAllStories().any { it.id.startsWith(LIVE_FEED_MARKER) }
 
-        return if (metadata == null || !hasLiveCache) {
-            // No cache yet, using mock fallback
+        return if (!hasLiveCache) {
+            // No real reporting yet; never substitute fictional stories.
             FeedMetadata(
-                state = FeedState.DEMO_FALLBACK,
+                state = FeedState.ERROR,
                 lastUpdated = null,
                 lastRefreshAttempt = null,
                 successfulSourceCount = 0,
                 failedSourceCount = 0,
-                errorMessage = null
+                errorMessage = "No cached reporting is available"
             )
+        } else if (metadata == null) {
+            FeedMetadata(FeedState.CACHED, null, null, 0, 0, null)
         } else {
             val state = when {
                 isCacheFresh(metadata) && metadata.successfulSourceCount > 0 -> FeedState.LIVE
@@ -198,7 +189,7 @@ class LiveStoryRepository @Inject constructor(
                         )
                     )
 
-                    // Keep existing cache if available, otherwise mock is shown via observeStories
+                    // Keep existing real reporting; a fresh install remains empty.
                     return@withContext Result.failure(java.io.IOException("All news feeds unavailable; cache retained"))
                 }
 
@@ -226,8 +217,8 @@ class LiveStoryRepository @Inject constructor(
                 // Convert to SourceArticleRecord for clustering
                 val articleRecords = balancedItems.map { (adapter, article) -> article }
 
-                // Add debug fixture articles (debug builds only, release returns empty list)
-                val fixtureArticles = debugFixtureProvider.getReadAcrossFixture()
+                // Normal debug and release feeds never mix in verification fixtures.
+                val fixtureArticles = emptyList<SourceArticleRecord>()
                 val allArticleRecords = articleRecords + fixtureArticles
 
                 // Audit clustering run (logs detailed information)

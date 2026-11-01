@@ -1,6 +1,5 @@
 package com.crosslens.app.di
 
-import com.crosslens.app.data.mock.MockStoryRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -10,7 +9,6 @@ import javax.inject.Singleton
 
 @Singleton
 class AppInitializer @Inject constructor(
-    private val storyRepository: MockStoryRepository,
     private val liveRepository: com.crosslens.app.data.repository.LiveStoryRepository
 ) {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -18,7 +16,6 @@ class AppInitializer @Inject constructor(
     fun initialize() {
         appScope.launch {
             try {
-                storyRepository.seedData()
                 liveRepository.refreshIfStale()
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e

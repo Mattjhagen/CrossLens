@@ -302,7 +302,9 @@ private fun SourcePane(
 
             item {
                 Text(
-                    text = "${stringResource(R.string.original_article)} (${stringResource(R.string.demo_link_notice)})",
+                    text = if (articleWithSource.article.contentUseMetadata.isDemo)
+                        "${stringResource(R.string.original_article)} (${stringResource(R.string.demo_link_notice)})"
+                    else stringResource(R.string.original_article),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

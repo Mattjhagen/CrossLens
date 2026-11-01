@@ -50,8 +50,6 @@ fun HomeScreen(
     val savedStories by viewModel.savedStories.collectAsStateWithLifecycle()
     val showSavedOnly by viewModel.showSavedOnly.collectAsStateWithLifecycle()
     val continueReading by viewModel.continueReading.collectAsStateWithLifecycle()
-    val showLocalOnly by viewModel.showLocalOnly.collectAsStateWithLifecycle()
-    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val refreshError by viewModel.refreshError.collectAsStateWithLifecycle()
     val lastRefreshedTime by viewModel.lastRefreshedTime.collectAsStateWithLifecycle()
@@ -65,20 +63,6 @@ fun HomeScreen(
             TopAppBar(
                 title = {},
                 actions = {
-                    IconButton(onClick = { viewModel.toggleLocalFilter() }) {
-                        val locationName = currentLocation?.let { "${it.cityName}, ${it.regionName}" }
-                        val contentDesc = when {
-                            showLocalOnly && locationName != null -> "Show local stories for $locationName, on"
-                            showLocalOnly -> "Show local stories, on"
-                            locationName != null -> "Show local stories for $locationName, off"
-                            else -> "Show local stories, off"
-                        }
-                        Icon(
-                            imageVector = if (showLocalOnly) Icons.Filled.LocationOn else Icons.Outlined.LocationOn,
-                            contentDescription = contentDesc,
-                            tint = if (showLocalOnly) MaterialTheme.colorScheme.primary else LocalContentColor.current
-                        )
-                    }
                     IconButton(onClick = onExploreClick) {
                         Icon(
                             imageVector = Icons.Default.Explore,
@@ -131,6 +115,9 @@ fun HomeScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Button(onClick = { viewModel.refresh() }, enabled = !isRefreshing) {
+                            Text(stringResource(R.string.retry))
+                        }
                     }
                 }
             }
@@ -153,7 +140,7 @@ fun HomeScreen(
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "Choose a demo location in Settings to see fictional local news stories.",
+                            text = "Local reporting is not available yet. Explore the latest reporting from all sources.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -197,7 +184,7 @@ fun HomeScreen(
                             contentDescription = if (isRefreshing) {
                                 "Refreshing news"
                             } else {
-                                "Pull to refresh demo data"
+                                "Pull to refresh news"
                             }
                         }
                 ) {
@@ -233,7 +220,7 @@ fun HomeScreen(
                                     com.crosslens.app.core.model.FeedState.DEMO_FALLBACK -> stringResource(R.string.mock_edition_label)
                                     com.crosslens.app.core.model.FeedState.LOADING -> "Updating..."
                                     com.crosslens.app.core.model.FeedState.ERROR -> "Feed Unavailable"
-                                    null -> stringResource(R.string.mock_edition_label)
+                                    null -> stringResource(R.string.feed_loading)
                                 }
                                 Text(
                                     text = feedStateLabel,

@@ -2,7 +2,6 @@ package com.crosslens.app.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.crosslens.app.core.model.AccessTier
 import com.crosslens.app.core.model.Theme
 import com.crosslens.app.data.preferences.EntitlementRepository
 import com.crosslens.app.data.preferences.PersonalRelevanceRepository
@@ -51,18 +50,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun previewPlus() {
-        viewModelScope.launch {
-            entitlementRepository.setAccessTier(AccessTier.PLUS_DEMO)
-        }
-    }
-
-    fun resetToFree() {
-        viewModelScope.launch {
-            entitlementRepository.setAccessTier(AccessTier.FREE)
-        }
-    }
-
     fun removePersonalPreference(preferenceId: String) {
         viewModelScope.launch {
             personalRelevanceRepository.removePreference(preferenceId)
@@ -75,9 +62,4 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateDemoLocalLocation(locationId: String?) {
-        viewModelScope.launch {
-            userPreferencesRepository.updateDemoLocalLocation(locationId)
-        }
-    }
 }

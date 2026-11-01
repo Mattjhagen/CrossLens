@@ -8,6 +8,7 @@ import com.crosslens.app.data.mock.MockStoryRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -26,7 +27,20 @@ class ProductionNavigationTest {
     @Before fun setup() = runBlocking {
         hilt.inject()
         fallback.seedData()
-        title = database.storyDao().getAllStories().first().title
+        // Explicit test fixture only; normal application startup never seeds demos.
+        val fixture = database.storyDao().getAllStories().first()
+        val testStory = fixture.copy(id = "live_feed_navigation_test")
+        val articles = database.articleDao().observeArticlesByStory(fixture.id).first()
+        database.storyDao().insertStories(listOf(testStory))
+        database.articleDao().insertArticles(articles.map { it.copy(id = "test_${it.id}", storyId = testStory.id) })
+        title = testStory.title
+    }
+    @Test fun settingsShowsFreePremiumWithoutDemoControls() {
+        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.onNodeWithText(compose.activity.getString(R.string.premium_free_access)).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(compose.activity.getString(R.string.preview_plus)).assertDoesNotExist()
+        compose.onNodeWithText(compose.activity.getString(R.string.reset_to_free)).assertDoesNotExist()
+        compose.onNodeWithText("Demo Local News").assertDoesNotExist()
     }
     @Test fun offlineStorySaveCompareAndBack() {
         compose.waitUntil(10_000) { compose.onAllNodesWithText(title).fetchSemanticsNodes().isNotEmpty() }

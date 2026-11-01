@@ -52,111 +52,17 @@ class SettingsEntitlementIntegrationTest {
     }
 
     @Test
-    fun `entitlement defaults to FREE on first launch`() = runTest(testDispatcher) {
+    fun `free promotion survives legacy writes and recreation without changing stored tier`() = runTest(testDispatcher) {
         val dataStore = createDataStore()
-        val repository = DataStoreEntitlementRepository(dataStore)
-
-        val entitlement = repository.entitlementFlow.first()
-        assertEquals(AccessTier.FREE, entitlement.activeTier)
-        assertEquals("local_demo", entitlement.accessStateSource)
-    }
-
-    @Test
-    fun `Settings Preview Plus enables PLUS_DEMO access`() = runTest(testDispatcher) {
-        val dataStore = createDataStore()
-        val repository = DataStoreEntitlementRepository(dataStore)
-
-        // Initial state: FREE
-        val initialEntitlement = repository.entitlementFlow.first()
-        assertEquals(AccessTier.FREE, initialEntitlement.activeTier)
-
-        val initialAccess = repository.hasAccess(PlusFeature.ALL_SOURCES).first()
-        assertFalse(initialAccess)
-
-        // Simulate Settings → Preview Plus button click
-        repository.setAccessTier(AccessTier.PLUS_DEMO)
-        testScheduler.advanceUntilIdle()
-
-        // Verify access granted
-        val updatedEntitlement = repository.entitlementFlow.first()
-        assertEquals(AccessTier.PLUS_DEMO, updatedEntitlement.activeTier)
-
-        val updatedAccess = repository.hasAccess(PlusFeature.ALL_SOURCES).first()
-        assertTrue(updatedAccess)
-    }
-
-    @Test
-    fun `entitlement persists across app restart`() = runTest(testDispatcher) {
-        // First launch: enable Plus
-        val dataStore = createDataStore()
-        val repository1 = DataStoreEntitlementRepository(dataStore)
-
-        repository1.setAccessTier(AccessTier.PLUS_DEMO)
-        testScheduler.advanceUntilIdle()
-
-        val entitlement1 = repository1.entitlementFlow.first()
-        assertEquals(AccessTier.PLUS_DEMO, entitlement1.activeTier)
-
-        // Simulate app restart: create new repository instance reading same DataStore
-        val repository2 = DataStoreEntitlementRepository(dataStore)
-        testScheduler.advanceUntilIdle()
-
-        val entitlement2 = repository2.entitlementFlow.first()
-        assertEquals(AccessTier.PLUS_DEMO, entitlement2.activeTier)
-
-        val hasAccess = repository2.hasAccess(PlusFeature.ALL_SOURCES).first()
-        assertTrue("Plus access should persist after restart", hasAccess)
-    }
-
-    @Test
-    fun `Reset to Free removes Plus access and persists`() = runTest(testDispatcher) {
-        val dataStore = createDataStore()
-
-        // First launch: enable Plus
-        val repository1 = DataStoreEntitlementRepository(dataStore)
-        repository1.setAccessTier(AccessTier.PLUS_DEMO)
-        testScheduler.advanceUntilIdle()
-        assertEquals(AccessTier.PLUS_DEMO, repository1.entitlementFlow.first().activeTier)
-
-        // Second launch: reset to Free
-        val repository2 = DataStoreEntitlementRepository(dataStore)
-        testScheduler.advanceUntilIdle()
-        assertEquals(AccessTier.PLUS_DEMO, repository2.entitlementFlow.first().activeTier)
-
-        repository2.setAccessTier(AccessTier.FREE)
-        testScheduler.advanceUntilIdle()
-        assertEquals(AccessTier.FREE, repository2.entitlementFlow.first().activeTier)
-
-        // Third launch: verify Free persisted
-        val repository3 = DataStoreEntitlementRepository(dataStore)
-        testScheduler.advanceUntilIdle()
-
-        val entitlement = repository3.entitlementFlow.first()
-        assertEquals(AccessTier.FREE, entitlement.activeTier)
-
-        val hasAccess = repository3.hasAccess(PlusFeature.ALL_SOURCES).first()
-        assertFalse("Free access should persist after reset", hasAccess)
-    }
-
-    @Test
-    fun `Plus access unlocks documented features`() = runTest(testDispatcher) {
-        val dataStore = createDataStore()
-        val repository = DataStoreEntitlementRepository(dataStore)
-
-        // Free tier: no access
-        assertFalse(repository.hasAccess(PlusFeature.ALL_SOURCES).first())
-        assertFalse(repository.hasAccess(PlusFeature.ALL_TRANSLATIONS).first())
-        assertFalse(repository.hasAccess(PlusFeature.FULL_LENS_GAP).first())
-        assertFalse(repository.hasAccess(PlusFeature.ADVANCED_FILTERS).first())
-
-        // Enable Plus
-        repository.setAccessTier(AccessTier.PLUS_DEMO)
-        testScheduler.advanceUntilIdle()
-
-        // Plus tier: all features unlocked
-        assertTrue(repository.hasAccess(PlusFeature.ALL_SOURCES).first())
-        assertTrue(repository.hasAccess(PlusFeature.ALL_TRANSLATIONS).first())
-        assertTrue(repository.hasAccess(PlusFeature.FULL_LENS_GAP).first())
-        assertTrue(repository.hasAccess(PlusFeature.ADVANCED_FILTERS).first())
+        for (legacyTier in listOf(AccessTier.FREE, AccessTier.PLUS_DEMO)) {
+            val repository = DataStoreEntitlementRepository(dataStore)
+            repository.setAccessTier(legacyTier)
+            val recreated = DataStoreEntitlementRepository(dataStore)
+            assertEquals(AccessTier.PLUS_FREE, recreated.entitlementFlow.first().activeTier)
+            assertEquals("free_promotion", recreated.entitlementFlow.first().accessStateSource)
+            for (feature in PlusFeature.values()) assertTrue(recreated.hasAccess(feature).first())
+            val stored = dataStore.data.first()[androidx.datastore.preferences.core.stringPreferencesKey("access_tier")]
+            assertEquals(legacyTier.name, stored)
+        }
     }
 }

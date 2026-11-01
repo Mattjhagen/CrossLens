@@ -72,7 +72,7 @@ class HomeViewModel @Inject constructor(
         // Initialize filter state from preferences
         viewModelScope.launch {
             userPreferencesRepository.preferencesFlow.collect { prefs ->
-                _showLocalOnly.value = prefs.showLocalOnly
+                _showLocalOnly.value = false // Ignore retired demo-local preferences on upgrade.
             }
         }
         loadStories()
@@ -125,7 +125,7 @@ class HomeViewModel @Inject constructor(
                 val recommendationResult = recommendationEngine.generateRecommendations(
                     allStories = allStories,
                     preferences = personalPrefs,
-                    demoLocalLocation = userPrefs.demoLocalLocation
+                    demoLocalLocation = null // Retired demo locations do not influence live recommendations.
                 )
 
                 _forYouEligible.value = recommendationResult.isEligible
