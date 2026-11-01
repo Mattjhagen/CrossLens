@@ -43,6 +43,7 @@ import java.time.Instant
 @OptIn(ExperimentalCoroutinesApi::class)
 class ArticleNavigatorViewModelTest {
 
+    private val readingStateRepository = mock<com.crosslens.app.data.preferences.ReadingStateRepository>()
     private lateinit var repository: StoryRepository
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: ArticleNavigatorViewModel
@@ -77,7 +78,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         // Then: Horizontal navigation is NOT available (requires 3)
@@ -100,7 +101,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         // Then: Horizontal navigation IS available
@@ -119,7 +120,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         // Then: No horizontal navigation
@@ -142,7 +143,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.getArticlesForStory("story2")).thenReturn(articles2)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         // When: Navigate to second article then to next story
@@ -166,7 +167,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         val navState = viewModel.navigationState.value
@@ -183,7 +184,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(articles)
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         // Navigate to last
@@ -207,7 +208,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(createMultipleTestArticles("story1", 3))
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         val navState = viewModel.navigationState.value
@@ -223,7 +224,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.observeStories()).thenReturn(flowOf(listOf(story)))
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "invalid_id"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -239,7 +240,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.getArticlesForStory("story1")).thenReturn(emptyList())
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
@@ -260,7 +261,7 @@ class ArticleNavigatorViewModelTest {
         whenever(repository.refresh()).then {}
 
         savedStateHandle = SavedStateHandle(mapOf("storyId" to "story2"))
-        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle)
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
         advanceUntilIdle()
 
         // When: Return to first and refresh
@@ -272,6 +273,27 @@ class ArticleNavigatorViewModelTest {
         assertEquals("Should be at first story", 0, navState!!.currentFeedPosition)
         assertEquals("Should be at first article", 0, navState.currentClusterPosition)
         verify(repository).refresh()
+    }
+
+    @Test
+    fun `background feed emissions do not reset the reader and saved state restores position`() = runTest {
+        val first = createTestStory("story1", true, 3)
+        val second = createTestStory("story2", true, 3)
+        val feed = kotlinx.coroutines.flow.MutableStateFlow(listOf(first, second))
+        whenever(repository.observeStories()).thenReturn(feed)
+        whenever(repository.getArticlesForStory("story1")).thenReturn(createMultipleTestArticles("story1", 3))
+        whenever(repository.getArticlesForStory("story2")).thenReturn(createMultipleTestArticles("story2", 3))
+        savedStateHandle = SavedStateHandle(mapOf("storyId" to "story1"))
+        viewModel = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
+        advanceUntilIdle()
+        viewModel.navigateToNextInFeed()
+        advanceUntilIdle()
+        feed.value = listOf(second, first)
+        advanceUntilIdle()
+        assertEquals("story2", (viewModel.uiState.value as ArticleNavigatorUiState.Success).story.id)
+        val restored = ArticleNavigatorViewModel(repository, savedStateHandle, readingStateRepository)
+        advanceUntilIdle()
+        assertEquals("story2", (restored.uiState.value as ArticleNavigatorUiState.Success).story.id)
     }
 
     // Helper functions

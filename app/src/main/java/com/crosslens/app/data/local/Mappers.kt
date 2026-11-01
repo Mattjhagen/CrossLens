@@ -5,7 +5,7 @@ import com.crosslens.app.data.local.entity.*
 import java.time.Instant
 
 fun StoryEntity.toDomain(lensGapDetails: String? = null): Story {
-    val lensGap = if (lensGapStatus == "AVAILABLE" && lensGapScore != null) {
+    val lensGap = if (lensGapIsDemo && lensGapStatus == "AVAILABLE" && lensGapScore != null) {
         LensGapAssessment(
             storyId = id,
             status = LensGapStatus.AVAILABLE,
@@ -17,7 +17,7 @@ fun StoryEntity.toDomain(lensGapDetails: String? = null): Story {
             confidence = "Demo illustrative",
             limitations = "Fixed demo assessment",
             methodVersion = "demo-v1",
-            generatedTime = Instant.now(),
+            generatedTime = updatedTime,
             isDemo = lensGapIsDemo
         )
     } else null
@@ -69,7 +69,7 @@ fun ArticleEntity.toDomain() = Article(
     attribution = attribution,
     contentUseMetadata = ContentUseMetadata(
         isDemo = isDemo,
-        isDemoPlaceholder = true
+        isDemoPlaceholder = isDemo
     ),
     requiresSubscription = requiresSubscription,
     imageUrl = imageUrl
@@ -82,7 +82,7 @@ fun TranslationEntity.toDomain() = Translation(
     targetLanguage = targetLanguage,
     translatedHeadline = translatedHeadline,
     translatedExcerpt = translatedExcerpt,
-    status = TranslationStatus.valueOf(status),
+    status = TranslationStatus.values().firstOrNull { it.name == status } ?: TranslationStatus.UNAVAILABLE,
     method = method,
     provider = provider,
     generatedTime = generatedTime,

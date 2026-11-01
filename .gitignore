@@ -50,8 +50,7 @@ output.json
 secrets.xml
 google-services.json
 
-# Room schema exports
-app/schemas/
+# Room schema exports are tracked for migration validation.
 
 # Test results
 **/test-results/
@@ -61,3 +60,8 @@ app/schemas/
 *.swp
 *~
 .~lock.*
+
+# Local portable handoff archives (not application release outputs)
+/artifacts/
+__pycache__/
+*.pyc

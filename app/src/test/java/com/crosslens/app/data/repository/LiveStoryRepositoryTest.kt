@@ -1,438 +1,155 @@
 package com.crosslens.app.data.repository
 
+import android.app.Application
+import androidx.room.Room
 import com.crosslens.app.core.model.FeedState
+import com.crosslens.app.core.model.ReadingState
 import com.crosslens.app.data.clustering.EventClusteringService
+import com.crosslens.app.data.fixture.DebugEventFixtureProvider
 import com.crosslens.app.data.ingestion.RssSourceAdapter
 import com.crosslens.app.data.ingestion.SourceArticleRecord
-import com.crosslens.app.data.ingestion.ContentPermission
 import com.crosslens.app.data.local.CrossLensDatabase
-import com.crosslens.app.data.local.dao.*
-import com.crosslens.app.data.local.entity.*
+import com.crosslens.app.data.local.dao.EventClusterDao
+import com.crosslens.app.data.local.entity.FeedMetadataEntity
+import com.crosslens.app.data.local.entity.StoryEntity
 import com.crosslens.app.data.mock.MockStoryRepository
+import com.crosslens.app.data.preferences.ReadingStateRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.runner.RunWith
 import org.mockito.kotlin.*
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 import java.time.Instant
 
+/** Use real Room transactions: mock DAOs cannot prove cache rollback or seed integrity. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
 class LiveStoryRepositoryTest {
-
-    private lateinit var rssAdapters: List<RssSourceAdapter>
-    private lateinit var storyDao: StoryDao
-    private lateinit var articleDao: ArticleDao
-    private lateinit var sourceDao: SourceDao
-    private lateinit var feedMetadataDao: FeedMetadataDao
-    private lateinit var eventClusterDao: EventClusterDao
     private lateinit var database: CrossLensDatabase
-    private lateinit var mockRepository: MockStoryRepository
-    private lateinit var digestGenerator: SourceDigestGenerator
-    private lateinit var clusteringService: EventClusteringService
-    private lateinit var debugFixtureProvider: com.crosslens.app.data.fixture.DebugEventFixtureProvider
-    private lateinit var repository: LiveStoryRepository
-
-    @Before
-    fun setup() {
-        rssAdapters = emptyList()
-        storyDao = mock()
-        articleDao = mock()
-        sourceDao = mock()
-        feedMetadataDao = mock()
-        eventClusterDao = mock()
-        database = mock()
-        mockRepository = mock()
-        digestGenerator = mock()
-        clusteringService = EventClusteringService()
-        debugFixtureProvider = object : com.crosslens.app.data.fixture.DebugEventFixtureProvider {
-            override fun getReadAcrossFixture() = emptyList<com.crosslens.app.data.ingestion.SourceArticleRecord>()
-        }
-
-        // Setup database mock
-        whenever(database.storyDao()).thenReturn(storyDao)
-        whenever(database.sourceDao()).thenReturn(sourceDao)
-        whenever(database.articleDao()).thenReturn(articleDao)
-
-        // Setup default empty responses for non-suspend functions
-        whenever(storyDao.observeAllStories()).thenReturn(flowOf(emptyList()))
-        whenever(feedMetadataDao.observeFeedMetadata()).thenReturn(flowOf(null))
+    private lateinit var fallback: MockStoryRepository
+    private val reading: ReadingStateRepository = mock()
+    private val digest = SourceDigestGenerator()
+    private val fixture = object : DebugEventFixtureProvider {
+        override fun getReadAcrossFixture() = emptyList<SourceArticleRecord>()
     }
 
-    @Test
-    fun `getFeedMetadata returns demo fallback when no cache exists`() = runTest {
-        whenever(storyDao.getAllStories()).thenReturn(emptyList())
-        whenever(feedMetadataDao.getFeedMetadata()).thenReturn(null)
+    @Before fun setup() {
+        database = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), CrossLensDatabase::class.java)
+            .allowMainThreadQueries().build()
+        fallback = MockStoryRepository(database.storyDao(), database.articleDao(), database.claimDao(),
+            database.frameObservationDao(), database, digest)
+        whenever(reading.readingStateFlow).thenReturn(flowOf(ReadingState(emptySet(), null)))
+    }
+    @After fun close() = database.close()
 
-        repository = LiveStoryRepository(
-            rssAdapters,
-            storyDao,
-            articleDao,
-            sourceDao,
-            feedMetadataDao,
-            eventClusterDao,
-            database,
-            mockRepository,
-            digestGenerator,
-            clusteringService,
-            debugFixtureProvider
-        )
+    private fun repository(adapters: List<RssSourceAdapter> = emptyList(),
+        clusters: EventClusterDao = database.eventClusterDao()) = LiveStoryRepository(
+        adapters, database.storyDao(), database.articleDao(), database.sourceDao(), database.feedMetadataDao(),
+        clusters, database, fallback, digest, EventClusteringService(), fixture, reading)
 
+    private fun story(id: String) = StoryEntity(id, "Cached headline", "Excerpt", null, Instant.now(),
+        emptyList(), emptyList(), emptyList(), emptyList(), null, "NOT_ASSESSED", false)
+
+    private suspend fun adapter(url: String = "https://publisher.example/news/1"): RssSourceAdapter {
+        val adapter = mock<RssSourceAdapter>()
+        whenever(adapter.sourceId).thenReturn("test-source")
+        whenever(adapter.sourceName).thenReturn("Test publisher")
+        whenever(adapter.homepage).thenReturn("https://publisher.example")
+        whenever(adapter.fetchArticles()).thenReturn(listOf(SourceArticleRecord(url, Instant.parse("2026-10-31T12:00:00Z"),
+            "en", "A dated report", "Publisher excerpt", imageUrl = "https://publisher.example/image.jpg", sourceId = "test-source")))
+        return adapter
+    }
+
+    @Test fun `startup seeding preserves live cache and is idempotent`() = runTest {
+        database.storyDao().insertStories(listOf(story("live_feed_existing")))
+        fallback.seedData()
+        val count = database.storyDao().getAllStories().size
+        fallback.seedData()
+        assertEquals(count, database.storyDao().getAllStories().size)
+        assertNotNull(database.storyDao().getStoryById("live_feed_existing"))
+    }
+
+    @Test fun `seeding repairs missing fixture articles without deleting existing stories`() = runTest {
+        fallback.seedData()
+        val fixtureStory = database.storyDao().getAllStories().first()
+        database.articleDao().deleteArticlesByStory(fixtureStory.id)
+        fallback.seedData()
+        assertTrue(fallback.getArticlesForStory(fixtureStory.id).isNotEmpty())
+        assertNotNull(database.storyDao().getStoryById(fixtureStory.id))
+    }
+
+    @Test fun `offline refresh reports failure and preserves last good cache`() = runTest {
+        database.storyDao().insertStories(listOf(story("live_feed_existing")))
+        val lastSuccess = Instant.now().minusSeconds(1800).truncatedTo(java.time.temporal.ChronoUnit.MILLIS)
+        database.feedMetadataDao().insertMetadata(FeedMetadataEntity(lastSuccessfulFetch = lastSuccess,
+            lastAttemptedFetch = lastSuccess, successfulSourceCount = 1, failedSourceCount = 0, totalArticleCount = 1))
+        val repository = repository()
+        assertTrue(repository.refresh().isFailure)
+        assertNotNull(database.storyDao().getStoryById("live_feed_existing"))
+        assertEquals(lastSuccess, repository.getFeedMetadata().lastUpdated)
+        assertEquals(FeedState.CACHED, repository.getFeedMetadata().state)
+    }
+
+    @Test fun `stable refresh retains IDs and images without duplicates`() = runTest {
+        val repository = repository(listOf(adapter()))
+        assertTrue(repository.refresh().isSuccess)
+        val first = repository.observeStories().first().single()
+        assertTrue(repository.refresh().isSuccess)
+        assertEquals(first.id, repository.observeStories().first().single().id)
+        val article = repository.getArticlesForStory(first.id).single()
+        assertEquals("https://publisher.example/image.jpg", article.imageUrl)
+        assertNull(repository.getSourceDigest(first.id))
+        assertNull(first.lensGapAssessment?.score)
+    }
+
+    @Test fun `transaction failure rolls back removed cache and inserted stories`() = runTest {
+        database.storyDao().insertStories(listOf(story("live_feed_previous")))
+        val clusters = mock<EventClusterDao>()
+        whenever(clusters.insertClusters(any())).thenThrow(IllegalStateException("Persistence failure"))
+        assertTrue(repository(listOf(adapter()), clusters).refresh().isFailure)
+        assertEquals(listOf("live_feed_previous"), database.storyDao().getAllStories().map { it.id })
+    }
+
+    @Test fun `refresh retains saved legacy IDs and last opened story`() = runTest {
+        database.storyDao().insertStories(listOf(story("live_feed_saved"), story("live_feed_reading"), story("live_feed_old")))
+        whenever(reading.readingStateFlow).thenReturn(flowOf(ReadingState(setOf("live_feed_saved"), "live_feed_reading")))
+        assertTrue(repository(listOf(adapter())).refresh().isSuccess)
+        assertNotNull(database.storyDao().getStoryById("live_feed_saved"))
+        assertNotNull(database.storyDao().getStoryById("live_feed_reading"))
+        assertNull(database.storyDao().getStoryById("live_feed_old"))
+    }
+
+    @Test fun `partial provider failure still commits available reporting`() = runTest {
+        val unavailable = mock<RssSourceAdapter>()
+        whenever(unavailable.fetchArticles()).thenReturn(emptyList())
+        val repository = repository(listOf(adapter(), unavailable))
+        assertTrue(repository.refresh().isSuccess)
         val metadata = repository.getFeedMetadata()
-
-        assertEquals(FeedState.DEMO_FALLBACK, metadata.state)
-        assertNull(metadata.lastUpdated)
-        assertEquals(0, metadata.successfulSourceCount)
+        assertEquals(1, metadata.successfulSourceCount)
+        assertEquals(1, metadata.failedSourceCount)
     }
 
-    @Test
-    fun `getFeedMetadata returns cached when metadata exists but stale`() = runTest {
-        val oldTime = Instant.now().minusSeconds(20 * 60) // 20 minutes ago
-        val metadata = FeedMetadataEntity(
-            lastSuccessfulFetch = oldTime,
-            lastAttemptedFetch = oldTime,
-            successfulSourceCount = 2,
-            failedSourceCount = 0,
-            totalArticleCount = 10
-        )
-
-        whenever(feedMetadataDao.getFeedMetadata()).thenReturn(metadata)
-        whenever(storyDao.getAllStories()).thenReturn(listOf(
-            StoryEntity(
-                id = "live_feed_story1",
-                title = "Test",
-                summary = "",
-                eventTime = null,
-                updatedTime = Instant.now(),
-                topicIds = emptyList(),
-                eventCountryCodes = emptyList(),
-                articleIds = emptyList(),
-                claimIds = emptyList(),
-                lensGapScore = null,
-                lensGapStatus = "",
-                lensGapIsDemo = false
-            )
-        ))
-
-        repository = LiveStoryRepository(
-            rssAdapters,
-            storyDao,
-            articleDao,
-            sourceDao,
-            feedMetadataDao,
-            eventClusterDao,
-            database,
-            mockRepository,
-            digestGenerator,
-            clusteringService,
-            debugFixtureProvider
-        )
-
-        val feedMeta = repository.getFeedMetadata()
-
-        assertEquals(FeedState.CACHED, feedMeta.state)
-        assertEquals(oldTime, feedMeta.lastUpdated)
-        assertEquals(2, feedMeta.successfulSourceCount)
+    @Test fun `cancellation is never converted to a successful refresh`() = runTest {
+        val unavailable = mock<RssSourceAdapter>()
+        whenever(unavailable.fetchArticles()).thenThrow(CancellationException("Canceled"))
+        try {
+            repository(listOf(unavailable)).refresh()
+            fail("Cancellation must propagate")
+        } catch (_: CancellationException) { }
+        assertNull(database.feedMetadataDao().getFeedMetadata())
     }
 
-    @Test
-    fun `getFeedMetadata returns live when metadata is fresh`() = runTest {
-        val recentTime = Instant.now().minusSeconds(5 * 60) // 5 minutes ago
-        val metadata = FeedMetadataEntity(
-            lastSuccessfulFetch = recentTime,
-            lastAttemptedFetch = recentTime,
-            successfulSourceCount = 3,
-            failedSourceCount = 1,
-            totalArticleCount = 15
-        )
-
-        whenever(feedMetadataDao.getFeedMetadata()).thenReturn(metadata)
-        whenever(storyDao.getAllStories()).thenReturn(listOf(
-            StoryEntity(
-                id = "live_feed_story1",
-                title = "Test",
-                summary = "",
-                eventTime = null,
-                updatedTime = Instant.now(),
-                topicIds = emptyList(),
-                eventCountryCodes = emptyList(),
-                articleIds = emptyList(),
-                claimIds = emptyList(),
-                lensGapScore = null,
-                lensGapStatus = "",
-                lensGapIsDemo = false
-            )
-        ))
-
-        repository = LiveStoryRepository(
-            rssAdapters,
-            storyDao,
-            articleDao,
-            sourceDao,
-            feedMetadataDao,
-            eventClusterDao,
-            database,
-            mockRepository,
-            digestGenerator,
-            clusteringService,
-            debugFixtureProvider
-        )
-
-        val feedMeta = repository.getFeedMetadata()
-
-        assertEquals(FeedState.LIVE, feedMeta.state)
-        assertEquals(recentTime, feedMeta.lastUpdated)
-        assertEquals(3, feedMeta.successfulSourceCount)
-        assertEquals(1, feedMeta.failedSourceCount)
-    }
-
-    @Test
-    fun `refresh handles all sources failing gracefully`() = runTest {
-        val failingAdapter1 = mock<RssSourceAdapter>()
-        val failingAdapter2 = mock<RssSourceAdapter>()
-
-        whenever(failingAdapter1.sourceId).thenReturn("source1")
-        whenever(failingAdapter2.sourceId).thenReturn("source2")
-        whenever(failingAdapter1.fetchArticles()).thenReturn(emptyList())
-        whenever(failingAdapter2.fetchArticles()).thenReturn(emptyList())
-
-        // Mock fresh metadata to prevent init block from triggering background refresh
-        val freshMetadata = FeedMetadataEntity(
-            lastSuccessfulFetch = Instant.now(),
-            lastAttemptedFetch = Instant.now(),
-            successfulSourceCount = 0,
-            failedSourceCount = 0,
-            totalArticleCount = 0
-        )
-        whenever(feedMetadataDao.getFeedMetadata()).thenReturn(freshMetadata)
-        whenever(storyDao.getAllStories()).thenReturn(emptyList())
-
-        repository = LiveStoryRepository(
-            listOf(failingAdapter1, failingAdapter2),
-            storyDao,
-            articleDao,
-            sourceDao,
-            feedMetadataDao,
-            eventClusterDao,
-            database,
-            mockRepository,
-            digestGenerator,
-            clusteringService,
-            debugFixtureProvider
-        )
-
-        val result = repository.refresh()
-
-        assertTrue(result.isSuccess)
-        verify(feedMetadataDao, atLeastOnce()).insertMetadata(argThat {
-            successfulSourceCount == 0 && failedSourceCount == 2
-        })
-    }
-
-    @Test
-    fun `refresh handles partial source failures`() = runTest {
-        val successAdapter = mock<RssSourceAdapter>()
-        val failingAdapter = mock<RssSourceAdapter>()
-
-        whenever(successAdapter.sourceId).thenReturn("success-source")
-        whenever(successAdapter.sourceName).thenReturn("Success Source")
-        whenever(failingAdapter.sourceId).thenReturn("fail-source")
-        whenever(failingAdapter.fetchArticles()).thenReturn(emptyList())
-
-        val article = SourceArticleRecord(
-            url = "https://example.com/article",
-            publishedAt = Instant.now(),
-            languageTag = "en",
-            headline = "Test Article",
-            excerpt = "Test excerpt",
-            contentPermission = ContentPermission.EXPLICIT_EXCERPT,
-            sourceId = "success-source"
-        )
-        whenever(successAdapter.fetchArticles()).thenReturn(listOf(article))
-        whenever(sourceDao.getSourcesByIds(any())).thenReturn(emptyList())
-
-        // Mock fresh metadata to prevent init block from triggering background refresh
-        val freshMetadata = FeedMetadataEntity(
-            lastSuccessfulFetch = Instant.now(),
-            lastAttemptedFetch = Instant.now(),
-            successfulSourceCount = 0,
-            failedSourceCount = 0,
-            totalArticleCount = 0
-        )
-        whenever(feedMetadataDao.getFeedMetadata()).thenReturn(freshMetadata)
-        whenever(storyDao.getAllStories()).thenReturn(emptyList())
-
-        repository = LiveStoryRepository(
-            listOf(successAdapter, failingAdapter),
-            storyDao,
-            articleDao,
-            sourceDao,
-            feedMetadataDao,
-            eventClusterDao,
-            database,
-            mockRepository,
-            digestGenerator,
-            clusteringService,
-            debugFixtureProvider
-        )
-
-        val result = repository.refresh()
-
-        assertTrue(result.isSuccess)
-        verify(storyDao, atLeastOnce()).insertStories(argThat { isNotEmpty() })
-        verify(articleDao, atLeastOnce()).insertArticles(argThat { isNotEmpty() })
-    }
-
-    @Test
-    fun `observeStories prefers live over mock when live cache exists`() = runTest {
-        val liveStory = StoryEntity(
-            id = "live_feed_story1",
-            title = "Live Story",
-            summary = "",
-            eventTime = null,
-            updatedTime = Instant.now(),
-            topicIds = emptyList(),
-            eventCountryCodes = emptyList(),
-            articleIds = emptyList(),
-            claimIds = emptyList(),
-            lensGapScore = null,
-            lensGapStatus = "",
-            lensGapIsDemo = false
-        )
-
-        val mockStory = StoryEntity(
-            id = "mock_story1",
-            title = "Mock Story",
-            summary = "",
-            eventTime = null,
-            updatedTime = Instant.now(),
-            topicIds = emptyList(),
-            eventCountryCodes = emptyList(),
-            articleIds = emptyList(),
-            claimIds = emptyList(),
-            lensGapScore = null,
-            lensGapStatus = "",
-            lensGapIsDemo = false
-        )
-
-        whenever(storyDao.observeAllStories()).thenReturn(flowOf(listOf(liveStory, mockStory)))
-
-        repository = LiveStoryRepository(
-            rssAdapters,
-            storyDao,
-            articleDao,
-            sourceDao,
-            feedMetadataDao,
-            eventClusterDao,
-            database,
-            mockRepository,
-            digestGenerator,
-            clusteringService,
-            debugFixtureProvider
-        )
-
-        val stories = repository.observeStories().first()
-
-        assertEquals(1, stories.size)
-        assertEquals("Live Story", stories[0].title)
-    }
-
-    @Test
-    fun `observeStories falls back to mock when no live cache`() = runTest {
-        val mockStory = StoryEntity(
-            id = "mock_story1",
-            title = "Mock Story",
-            summary = "",
-            eventTime = null,
-            updatedTime = Instant.now(),
-            topicIds = emptyList(),
-            eventCountryCodes = emptyList(),
-            articleIds = emptyList(),
-            claimIds = emptyList(),
-            lensGapScore = null,
-            lensGapStatus = "",
-            lensGapIsDemo = false
-        )
-
-        whenever(storyDao.observeAllStories()).thenReturn(flowOf(listOf(mockStory)))
-
-        repository = LiveStoryRepository(
-            rssAdapters,
-            storyDao,
-            articleDao,
-            sourceDao,
-            feedMetadataDao,
-            eventClusterDao,
-            database,
-            mockRepository,
-            digestGenerator,
-            clusteringService,
-            debugFixtureProvider
-        )
-
-        val stories = repository.observeStories().first()
-
-        assertEquals(1, stories.size)
-        assertEquals("Mock Story", stories[0].title)
-    }
-
-    @Test
-    fun `refresh preserves article images through ingestion`() = runTest {
-        val successAdapter = mock<RssSourceAdapter>()
-
-        whenever(successAdapter.sourceId).thenReturn("test-source")
-        whenever(successAdapter.sourceName).thenReturn("Test Source")
-
-        val article = SourceArticleRecord(
-            url = "https://example.com/article",
-            publishedAt = Instant.now(),
-            languageTag = "en",
-            headline = "Test Article",
-            excerpt = "Test excerpt",
-            contentPermission = ContentPermission.EXPLICIT_EXCERPT,
-            imageUrl = "https://example.com/image.jpg",
-            sourceId = "test-source"
-        )
-        whenever(successAdapter.fetchArticles()).thenReturn(listOf(article))
-        whenever(sourceDao.getSourcesByIds(any())).thenReturn(emptyList())
-
-        // Mock fresh metadata to prevent init block from triggering background refresh
-        val freshMetadata = FeedMetadataEntity(
-            lastSuccessfulFetch = Instant.now(),
-            lastAttemptedFetch = Instant.now(),
-            successfulSourceCount = 0,
-            failedSourceCount = 0,
-            totalArticleCount = 0
-        )
-        whenever(feedMetadataDao.getFeedMetadata()).thenReturn(freshMetadata)
-        whenever(storyDao.getAllStories()).thenReturn(emptyList())
-
-        repository = LiveStoryRepository(
-            listOf(successAdapter),
-            storyDao,
-            articleDao,
-            sourceDao,
-            feedMetadataDao,
-            eventClusterDao,
-            database,
-            mockRepository,
-            digestGenerator,
-            clusteringService,
-            debugFixtureProvider
-        )
-
-        val result = repository.refresh()
-
-        assertTrue(result.isSuccess)
-
-        // Verify article was inserted with imageUrl
-        verify(articleDao, atLeastOnce()).insertArticles(argThat { articles ->
-            articles.isNotEmpty() && articles.first().imageUrl == "https://example.com/image.jpg"
-        })
-
-        // Verify story was created with imageUrl from primary article
-        verify(storyDao, atLeastOnce()).insertStories(argThat { stories ->
-            stories.isNotEmpty() && stories.first().imageUrl == "https://example.com/image.jpg"
-        })
+    @Test fun `demo fallback is explicit when no cache exists`() = runTest {
+        fallback.seedData()
+        assertEquals(FeedState.DEMO_FALLBACK, repository().getFeedMetadata().state)
+        assertTrue(repository().observeStories().first().isNotEmpty())
     }
 }

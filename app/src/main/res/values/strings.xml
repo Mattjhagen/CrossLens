@@ -164,4 +164,23 @@
     <string name="cd_editorial_review">Open editorial review</string>
     <string name="cd_refresh">Pull to refresh demo data</string>
     <string name="cd_refreshing">Refreshing demo data</string>
+    <string name="billing_unavailable">CrossLens Plus purchases are not available in this version. No payment will be taken.</string>
+    <string name="browser_unavailable">Unable to open this publisher link. An HTTPS browser is required.</string>
+    <string name="search_cached_stories">Search cached headlines and summaries</string>
+    <string name="filter_publisher_country">Publisher country</string>
+    <string name="filter_original_language">Original reporting language</string>
+    <string name="comparison_evidence_unavailable">Compare the attributed headlines and excerpts below. Claims and framing have not been independently assessed. Grouping is automatic and may be incorrect. No Lens Gap score is available for live reporting.</string>
+    <string name="translation_production_unavailable">Translation provider unavailable. Original reporting remains available.</string>
+    <string name="saved_stories_filter">Saved stories</string>
+    <string name="continue_reading_story">Continue reading: %1$s</string>
+    <string name="filter_reading_language">Reading language (when translation is available)</string>
+    <string name="privacy_local_disclosure">Saved stories and reading preferences are stored on this device. Refreshing feeds and loading images contacts publishers and image hosts, which receive network information such as your IP address. Crash reporting and paid subscriptions are disabled in this version.</string>
+    <string name="delete_local_data">Delete local app data</string>
+    <string name="delete_local_data_explanation">This removes saved stories, cached news, preferences and local demo access, then closes CrossLens. This cannot be undone.</string>
+    <string name="cancel_action">Cancel</string>
+    <string name="offline_cached_notice">Offline · showing content saved on this device</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="privacy_policy_unavailable">Privacy policy unavailable</string>
+    <string name="contact_information">Publisher and contact information</string>
+    <string name="contact_unavailable">Publisher contact information unavailable</string>
 </resources>

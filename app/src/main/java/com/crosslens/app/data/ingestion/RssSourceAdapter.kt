@@ -2,7 +2,16 @@ package com.crosslens.app.data.ingestion
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
+import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.SocketTimeoutException
@@ -24,81 +33,102 @@ class RssSourceAdapter(
     private val healthMonitor: SourceHealthMonitor? = null
 ) : SourceAdapter {
 
+    val homepage: String get() = "https://${java.net.URI(feedUrl).host}"
+
     override suspend fun fetchArticles(): List<SourceArticleRecord> = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
-        var fetchSucceeded = false
-        var parseSucceeded = false
-        var parsedItems: List<RssFeedItem> = emptyList()
-        var errorMessage: String? = null
-
+        var fetched = false
+        var parsed = false
         try {
-            withTimeout(timeoutMillis) {
-                val request = Request.Builder()
-                    .url(feedUrl)
-                    .header("User-Agent", "CrossLens/0.0.14-beta (Android; +https://crosslens.org)")
-                    .build()
-
-                val response = httpClient.newCall(request).execute()
-
-                if (!response.isSuccessful) {
-                    errorMessage = "HTTP ${response.code}: ${response.message}"
-                    recordHealthCheck(startTime, fetchSucceeded, parseSucceeded, emptyList(), errorMessage)
-                    return@withTimeout emptyList()
-                }
-
-                fetchSucceeded = true
-
-                val body = response.body?.string()
-                if (body == null) {
-                    errorMessage = "Empty response body"
-                    recordHealthCheck(startTime, fetchSucceeded, parseSucceeded, emptyList(), errorMessage)
-                    return@withTimeout emptyList()
-                }
-
-                val parseResult = parser.parse(body, sourceId, sourceName)
-
-                parseResult.onSuccess {
-                    parsedItems = it
-                    parseSucceeded = true
-                }.onFailure {
-                    errorMessage = "Parse error: ${it.message}"
-                }
-
-                if (!parseSucceeded) {
-                    recordHealthCheck(startTime, fetchSucceeded, parseSucceeded, emptyList(), errorMessage)
-                    return@withTimeout emptyList()
-                }
-
-                val articles = parsedItems.mapNotNull { item ->
-                    // Filter out items without HTTPS links
-                    if (!item.link.startsWith("https://")) {
-                        null
-                    } else {
-                        SourceArticleRecord(
-                            url = item.link,
-                            publishedAt = item.pubDate ?: Instant.now(),
-                            languageTag = inferLanguageFromSourceId(sourceId),
-                            headline = item.title,
-                            excerpt = item.description,
-                            contentPermission = ContentPermission.EXPLICIT_EXCERPT,
-                            imageUrl = item.imageUrl,
-                            sourceId = sourceId  // ✅ SET SOURCE ID
-                        )
+            require(feedUrl.startsWith("https://")) { "Feed must use HTTPS" }
+            val xml = withTimeoutOrNull(timeoutMillis) {
+                var body: String? = null
+                // Retry only transient transport/server failures; no unbounded retry loops.
+                for (attempt in 0..1) {
+                    try {
+                        body = fetchXml()
+                        break
+                    } catch (e: RetryableFeedException) {
+                        if (attempt == 1) throw e
+                        delay(500L shl attempt)
                     }
                 }
-
-                recordHealthCheck(startTime, fetchSucceeded, parseSucceeded, articles, null)
-                articles
-            }
-        } catch (e: SocketTimeoutException) {
-            errorMessage = "Timeout after ${timeoutMillis}ms"
-            recordHealthCheck(startTime, fetchSucceeded, parseSucceeded, emptyList(), errorMessage)
-            emptyList()
+                body
+            } ?: throw SocketTimeoutException("Feed deadline exceeded")
+            fetched = true
+            val items = parser.parse(xml, sourceId, sourceName).getOrThrow()
+            parsed = true
+            val articles = items.mapNotNull { item ->
+                // The domain currently requires a date. Exclude undated items rather than inventing one.
+                val publishedAt = item.pubDate ?: return@mapNotNull null
+                val uri = runCatching { java.net.URI(item.link) }.getOrNull()
+                if (uri?.scheme != "https" || uri.host.isNullOrBlank() || uri.userInfo != null) {
+                    return@mapNotNull null
+                }
+                SourceArticleRecord(
+                    url = item.link,
+                    publishedAt = publishedAt,
+                    languageTag = LanguageTags.normalize(item.languageTag)
+                        ?: LanguageTags.normalize(SourceMetadataRegistry.getMetadata(sourceId)?.languageCode)
+                        ?: inferLanguageFromSourceId(sourceId),
+                    headline = item.title,
+                    excerpt = item.description,
+                    contentPermission = ContentPermission.PUBLIC_FEED_REVIEW_REQUIRED,
+                    imageUrl = item.imageUrl,
+                    sourceId = sourceId
+                )
+            }.distinctBy { com.crosslens.app.data.repository.NewsIdentity.canonicalUrl(it.url) }
+            recordHealthCheck(startTime, fetched, parsed, articles, null)
+            articles
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            errorMessage = "Exception: ${e.javaClass.simpleName}: ${e.message}"
-            recordHealthCheck(startTime, fetchSucceeded, parseSucceeded, emptyList(), errorMessage)
+            val reason = when {
+                e is SocketTimeoutException -> "Timeout"
+                e.message?.startsWith("HTTP ") == true -> e.message
+                fetched && !parsed -> "Parse error: ${e.javaClass.simpleName}"
+                else -> "Network failure: ${e.cause?.javaClass?.simpleName ?: e.javaClass.simpleName}"
+            }
+            recordHealthCheck(startTime, fetched, parsed, emptyList(), reason)
             emptyList()
         }
+    }
+
+    private class RetryableFeedException(cause: IOException) : IOException(cause)
+
+    /** Read at most 5 MiB of decompressed content. Cancellation also cancels body reads. */
+    private suspend fun fetchXml(): String = suspendCancellableCoroutine { continuation ->
+        val request = Request.Builder().url(feedUrl)
+            .header("User-Agent", "CrossLens/1.0 (Android RSS reader)")
+            .build()
+        val call = httpClient.newCall(request)
+        continuation.invokeOnCancellation { call.cancel() }
+        call.enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                if (continuation.isActive) continuation.resumeWithException(RetryableFeedException(e))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                try {
+                    val xml = response.use {
+                        if (it.code in 500..599 || it.code == 429) {
+                            throw RetryableFeedException(IOException("Transient feed failure"))
+                        }
+                        if (!it.isSuccessful) throw IOException("HTTP ${it.code}")
+                        require(it.request.url.isHttps) { "HTTPS downgrade rejected" }
+                        val body = it.body ?: throw IOException("Empty feed")
+                        val limit = 5L * 1024 * 1024
+                        if (body.contentLength() > limit) throw IOException("Feed exceeds 5 MiB")
+                        val source = body.source()
+                        if (source.request(limit + 1)) throw IOException("Feed exceeds 5 MiB")
+                        source.readString(body.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8)
+                    }
+                    if (continuation.isActive) continuation.resume(xml)
+                } catch (e: Exception) {
+                    if (continuation.isActive) continuation.resumeWithException(e)
+                }
+            }
+        })
     }
 
     private suspend fun recordHealthCheck(
@@ -161,7 +191,7 @@ class RssSourceAdapter(
             sourceId.contains("euronews") -> "en"  // Pan-European English service
             sourceId.contains("rfi") -> "en"  // France (English service)
             sourceId.contains("themoscowtimes") -> "en"  // Russia (English)
-            else -> "en"
+            else -> "und"
         }
     }
 
@@ -171,11 +201,12 @@ class RssSourceAdapter(
          */
         fun createHttpClient(): OkHttpClient {
             return OkHttpClient.Builder()
+                .callTimeout(10, TimeUnit.SECONDS)
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(10, TimeUnit.SECONDS)
                 .followRedirects(true)
-                .followSslRedirects(true)
+                .followSslRedirects(false)
                 .build()
         }
 

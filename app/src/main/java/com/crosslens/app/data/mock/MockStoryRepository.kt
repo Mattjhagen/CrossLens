@@ -1,5 +1,6 @@
 package com.crosslens.app.data.mock
 
+import androidx.room.withTransaction
 import com.crosslens.app.core.model.*
 import com.crosslens.app.data.local.*
 import com.crosslens.app.data.local.dao.*
@@ -19,21 +20,28 @@ class MockStoryRepository @Inject constructor(
 ) : StoryRepository {
 
     suspend fun seedData() {
-        // Clear existing data
-        database.storyDao().deleteAllStories()
-        database.sourceDao().deleteAllSources()
-        database.articleDao().deleteAllArticles()
-        database.translationDao().deleteAllTranslations()
-        database.claimDao().deleteAllClaims()
-        database.frameObservationDao().deleteAllObservations()
-
-        // Insert mock data
-        database.sourceDao().insertSources(MockFixtures.sources)
-        database.storyDao().insertStories(MockFixtures.stories)
-        database.articleDao().insertArticles(MockFixtures.articles)
-        database.translationDao().insertTranslations(MockFixtures.translations)
-        database.claimDao().insertClaims(MockFixtures.claims)
-        database.frameObservationDao().insertObservations(MockFixtures.frameObservations)
+        database.withTransaction {
+            // Fixtures are an offline fallback, never a reason to delete cached journalism.
+            // Existing fixture IDs are retained so saved stories and reading progress survive.
+            val existingIds = storyDao.getAllStories().map { it.id }.toSet()
+            val missingStories = MockFixtures.stories.filter { it.id !in existingIds }
+            val existingArticleIds = articleDao.getArticlesByIds(MockFixtures.articles.map { it.id }).map { it.id }.toSet()
+            val articles = MockFixtures.articles.filter { it.id !in existingArticleIds }
+            val existingTranslationIds = database.translationDao()
+                .getTranslationsByArticleIds(MockFixtures.articles.map { it.id }).map { it.id }.toSet()
+            val existingClaimIds = database.claimDao().getClaimsByIds(MockFixtures.claims.map { it.id }).map { it.id }.toSet()
+            val existingObservationIds = MockFixtures.stories.flatMap {
+                database.frameObservationDao().getObservationsByStory(it.id)
+            }.map { it.id }.toSet()
+            val existingSourceIds = database.sourceDao()
+                .getSourcesByIds(MockFixtures.sources.map { it.id }).map { it.id }.toSet()
+            database.sourceDao().insertSources(MockFixtures.sources.filter { it.id !in existingSourceIds })
+            storyDao.insertStories(missingStories)
+            articleDao.insertArticles(articles)
+            database.translationDao().insertTranslations(MockFixtures.translations.filter { it.id !in existingTranslationIds })
+            database.claimDao().insertClaims(MockFixtures.claims.filter { it.id !in existingClaimIds })
+            database.frameObservationDao().insertObservations(MockFixtures.frameObservations.filter { it.id !in existingObservationIds })
+        }
     }
 
     override fun observeStories(): Flow<List<Story>> {

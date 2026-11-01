@@ -17,6 +17,13 @@ class SourceDigestGeneratorTest {
         generator = SourceDigestGenerator()
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun `real journalism never receives demo agreement claims`() {
+        val article = createArticle("real", "source", "Headline").copy(
+            contentUseMetadata = ContentUseMetadata(isDemo = false, isDemoPlaceholder = false))
+        generator.generateDigest("real", listOf(article), emptyMap())
+    }
+
     @Test
     fun `generateDigest with multiple sources produces agreements and differences`() {
         val articles = listOf(

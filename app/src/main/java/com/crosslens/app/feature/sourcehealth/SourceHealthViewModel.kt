@@ -77,6 +77,8 @@ class SourceHealthViewModel @Inject constructor(
                         isRefreshing = _isRefreshing.value
                     )
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = SourceHealthUiState.Error(
                     message = e.message ?: "Failed to load source health"
@@ -120,6 +122,8 @@ class SourceHealthViewModel @Inject constructor(
                 _refreshResult.value = result
                 _isRefreshing.value = false
                 updateRefreshFlags()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _isRefreshing.value = false
                 _refreshResult.value = null

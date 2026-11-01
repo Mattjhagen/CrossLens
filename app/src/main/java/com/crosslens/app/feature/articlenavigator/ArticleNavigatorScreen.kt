@@ -613,16 +613,7 @@ private fun BoundaryFeedbackOverlay(boundaryType: BoundaryType) {
 }
 
 private fun openPublisherPage(context: Context, url: String) {
-    try {
-        val customTabsIntent = CustomTabsIntent.Builder()
-            .setShowTitle(true)
-            .build()
-        customTabsIntent.launchUrl(context, Uri.parse(url))
-    } catch (e: Exception) {
-        // Fallback to default browser
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        context.startActivity(intent)
-    }
+    com.crosslens.app.core.navigation.PublisherLinks.open(context, url)
 }
 
 /**

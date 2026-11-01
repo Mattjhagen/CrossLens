@@ -1,6 +1,7 @@
 package com.crosslens.app.feature.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -27,6 +28,20 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    if (showDeleteConfirmation) {
+        AlertDialog(onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(stringResource(R.string.delete_local_data)) },
+            text = { Text(stringResource(R.string.delete_local_data_explanation)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirmation = false
+                    context.getSystemService(android.app.ActivityManager::class.java).clearApplicationUserData()
+                }) { Text(stringResource(R.string.delete_local_data)) }
+            },
+            dismissButton = { TextButton(onClick = { showDeleteConfirmation = false }) { Text(stringResource(R.string.cancel_action)) } })
+    }
     val userPrefs by viewModel.userPreferences.collectAsStateWithLifecycle()
     val entitlement by viewModel.entitlement.collectAsStateWithLifecycle()
 
@@ -60,6 +75,28 @@ fun SettingsScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                item {
+                    Text(stringResource(R.string.privacy_local_disclosure), style = MaterialTheme.typography.bodySmall)
+                    TextButton(onClick = { showDeleteConfirmation = true }) { Text(stringResource(R.string.delete_local_data)) }
+                    TextButton(enabled = com.crosslens.app.BuildConfig.PRIVACY_POLICY_URL.isNotEmpty(),
+                        onClick = { com.crosslens.app.core.navigation.PublisherLinks.open(context, com.crosslens.app.BuildConfig.PRIVACY_POLICY_URL) }) {
+                        Text(stringResource(if (com.crosslens.app.BuildConfig.PRIVACY_POLICY_URL.isEmpty()) R.string.privacy_policy_unavailable else R.string.privacy_policy))
+                    }
+                    TextButton(enabled = com.crosslens.app.BuildConfig.CONTACT_URL.isNotEmpty(),
+                        onClick = { com.crosslens.app.core.navigation.PublisherLinks.open(context, com.crosslens.app.BuildConfig.CONTACT_URL) }) {
+                        Text(stringResource(if (com.crosslens.app.BuildConfig.CONTACT_URL.isEmpty()) R.string.contact_unavailable else R.string.contact_information))
+                    }
+                }
+                item {
+                    Text(stringResource(R.string.filter_reading_language), style = MaterialTheme.typography.titleSmall)
+                    Row(modifier = Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState())) {
+                        listOf("en", "fr", "es", "ar", "ja").forEach { language ->
+                            FilterChip(selected = userPrefs!!.readingLanguage == language,
+                                onClick = { viewModel.updateReadingLanguage(language) },
+                                label = { Text(java.util.Locale.forLanguageTag(language).displayLanguage) })
+                        }
+                    }
+                }
                 item {
                     Text(
                         text = stringResource(R.string.settings_display),
@@ -184,6 +221,7 @@ fun SettingsScreen(
                             if (entitlement!!.activeTier == AccessTier.FREE) {
                                 Button(
                                     onClick = { viewModel.previewPlus() },
+                                    enabled = com.crosslens.app.BuildConfig.DEBUG,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text(stringResource(R.string.preview_plus))
@@ -199,7 +237,7 @@ fun SettingsScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = stringResource(R.string.paywall_demo_notice),
+                                text = stringResource(if (com.crosslens.app.BuildConfig.DEBUG) R.string.paywall_demo_notice else R.string.billing_unavailable),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

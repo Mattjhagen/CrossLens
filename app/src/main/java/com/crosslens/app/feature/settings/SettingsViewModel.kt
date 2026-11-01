@@ -29,6 +29,10 @@ class SettingsViewModel @Inject constructor(
     val personalRelevancePreferences = personalRelevanceRepository.preferencesFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    fun updateReadingLanguage(language: String) {
+        viewModelScope.launch { userPreferencesRepository.updateReadingLanguage(language) }
+    }
+
     fun updateTheme(theme: Theme) {
         viewModelScope.launch {
             userPreferencesRepository.updateTheme(theme)

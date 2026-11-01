@@ -60,6 +60,7 @@ fun PaywallSheet(
 
             Button(
                 onClick = onPreviewPlus,
+                enabled = com.crosslens.app.BuildConfig.DEBUG,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.preview_plus))
@@ -73,7 +74,7 @@ fun PaywallSheet(
             }
 
             Text(
-                text = stringResource(R.string.paywall_demo_notice),
+                text = stringResource(if (com.crosslens.app.BuildConfig.DEBUG) R.string.paywall_demo_notice else R.string.billing_unavailable),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center

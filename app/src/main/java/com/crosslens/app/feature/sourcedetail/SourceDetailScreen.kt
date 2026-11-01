@@ -445,15 +445,5 @@ private fun PersonalRelevanceFeedback(
 }
 
 private fun openPublisherPage(context: Context, url: String) {
-    try {
-        // Use Custom Tabs for in-app browser experience
-        val customTabsIntent = CustomTabsIntent.Builder()
-            .setShowTitle(true)
-            .build()
-        customTabsIntent.launchUrl(context, Uri.parse(url))
-    } catch (e: Exception) {
-        // Fallback to regular browser
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        context.startActivity(intent)
-    }
+    com.crosslens.app.core.navigation.PublisherLinks.open(context, url)
 }

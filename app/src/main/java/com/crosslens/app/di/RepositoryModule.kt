@@ -23,7 +23,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindTranslationRepository(impl: com.crosslens.app.data.mock.MockTranslationRepository): com.crosslens.app.data.repository.TranslationRepository
+    abstract fun bindTranslationRepository(impl: com.crosslens.app.data.translation.CachedTranslationRepository): com.crosslens.app.data.repository.TranslationRepository
 
     @Binds
     @Singleton

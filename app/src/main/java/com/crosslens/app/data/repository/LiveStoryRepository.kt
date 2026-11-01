@@ -1,5 +1,9 @@
 package com.crosslens.app.data.repository
 
+import androidx.room.withTransaction
+import com.crosslens.app.data.preferences.ReadingStateRepository
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import com.crosslens.app.core.model.*
 import com.crosslens.app.data.clustering.EventClusteringService
 import com.crosslens.app.data.ingestion.RssSourceAdapter
@@ -35,12 +39,13 @@ class LiveStoryRepository @Inject constructor(
     private val mockRepository: MockStoryRepository,
     private val digestGenerator: SourceDigestGenerator,
     private val clusteringService: EventClusteringService,
-    private val debugFixtureProvider: com.crosslens.app.data.fixture.DebugEventFixtureProvider
+    private val debugFixtureProvider: com.crosslens.app.data.fixture.DebugEventFixtureProvider,
+    private val readingStateRepository: ReadingStateRepository
 ) : StoryRepository {
 
     private val clusteringAuditor = com.crosslens.app.data.clustering.ClusteringAuditor(clusteringService)
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val refreshMutex = Mutex()
 
     companion object {
         private const val CACHE_FRESHNESS_THRESHOLD_MINUTES = 15L
@@ -48,15 +53,8 @@ class LiveStoryRepository @Inject constructor(
         private const val MAX_ARTICLES_PER_PUBLISHER = 5
     }
 
-    init {
-        // On init, check cache age and refresh in background if stale
-        scope.launch {
-            val metadata = feedMetadataDao.getFeedMetadata()
-            if (shouldRefreshCache(metadata)) {
-                refreshLiveFeed(isUserTriggered = false)
-            }
-        }
-    }
+    /** Called after fallback seeding by the application, never from a constructor. */
+    suspend fun refreshIfStale(): Result<Unit> = refreshLiveFeed(isUserTriggered = false)
 
     override fun observeStories(): Flow<List<Story>> {
         return combine(
@@ -95,13 +93,13 @@ class LiveStoryRepository @Inject constructor(
     }
 
     override suspend fun getClaimsForStory(storyId: String): List<Claim> {
-        // Live feed stories don't have claims yet
-        return emptyList()
+        return if (storyId.startsWith(LIVE_FEED_MARKER)) emptyList()
+        else mockRepository.getClaimsForStory(storyId)
     }
 
     override suspend fun getFrameObservationsForStory(storyId: String): List<FrameObservation> {
-        // Live feed stories don't have observations yet
-        return emptyList()
+        return if (storyId.startsWith(LIVE_FEED_MARKER)) emptyList()
+        else mockRepository.getFrameObservationsForStory(storyId)
     }
 
     override suspend fun getArticle(articleId: String): Article? {
@@ -110,7 +108,7 @@ class LiveStoryRepository @Inject constructor(
 
     override suspend fun getSourceDigest(storyId: String): SourceDigest? {
         val articles = getArticlesForStory(storyId)
-        if (articles.isEmpty()) return null
+        if (articles.isEmpty() || articles.any { !it.contentUseMetadata.isDemo }) return null
 
         val sourceIds = articles.map { it.sourceId }.distinct()
         val sources = database.sourceDao().getSourcesByIds(sourceIds)
@@ -146,7 +144,7 @@ class LiveStoryRepository @Inject constructor(
             )
         } else {
             val state = when {
-                isCacheFresh(metadata) -> FeedState.LIVE
+                isCacheFresh(metadata) && metadata.successfulSourceCount > 0 -> FeedState.LIVE
                 else -> FeedState.CACHED
             }
 
@@ -156,37 +154,35 @@ class LiveStoryRepository @Inject constructor(
                 lastRefreshAttempt = metadata.lastAttemptedFetch,
                 successfulSourceCount = metadata.successfulSourceCount,
                 failedSourceCount = metadata.failedSourceCount,
-                errorMessage = null
+                errorMessage = if (metadata.successfulSourceCount == 0) "Refresh unavailable; showing cached reporting" else null
             )
         }
     }
 
     private suspend fun refreshLiveFeed(isUserTriggered: Boolean): Result<Unit> {
-        return withContext(Dispatchers.IO) {
+        return refreshMutex.withLock { withContext(Dispatchers.IO) {
             try {
+                if (!isUserTriggered && !shouldRefreshCache(feedMetadataDao.getFeedMetadata())) {
+                    return@withContext Result.success(Unit)
+                }
                 val now = Instant.now()
                 val allItems = mutableListOf<Pair<RssSourceAdapter, com.crosslens.app.data.ingestion.SourceArticleRecord>>()
-                var successCount = 0
-                var failCount = 0
-
-                // Fetch from all sources in parallel, isolating failures
-                val results = rssAdapters.map { adapter ->
+                // Results are collected before counting; no shared mutable counters across IO threads.
+                val fetched = rssAdapters.map { adapter ->
                     async {
                         try {
-                            val articles = adapter.fetchArticles()
-                            if (articles.isNotEmpty()) {
-                                successCount++
-                                articles.map { adapter to it }
-                            } else {
-                                failCount++
-                                emptyList()
-                            }
+                            adapter to adapter.fetchArticles()
+                        } catch (e: CancellationException) {
+                            throw e
                         } catch (e: Exception) {
-                            failCount++
-                            emptyList()
+                            adapter to emptyList<SourceArticleRecord>()
                         }
                     }
-                }.awaitAll().flatten()
+                }.awaitAll()
+                val successCount = fetched.count { it.second.isNotEmpty() }
+                val failCount = fetched.size - successCount
+                val results = fetched.flatMap { (adapter, articles) -> articles.map { adapter to it } }
+                    .distinctBy { (adapter, article) -> adapter.sourceId to NewsIdentity.canonicalUrl(article.url) }
 
                 allItems.addAll(results)
 
@@ -203,35 +199,19 @@ class LiveStoryRepository @Inject constructor(
                     )
 
                     // Keep existing cache if available, otherwise mock is shown via observeStories
-                    return@withContext Result.success(Unit)
+                    return@withContext Result.failure(java.io.IOException("All news feeds unavailable; cache retained"))
                 }
 
-                // Create/update live feed sources
-                val liveSourceIds = mutableSetOf<String>()
-                allItems.groupBy { it.first }.forEach { (adapter, items) ->
-                    val sourceId = "live_${adapter.sourceId}"
-                    liveSourceIds.add(sourceId)
-
-                    // Upsert source if not exists
-                    if (sourceDao.getSourcesByIds(listOf(sourceId)).isEmpty()) {
-                        sourceDao.insertSources(listOf(
-                            SourceEntity(
-                                id = sourceId,
-                                name = adapter.sourceName,
-                                homepage = "https://", // RSS adapters don't expose this yet
-                                countryCodes = emptyList(),
-                                regionIds = emptyList(),
-                                defaultLanguages = listOf(items.first().second.languageTag)
-                            )
-                        ))
-                    }
-                }
-
-                // Clear old live feed articles
-                val oldLiveStories = storyDao.getAllStories().filter { it.id.startsWith(LIVE_FEED_MARKER) }
-                oldLiveStories.forEach { story ->
-                    articleDao.deleteArticlesByStory(story.id)
-                    storyDao.deleteStories(listOf(story.id))
+                val sourcesToInsert = allItems.groupBy { it.first }.map { (adapter, items) ->
+                    val metadata = com.crosslens.app.data.ingestion.SourceMetadataRegistry.getMetadata(adapter.sourceId)
+                    SourceEntity(
+                        id = "live_${adapter.sourceId}",
+                        name = adapter.sourceName,
+                        homepage = metadata?.homepage ?: adapter.homepage,
+                        countryCodes = PublisherGeography.countryCodes(metadata?.country),
+                        regionIds = PublisherGeography.regionIds(metadata?.country),
+                        defaultLanguages = items.map { it.second.languageTag }.distinct()
+                    )
                 }
 
                 // Apply per-publisher balancing: max 5 articles per publisher, chronological within publisher
@@ -251,8 +231,10 @@ class LiveStoryRepository @Inject constructor(
                 val allArticleRecords = articleRecords + fixtureArticles
 
                 // Audit clustering run (logs detailed information)
-                val auditReport = clusteringAuditor.auditClusteringRun(allArticleRecords)
-                android.util.Log.i("LiveFeedCluster", "Audit: ${auditReport.clustersFormed} clusters from ${auditReport.totalArticles} articles (${auditReport.distinctPublishers} publishers)")
+                if (com.crosslens.app.BuildConfig.DEBUG) {
+                    // Auditor uses reflection and verbose headlines; never run it in optimized releases.
+                    clusteringAuditor.auditClusteringRun(allArticleRecords)
+                }
 
                 // Use EventClusteringService for intelligent grouping (includes fixture in debug builds)
                 val clusters = clusteringService.clusterArticles(allArticleRecords)
@@ -279,14 +261,14 @@ class LiveStoryRepository @Inject constructor(
 
                 // Process clustered events (2+ publishers)
                 clusters.forEach { cluster ->
-                    val storyId = "${LIVE_FEED_MARKER}${UUID.randomUUID()}"
+                    val storyId = NewsIdentity.storyId(cluster.articles.map { it.url })
                     val articleIds = mutableListOf<String>()
 
                     // Create articles for each source in cluster
                     cluster.articles.forEach { clusteredArticle ->
                         val adapter = articleToAdapter[clusteredArticle.url]
                         if (adapter != null) {
-                            val articleId = "article_${UUID.randomUUID()}"
+                            val articleId = NewsIdentity.articleId(clusteredArticle.url, storyId)
                             articleIds.add(articleId)
                             val sourceId = "live_${adapter.sourceId}"
 
@@ -302,8 +284,8 @@ class LiveStoryRepository @Inject constructor(
                                     originalExcerpt = clusteredArticle.excerpt,
                                     originalContent = clusteredArticle.excerpt,
                                     attribution = adapter.sourceName,
-                                    isDemo = false,
-                                    requiresSubscription = true,
+                                    isDemo = fixtureArticles.any { it.url == clusteredArticle.url },
+                                    requiresSubscription = false,
                                     imageUrl = clusteredArticle.imageUrl
                                 )
                             )
@@ -332,7 +314,7 @@ class LiveStoryRepository @Inject constructor(
                     // Store event cluster metadata
                     eventClustersToInsert.add(
                         EventClusterEntity(
-                            id = cluster.id,
+                            id = storyId,
                             eventSummary = cluster.eventSummary,
                             eventTime = cluster.eventTime,
                             clusteredAt = cluster.clusteredAt,
@@ -353,8 +335,8 @@ class LiveStoryRepository @Inject constructor(
 
                 balancedItems.filter { (_, article) -> article.url !in clusteredUrls }
                     .forEach { (adapter, article) ->
-                        val storyId = "${LIVE_FEED_MARKER}${UUID.randomUUID()}"
-                        val articleId = "article_${UUID.randomUUID()}"
+                        val storyId = NewsIdentity.storyId(listOf(article.url))
+                        val articleId = NewsIdentity.articleId(article.url, storyId)
                         val sourceId = "live_${adapter.sourceId}"
 
                         articlesToInsert.add(
@@ -370,7 +352,7 @@ class LiveStoryRepository @Inject constructor(
                                 originalContent = article.excerpt,
                                 attribution = adapter.sourceName,
                                 isDemo = false,
-                                requiresSubscription = true,
+                                requiresSubscription = false,
                                 imageUrl = article.imageUrl
                             )
                         )
@@ -394,7 +376,20 @@ class LiveStoryRepository @Inject constructor(
                         )
                     }
 
-                // Insert new stories, articles, and event clusters
+                val readingState = readingStateRepository.readingStateFlow.first()
+                val protectedIds = readingState.savedStoryIds + listOfNotNull(readingState.lastOpenedStoryId)
+                database.withTransaction {
+                // Replacement is atomic. Retain saved/last-opened stories, including legacy random IDs.
+                val replacementIds = storiesToInsert.map { it.id }.toSet()
+                val obsolete = storyDao.getAllStories().filter {
+                    it.id.startsWith(LIVE_FEED_MARKER) && it.id !in protectedIds && it.id !in replacementIds
+                }
+                obsolete.forEach { story ->
+                    articleDao.deleteArticlesByStory(story.id)
+                    storyDao.deleteStories(listOf(story.id))
+                }
+                sourceDao.insertSources(sourcesToInsert)
+                eventClusterDao.deleteAllClusters()
                 storyDao.insertStories(storiesToInsert)
                 articleDao.insertArticles(articlesToInsert)
                 eventClusterDao.insertClusters(eventClustersToInsert)
@@ -410,11 +405,14 @@ class LiveStoryRepository @Inject constructor(
                     )
                 )
 
+                }
                 Result.success(Unit)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Result.failure(e)
             }
-        }
+        } }
     }
 
     private fun shouldRefreshCache(metadata: FeedMetadataEntity?): Boolean {

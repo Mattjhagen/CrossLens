@@ -1,3 +1,4 @@
+import java.net.URI
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -8,9 +9,13 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-// Apply Firebase plugins only for release builds
-apply(plugin = "com.google.gms.google-services")
-apply(plugin = "com.google.firebase.crashlytics")
+// Firebase is an explicit integration. A clean checkout needs no project credentials.
+val firebaseEnabled = providers.gradleProperty("crosslens.firebaseEnabled").orNull == "true"
+val uploadCrashlyticsMapping = providers.gradleProperty("crosslens.uploadCrashlyticsMapping").orNull == "true"
+if (firebaseEnabled) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
 
 // Load release signing configuration
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -18,7 +23,7 @@ val keystoreProperties = Properties()
 val hasKeystoreFile = keystorePropertiesFile.exists()
 
 if (hasKeystoreFile) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    FileInputStream(keystorePropertiesFile).use { keystoreProperties.load(it) }
 }
 
 // Priority: Gradle properties > Environment variables > keystore.properties
@@ -42,18 +47,32 @@ val finalStorePassword = storePassword ?: ""
 val finalKeyAlias = keyAlias ?: ""
 val finalKeyPassword = keyPassword ?: ""
 
+// Owner-provided public pages; empty values leave links visibly unavailable.
+fun publicUrlProperty(name: String): String {
+    val value = providers.gradleProperty(name).orNull.orEmpty()
+    if (value.isEmpty()) return "\"\""
+    val uri = URI(value)
+    require(uri.scheme == "https" && !uri.host.isNullOrBlank() && uri.userInfo == null) {
+        "$name must be a public HTTPS URL"
+    }
+    return "\"$value\""
+}
+
 android {
     namespace = "com.crosslens.app"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.crosslens.app"
         minSdk = 29
-        targetSdk = 34
-        versionCode = 15
-        versionName = "0.0.15-beta"
+        targetSdk = 36
+        versionCode = 16
+        versionName = "1.0.0-rc01"
+        buildConfigField("boolean", "FIREBASE_ENABLED", firebaseEnabled.toString())
+        buildConfigField("String", "PRIVACY_POLICY_URL", publicUrlProperty("crosslens.privacyPolicyUrl"))
+        buildConfigField("String", "CONTACT_URL", publicUrlProperty("crosslens.contactUrl"))
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.crosslens.app.CrossLensTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -67,9 +86,8 @@ android {
 
     signingConfigs {
         if (hasSigningConfig) {
-            println("DEBUG: Creating release signing config")
             create("release") {
-                val storeFile = File(finalStoreFilePath)
+                val storeFile = rootProject.file(finalStoreFilePath)
                 if (!storeFile.exists()) {
                     throw GradleException(
                         """
@@ -85,10 +103,7 @@ android {
                 this.storePassword = finalStorePassword
                 this.keyAlias = finalKeyAlias
                 this.keyPassword = finalKeyPassword
-                println("DEBUG: Release signing config created with keystore: ${storeFile.absolutePath}")
             }
-        } else {
-            println("DEBUG: No signing config - hasSigningConfig is false")
         }
     }
 
@@ -99,8 +114,10 @@ android {
             versionNameSuffix = "-debug"
 
             // Disable Crashlytics for debug builds
-            configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
-                mappingFileUploadEnabled = false
+            if (firebaseEnabled) {
+                configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
+                    mappingFileUploadEnabled = false
+                }
             }
         }
         release {
@@ -111,50 +128,14 @@ android {
             )
 
             // Upload ProGuard mapping files to Crashlytics for symbolicated stack traces
-            configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
-                mappingFileUploadEnabled = true
-            }
-
-            // Apply signing configuration if available
-            if (hasSigningConfig) {
-                println("DEBUG: Applying signing config to release build type")
-                signingConfig = signingConfigs.getByName("release")
-                println("DEBUG: Signing config applied: ${signingConfig?.name}")
-            } else {
-                println("DEBUG: NOT applying signing config - hasSigningConfig is false")
-                // Fail with clear instructions if signing config is missing
-                gradle.taskGraph.whenReady {
-                    if (hasTask(":app:assembleRelease") ||
-                        hasTask(":app:bundleRelease") ||
-                        hasTask(":app:installRelease")) {
-                        throw GradleException(
-                            """
-                            |
-                            |❌ Release signing configuration missing.
-                            |
-                            |To build a release APK, you must configure release signing credentials.
-                            |
-                            |Option 1: Create keystore.properties file
-                            |  1. Copy keystore.properties.example to keystore.properties
-                            |  2. Replace placeholder values with your actual signing credentials
-                            |  3. Generate a signing key if you don't have one yet
-                            |
-                            |Option 2: Set environment variables
-                            |  export CROSSLENS_STORE_FILE=/path/to/keystore.jks
-                            |  export CROSSLENS_STORE_PASSWORD=your_store_password
-                            |  export CROSSLENS_KEY_ALIAS=your_key_alias
-                            |  export CROSSLENS_KEY_PASSWORD=your_key_password
-                            |
-                            |For detailed setup instructions, see:
-                            |  docs/RELEASE_SIGNING.md
-                            |
-                            |Debug builds continue to work without signing configuration.
-                            |
-                            """.trimMargin()
-                        )
-                    }
+            if (firebaseEnabled) {
+                configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
+                    mappingFileUploadEnabled = uploadCrashlyticsMapping
                 }
             }
+
+            // Without owner credentials, produce unsigned artifacts for verification only.
+            if (hasSigningConfig) signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -227,8 +208,12 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    implementation("com.android.billingclient:billing:9.1.0")
+
     // DataStore
     implementation(libs.androidx.datastore.preferences)
+
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     // Networking
     implementation(libs.retrofit)
@@ -254,6 +239,7 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation("org.robolectric:robolectric:4.14.1")
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.arch.core.testing)
     testImplementation(libs.mockito.core)
@@ -263,6 +249,8 @@ dependencies {
     // XML parser for JVM unit tests (Android XmlPullParser not available in pure JVM)
     testImplementation("xpp3:xpp3:1.1.4c")
 
+    androidTestImplementation("com.google.dagger:hilt-android-testing:2.51.1")
+    kspAndroidTest(libs.hilt.android.compiler)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

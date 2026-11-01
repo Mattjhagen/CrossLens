@@ -1,3 +1,5 @@
+> Historical beta report. Current production status and actual verification results are recorded in [docs/PRODUCTION_READINESS_REPORT.md](docs/PRODUCTION_READINESS_REPORT.md). Earlier passing claims below do not describe the current candidate.
+
 # CrossLens Android Skeleton - Handoff Summary
 
 **Date:** 2026-09-22  

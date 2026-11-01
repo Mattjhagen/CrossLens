@@ -37,9 +37,9 @@ class DataStoreUserPreferencesRepository @Inject constructor(
             homeRegion = prefs[PreferencesKeys.HOME_REGION],
             enabledSourceIds = prefs[PreferencesKeys.ENABLED_SOURCES] ?: emptySet(),
             translationPreference = prefs[PreferencesKeys.TRANSLATION_PREF]?.let {
-                TranslationPreference.valueOf(it)
+                TranslationPreference.values().firstOrNull { value -> value.name == it } ?: TranslationPreference.AUTO
             } ?: TranslationPreference.AUTO,
-            theme = prefs[PreferencesKeys.THEME]?.let { Theme.valueOf(it) } ?: Theme.SYSTEM,
+            theme = prefs[PreferencesKeys.THEME]?.let { Theme.values().firstOrNull { value -> value.name == it } ?: Theme.SYSTEM } ?: Theme.SYSTEM,
             reducedMotion = prefs[PreferencesKeys.REDUCED_MOTION] ?: false,
             demoLocalLocation = prefs[PreferencesKeys.DEMO_LOCAL_LOCATION],
             showLocalOnly = prefs[PreferencesKeys.SHOW_LOCAL_ONLY] ?: false,

@@ -1,6 +1,8 @@
 package com.crosslens.app.feature.explore
 
-import com.crosslens.app.core.model.Story
+import com.crosslens.app.core.model.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import com.crosslens.app.data.repository.StoryRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,6 +33,33 @@ class ExploreViewModelTest {
         Dispatchers.resetMain()
     }
 
+    @Test fun `region and country describe publisher while language and search filter cached reporting`() = runTest {
+        val story = Story("one", "Climate report", "Summary", null, Instant.now(), listOf("environment"),
+            listOf("JP"), listOf("article"), emptyList(), null)
+        val article = Article("article", "one", "publisher", "https://publisher.example/a", Instant.now(), "fr",
+            "Titre", "Extrait", "Extrait", "Publisher", ContentUseMetadata(false, false))
+        val source = Source("publisher", "Publisher", "https://publisher.example", listOf("FR"), listOf("europe"), listOf("fr"), null, null, null)
+        val sources = mock<com.crosslens.app.data.repository.SourceRepository>()
+        whenever(sources.observeSources()).thenReturn(flowOf(listOf(source)))
+        whenever(storyRepository.observeStories()).thenReturn(flowOf(listOf(story)))
+        whenever(storyRepository.getArticlesForStory("one")).thenReturn(listOf(article))
+        val viewModel = ExploreViewModel(storyRepository, sources)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.filteredStories.collect { } }
+        viewModel.toggleRegion("europe")
+        viewModel.toggleCountry("FR")
+        viewModel.toggleLanguage("fr")
+        advanceUntilIdle()
+        assertEquals(listOf("one"), viewModel.filteredStories.value.map { it.id })
+        viewModel.toggleCountry("FR")
+        viewModel.toggleCountry("JP")
+        advanceUntilIdle()
+        assertTrue(viewModel.filteredStories.value.isEmpty())
+        viewModel.clearFilters()
+        viewModel.updateQuery("no matching headline")
+        advanceUntilIdle()
+        assertTrue(viewModel.filteredStories.value.isEmpty())
+    }
+
     @Test
     fun `clearFilters resets all filters`() = runTest {
         val stories = listOf(
@@ -48,7 +77,9 @@ class ExploreViewModelTest {
             )
         )
         whenever(storyRepository.observeStories()).thenReturn(flowOf(stories))
-        val viewModel = ExploreViewModel(storyRepository)
+        val sourceRepository = mock<com.crosslens.app.data.repository.SourceRepository>()
+        whenever(sourceRepository.observeSources()).thenReturn(flowOf(emptyList()))
+        val viewModel = ExploreViewModel(storyRepository, sourceRepository)
 
         viewModel.toggleTopic("technology")
         viewModel.toggleRegion("europe")

@@ -81,13 +81,19 @@ class SourceHealthRepository @Inject constructor(
 
                 // fetchArticles() already recorded a health check internally
                 results.add(
-                    SourceRefreshOutcome.Success(
+                    if (articles.isEmpty()) SourceRefreshOutcome.Failure(
+                        sourceId = adapter.sourceId,
+                        sourceName = adapter.sourceName,
+                        errorMessage = "No usable dated reporting returned"
+                    ) else SourceRefreshOutcome.Success(
                         sourceId = adapter.sourceId,
                         sourceName = adapter.sourceName,
                         articlesReturned = articles.size,
                         durationMs = duration
                     )
                 )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 // DIAGNOSTIC: Log adapter failure
                 SourceHealthDiagnostics.logRepositoryAdapterFailure(

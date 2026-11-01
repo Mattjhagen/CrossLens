@@ -21,14 +21,28 @@ class HomeViewModel @Inject constructor(
     private val storyRepository: StoryRepository,
     private val userPreferencesRepository: com.crosslens.app.data.preferences.UserPreferencesRepository,
     private val personalRelevanceRepository: com.crosslens.app.data.preferences.PersonalRelevanceRepository,
-    private val recommendationEngine: PersonalizedRecommendationEngine
+    private val recommendationEngine: PersonalizedRecommendationEngine,
+    private val readingStateRepository: com.crosslens.app.data.preferences.ReadingStateRepository
 ) : ViewModel() {
+
+    private val _showSavedOnly = MutableStateFlow(false)
+    val showSavedOnly = _showSavedOnly.asStateFlow()
+    fun toggleSavedFilter() { _showSavedOnly.update { !it } }
+    val savedStories = combine(readingStateRepository.readingStateFlow, storyRepository.observeStories()) { reading, _ ->
+        reading.savedStoryIds.sorted().mapNotNull { storyRepository.getStory(it) }
+    }.catch { emit(emptyList()) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val continueReading = combine(readingStateRepository.readingStateFlow, storyRepository.observeStories()) { reading, _ ->
+        reading.lastOpenedStoryId?.let { storyRepository.getStory(it) }
+    }.catch { emit(null) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private val _showLocalOnly = MutableStateFlow(false)
     val showLocalOnly: StateFlow<Boolean> = _showLocalOnly.asStateFlow()
+
+    private val _refreshError = MutableStateFlow<String?>(null)
+    val refreshError = _refreshError.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
@@ -70,7 +84,13 @@ class HomeViewModel @Inject constructor(
             if (storyRepository is LiveStoryRepository) {
                 // Poll metadata every 30 seconds for freshness indicator
                 while (true) {
-                    _feedMetadata.value = storyRepository.getFeedMetadata()
+                    try {
+                        _feedMetadata.value = storyRepository.getFeedMetadata()
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        break
+                    }
                     kotlinx.coroutines.delay(30_000)
                 }
             }
@@ -135,16 +155,25 @@ class HomeViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
+            if (_isRefreshing.value) return@launch
             _isRefreshing.value = true
+            _refreshError.value = null
             try {
                 // Reload data (live or demo fallback)
-                storyRepository.refresh()
-                // Update the timestamp to now
-                userPreferencesRepository.updateLastRefreshedTime(Instant.now())
+                val result = storyRepository.refresh()
+                if (result.isSuccess) {
+                    userPreferencesRepository.updateLastRefreshedTime(Instant.now())
+                } else {
+                    _refreshError.value = "Refresh unavailable. Showing previously saved content."
+                }
                 // Immediately update feed metadata after refresh
                 if (storyRepository is LiveStoryRepository) {
                     _feedMetadata.value = storyRepository.getFeedMetadata()
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                _refreshError.value = "Refresh unavailable. Showing previously saved content."
             } finally {
                 _isRefreshing.value = false
             }

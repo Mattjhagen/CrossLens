@@ -85,6 +85,8 @@ class SourceDetailViewModel @Inject constructor(
                         existingPreferences = relevantPreferences
                     )
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = SourceDetailUiState.Error(e.message ?: "Unknown error")
             }

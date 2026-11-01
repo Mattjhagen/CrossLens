@@ -86,6 +86,8 @@ class EventComparisonViewModel @Inject constructor(
                     articles = articleWithMetadata,
                     recommendations = recommendations
                 )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = EventComparisonUiState.Error(
                     e.message ?: "Failed to load event comparison"

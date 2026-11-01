@@ -32,7 +32,10 @@ class SourceHealthRepositoryTest {
         healthMonitor = SourceHealthMonitor(fakeDao)
 
         // Create test adapters
-        val httpClient = OkHttpClient()
+        val httpClient = OkHttpClient.Builder().addInterceptor { chain ->
+            okhttp3.Response.Builder().request(chain.request()).protocol(okhttp3.Protocol.HTTP_1_1)
+                .code(404).message("Test unavailable feed").body(okhttp3.ResponseBody.create(null, "")).build()
+        }.build()
         adapters = listOf(
             RssSourceAdapter(
                 sourceId = "test-source-1",
@@ -87,7 +90,7 @@ class SourceHealthRepositoryTest {
 
     @Test
     fun `refreshAllSources attempts to refresh configured sources`() = runTest {
-        // Note: This will fail because the URLs are fake, but that's expected in tests
+        // The deterministic interceptor returns 404; tests never contact external publishers.
         val result = repository.refreshAllSources()
 
         // Just verify that it returned a result with the right number of sources

@@ -17,6 +17,9 @@ interface TranslationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTranslations(translations: List<TranslationEntity>)
 
+    @Query("DELETE FROM translations WHERE articleId = :articleId AND targetLanguage = :targetLanguage")
+    suspend fun deleteTranslation(articleId: String, targetLanguage: String)
+
     @Query("DELETE FROM translations")
     suspend fun deleteAllTranslations()
 }

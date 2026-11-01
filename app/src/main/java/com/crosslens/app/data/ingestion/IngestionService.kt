@@ -79,6 +79,8 @@ class IngestionService @Inject constructor(
                         }
                     }
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 adapterErrors += AdapterError(adapter.sourceId, e.message ?: "Unknown error")
             }
@@ -162,7 +164,9 @@ class IngestionService @Inject constructor(
             storyDao.insertStories(listOf(storyEntity))
 
             Result.success(cluster.clusterId)
-        } catch (e: Exception) {
+        } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
             Result.failure(e)
         }
     }

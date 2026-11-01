@@ -184,6 +184,8 @@ class CoverageDetailsViewModel @Inject constructor(
                 )
 
                 _uiState.value = CoverageDetailsUiState.Success(coverageDetails)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = CoverageDetailsUiState.Error(
                     e.message ?: "Failed to load coverage details"
@@ -290,7 +292,9 @@ class CoverageDetailsViewModel @Inject constructor(
                     )
                 )
             }
-        } catch (e: Exception) {
+        } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
             // Don't fail the whole screen if health check fails
             // Just skip adding health limitations
         }

@@ -147,14 +147,31 @@ fun EventComparisonScreen(
                         }
                     }
 
-                    // Article cards with "why this appears" explanations
-                    items(state.articles) { articleWithMetadata ->
-                        ArticleComparisonCard(
-                            article = articleWithMetadata.article,
-                            metadata = articleWithMetadata.metadata,
-                            totalPublishers = state.articles.size,
-                            allPublishers = state.articles.mapNotNull { it.metadata?.publisherName }
-                        )
+                    item {
+                        Text(androidx.compose.ui.res.stringResource(com.crosslens.app.R.string.comparison_evidence_unavailable),
+                            style = MaterialTheme.typography.bodyMedium)
+                        Text(androidx.compose.ui.res.stringResource(com.crosslens.app.R.string.translation_production_unavailable),
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+
+                    items(state.articles.chunked(2), key = { it.first().article.id }) { group ->
+                        BoxWithConstraints {
+                            if (maxWidth >= 720.dp) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    group.forEach { entry ->
+                                        ArticleComparisonCard(entry.article, entry.metadata, state.articles.size,
+                                            state.articles.mapNotNull { it.metadata?.publisherName }, Modifier.weight(1f))
+                                    }
+                                }
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    group.forEach { entry ->
+                                        ArticleComparisonCard(entry.article, entry.metadata, state.articles.size,
+                                            state.articles.mapNotNull { it.metadata?.publisherName })
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     // Explanation footer
@@ -388,8 +405,7 @@ private fun ArticleComparisonCard(
             // Open original button
             OutlinedButton(
                 onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.originalUrl))
-                    context.startActivity(intent)
+                    com.crosslens.app.core.navigation.PublisherLinks.open(context, article.originalUrl)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -570,8 +586,7 @@ private fun ReadAcrossCoverageSheet(
                     metadata = recommendation.metadata,
                     explanation = recommendation.explanation,
                     onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(recommendation.article.originalUrl))
-                        context.startActivity(intent)
+                        com.crosslens.app.core.navigation.PublisherLinks.open(context, recommendation.article.originalUrl)
                     },
                     modifier = Modifier.padding(bottom = 12.dp)
                 )

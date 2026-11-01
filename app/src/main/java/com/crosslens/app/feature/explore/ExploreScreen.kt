@@ -32,6 +32,11 @@ fun ExploreScreen(
     val selectedRegions by viewModel.selectedRegions.collectAsStateWithLifecycle()
     val selectedCountries by viewModel.selectedCountries.collectAsStateWithLifecycle()
     val selectedTopics by viewModel.selectedTopics.collectAsStateWithLifecycle()
+    val selectedLanguages by viewModel.selectedLanguages.collectAsStateWithLifecycle()
+    val countries by viewModel.availableCountries.collectAsStateWithLifecycle()
+    val languages by viewModel.availableLanguages.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -43,7 +48,7 @@ fun ExploreScreen(
                     }
                 },
                 actions = {
-                    if (selectedRegions.isNotEmpty() || selectedCountries.isNotEmpty() || selectedTopics.isNotEmpty()) {
+                    if (selectedRegions.isNotEmpty() || selectedCountries.isNotEmpty() || selectedTopics.isNotEmpty() || selectedLanguages.isNotEmpty() || query.isNotBlank()) {
                         TextButton(onClick = { viewModel.clearFilters() }) {
                             Text(stringResource(R.string.clear_filters))
                         }
@@ -60,6 +65,29 @@ fun ExploreScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
+                OutlinedTextField(value = query, onValueChange = viewModel::updateQuery,
+                    label = { Text(stringResource(R.string.search_cached_stories)) },
+                    singleLine = true, modifier = Modifier.fillMaxWidth())
+            }
+            item {
+                Column {
+                    Text(stringResource(R.string.filter_publisher_country), style = MaterialTheme.typography.titleSmall)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        countries.forEach { country ->
+                            FilterChip(selected = country in selectedCountries, onClick = { viewModel.toggleCountry(country) },
+                                label = { Text(java.util.Locale("", country).displayCountry) })
+                        }
+                    }
+                    Text(stringResource(R.string.filter_original_language), style = MaterialTheme.typography.titleSmall)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        languages.forEach { language ->
+                            FilterChip(selected = language in selectedLanguages, onClick = { viewModel.toggleLanguage(language) },
+                                label = { Text(java.util.Locale.forLanguageTag(language).displayName) })
+                        }
+                    }
+                }
+            }
             // Filter chips
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -141,7 +169,7 @@ fun ExploreScreen(
                         ) {
                             CrossLensSignature(size = SignatureSize.Small)
                             Text(
-                                text = stringResource(R.string.no_results),
+                                text = error ?: stringResource(R.string.no_results),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(

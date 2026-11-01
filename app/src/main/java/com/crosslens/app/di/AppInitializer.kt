@@ -10,13 +10,22 @@ import javax.inject.Singleton
 
 @Singleton
 class AppInitializer @Inject constructor(
-    private val storyRepository: MockStoryRepository
+    private val storyRepository: MockStoryRepository,
+    private val liveRepository: com.crosslens.app.data.repository.LiveStoryRepository
 ) {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun initialize() {
         appScope.launch {
-            storyRepository.seedData()
+            try {
+                storyRepository.seedData()
+                liveRepository.refreshIfStale()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // A failed refresh must not terminate the process or erase the local cache.
+                android.util.Log.e("CrossLensInit", "Local initialization unavailable", e)
+            }
         }
     }
 }

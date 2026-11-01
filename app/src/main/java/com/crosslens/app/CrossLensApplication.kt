@@ -16,10 +16,11 @@ class CrossLensApplication : Application() {
         super.onCreate()
 
         // Initialize Crashlytics only for release builds
-        if (!BuildConfig.DEBUG) {
+        if (BuildConfig.FIREBASE_ENABLED && !BuildConfig.DEBUG &&
+            com.google.firebase.FirebaseApp.getApps(this).isNotEmpty()) {
             FirebaseCrashlytics.getInstance().apply {
                 // Enable crash reporting
-                setCrashlyticsCollectionEnabled(true)
+                setCrashlyticsCollectionEnabled(false)
 
                 // Set custom keys for debugging
                 setCustomKey("build_type", BuildConfig.BUILD_TYPE)
@@ -29,5 +30,6 @@ class CrossLensApplication : Application() {
         }
 
         appInitializer.initialize()
+        com.crosslens.app.data.sync.FeedSyncWorker.schedule(this)
     }
 }

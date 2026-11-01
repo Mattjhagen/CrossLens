@@ -28,7 +28,6 @@ class StoryViewModel @Inject constructor(
 
     init {
         loadStory()
-        updateLastOpened()
     }
 
     private fun loadStory() {
@@ -40,6 +39,7 @@ class StoryViewModel @Inject constructor(
                     return@launch
                 }
 
+                readingStateRepository.updateLastOpened(storyId)
                 val articles = storyRepository.getArticlesForStory(storyId)
                 val claims = storyRepository.getClaimsForStory(storyId)
                 val observations = storyRepository.getFrameObservationsForStory(storyId)
@@ -50,6 +50,8 @@ class StoryViewModel @Inject constructor(
                     claims = claims,
                     frameObservations = observations
                 )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = StoryUiState.Error(e.message ?: "Unknown error")
             }

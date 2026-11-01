@@ -14,6 +14,11 @@ object IngestionModule {
 
     @Provides
     @Singleton
+    fun provideTranslationProvider(): com.crosslens.app.data.translation.TranslationProvider =
+        com.crosslens.app.data.translation.UnconfiguredTranslationProvider()
+
+    @Provides
+    @Singleton
     fun provideEventClusteringPipeline(): EventClusteringPipeline {
         return EventClusteringPipeline()
     }

@@ -2,271 +2,50 @@
 
 **One event. A world of perspectives.**
 
-CrossLens is an Android news app for understanding how the same event is reported across countries, languages, and institutions. Readers explore clustered stories, compare source coverage, and read translations while retaining a clear path to the original reporting.
+CrossLens is a native Android news reader for comparing available reporting across publications, countries and languages. Publisher geography is context, never a political classification. The editorial visual identity, Kotlin/Compose MVVM architecture, Hilt, Room and DataStore are preserved.
 
-The goal is informed comparison: show where reporting overlaps, where emphasis differs, and what evidence supports those observations. A source's country is context, not a proxy for its politics or the views of an entire population.
+**Current status: production hardening candidate, not production-ready.** No Android build or test passed in the current environment because Java/Android SDK are absent and dependency downloads are blocked. Read the [production readiness report](docs/PRODUCTION_READINESS_REPORT.md), [progress log](docs/PRODUCTION_PROGRESS.md), and [actual command results](docs/verification/2026-11-01/RESULTS.md) before relying on historical beta reports. No app was published or production signing key generated.
 
-> **Project status:** ✅ **Crash Reporting milestone complete (v0.0.13-beta).** Firebase Crashlytics is now integrated for production crash monitoring with ProGuard mapping file upload. The app supports properly signed release builds, includes personalized "For You — Demo" recommendations, and works offline with mock data. Future work includes crash reporting UI controls, live local sources, and translation services.
+## Implemented candidate behavior
 
-## Quick Start
+- RSS/Atom ingestion uses configured public feeds, publisher metadata, original links and publication timestamps. Undated entries are excluded rather than assigned invented dates. Public-feed and image redistribution rights still need owner review. This revision's real end-to-end ingestion has not been verified on device.
+- Room-backed cached reading, idempotent demo fallback, serialized transactional refresh, deterministic URL identities and saved/last-opened retention. Nine evidenced historical schema upgrade paths are implemented; SQLite checks passed, while Room/device upgrade validation remains pending. Unknown schema 7 is not guessed.
+- Story reading and automatic related-coverage grouping, attributed headlines/excerpts, publisher/country/language/time context, original reporting routes and adaptive paired comparison cards. Grouping may be wrong; verified framing/claim analysis and live Lens Gap scores are unavailable.
+- Home Saved/Continue reading controls, Explore publisher-country/region/original-language filters and search across cached headlines/summaries. Topic metadata is incomplete for live feeds. Settings retains theme/reduced motion, adds reading language, confirmed local-data deletion and configurable public privacy/contact links.
+- Constrained periodic WorkManager refresh, HTTPS-only feed/browser paths, lifecycle-aware network indicator, source health and explicit cached/demo states.
+- Production translation provider is unconfigured. Labeled fixture translations remain available; a provider/cache boundary handles revision/provider/freshness, cancellation and failure while preserving originals. Feed/publisher language metadata is used; automatic text-language detection remains future work.
+- Release remains Free. Preview Plus is debug-only. A dormant Play Billing 9.1.0 gateway supports product queries, pending state, restore, server-verifier boundary and acknowledgement, but is not connected to app DI/UI. No paid purchases or production entitlement are enabled.
+- Firebase is optional and unconfigured by default; crash collection is disabled. Publisher and image requests still transmit network information. See the [privacy draft](docs/PRIVACY_POLICY_DRAFT.md) and [Data Safety worksheet](docs/DATA_SAFETY_WORKSHEET.md).
 
-### Prerequisites
+## Build
 
-- **Android Studio** with SDK Platform 29+ and Build Tools 34.0.0+
-- **JDK 21** (Azul Zulu recommended)
-- **Git**
-
-### Build and Run
+Use JDK 17, Android SDK platform 36/build-tools 35.0.0 and the checked-in Gradle 8.11.1 wrapper with AGP 8.10.1. Application ID: `com.crosslens.app`; minimum API 29; target API 36; candidate code 16 / `1.0.0-rc01`. The complete dependency/toolchain matrix still needs successful CI validation.
 
 ```sh
-git clone https://github.com/Mattjhagen/CrossLens.git
-cd CrossLens
-
-# Build debug APK (no signing config needed)
+./gradlew clean
 ./gradlew :app:assembleDebug
-
-# Run tests and lint
-./gradlew :app:testDebugUnitTest :app:lintDebug
-
-# Install on connected device/emulator
-./gradlew :app:installDebug
-adb shell am start -n com.crosslens.app.debug/.MainActivity
+./gradlew :app:testDebugUnitTest
+./gradlew :app:lintDebug
+./gradlew :app:assembleRelease
+./gradlew :app:bundleRelease
+./gradlew :app:lintRelease
+python3 scripts/verify_release_artifacts.py
 ```
 
-**APK Location:** `app/build/outputs/apk/debug/app-debug.apk`
-
-### Release Builds
-
-Release builds require signing configuration. See [Release Signing Guide](docs/RELEASE_SIGNING.md) for setup.
+On a configured emulator/device:
 
 ```sh
-# Build signed release APK (requires keystore.properties or env vars)
-./gradlew :app:assembleRelease
-
-# Output location
-ls -lh app/build/outputs/apk/release/app-release.apk
+./gradlew :app:connectedDebugAndroidTest
+./gradlew :app:installDebug
+adb shell am start -n com.crosslens.app.debug/com.crosslens.app.MainActivity
 ```
 
-### Build Results
+Expected outputs after successful builds: debug APK at `app/build/outputs/apk/debug/app-debug.apk`; release APK under `app/build/outputs/apk/release/`; AAB at `app/build/outputs/bundle/release/app-release.aab`. **These artifacts were not generated in this session.** Release is unsigned without the owner's existing credentials. See [signing instructions](docs/RELEASE_SIGNING.md). CI runs debug/tests/lint and optimized unsigned release verification; no CI success is claimed yet.
 
-- **Build:** ✅ SUCCESS (Gradle 8.9, AGP 8.5.2, Kotlin 1.9.24)
-- **Unit Tests:** ✅ 139/139 passed
-- **Lint:** ✅ 0 errors, 0 warnings
-- **Release Signing:** ✅ Configured (see [RELEASE_SIGNING.md](docs/RELEASE_SIGNING.md))
-- **Crash Reporting:** ✅ Firebase Crashlytics integrated
-- **Quality Audit:** See [QUALITY_REPORT.md](docs/QUALITY_REPORT.md)
+## Tests and remaining gates
 
-## Product principles
+Added regression coverage for seed idempotence, transactional rollback, stable identity, offline/partial failure, saved content, XML/Atom/dates, translation cache/failure/cancellation, subscription access, navigation restoration and Hilt Compose save/compare/back. Android/JVM tests remain unexecuted. Static XML/TOML/YAML checks, nine SQLite migration-structure/preservation checks and synthetic artifact-validator checks passed. These do not prove APK behavior.
 
-- **Global by design:** organize coverage by source, country, region, language, topic, and institutional context.
-- **Evidence stays visible:** link summaries and comparison observations to the articles supporting them; distinguish reported claims from established facts.
-- **Translation with provenance:** preserve original text, label translated text, and disclose translation availability and method.
-- **Multiple dimensions of perspective:** geographic, political, and institutional context can coexist. Avoid a universal left/center/right classification.
-- **Explain the comparison:** readers should understand the reasons behind a future Lens Gap result and its limitations.
+Release blockers include compilation/test/lint/R8/device checks, actual beta upgrades, source rights and real ingestion, accessibility/performance/RTL/form-factor validation, complete dependency security review, public privacy/contact pages, Play declarations and signed artifacts. Translation/billing/Firebase need separate owner-configured services before activation. The full [Play checklist](docs/PLAY_STORE_RELEASE_CHECKLIST.md) includes listing copy, assets, internal/closed testing and rollout instructions.
 
-## Design is a core feature
-
-**CrossLens should be gorgeous and make readers want to return.** The visual direction takes inspiration from the owner's love of Flipboard's editorial feel and tactile browsing, expressed through an original CrossLens identity: expressive typography, generous imagery, varied magazine compositions, warm surfaces, and restrained perspective-switch motion.
-
-The first skeleton must already feel thoughtfully designed. Material 3 is the foundation for a custom visual system, and every screen—including empty states and Settings—gets the same care. Subtle flip-inspired transitions should support comparing sources, with accessible controls and reduced-motion alternatives.
-
-Build reasons to return from the start: a finite mock edition, locally saved stories, a continue-reading shortcut, and useful invitations to explore another perspective. Live briefings, followed topics, and meaningful update notifications come later. Return visits should come from beauty, trust, and discovery.
-
-Read [the design direction and visual acceptance gate](docs/DESIGN_DIRECTION.md) alongside the build guide. It defines screen composition, motion, original identity, and the visual evidence required at handoff.
-
-## Free reading and CrossLens Plus
-
-CrossLens will offer a useful free experience and an optional **CrossLens Plus** upgrade. Free readers can discover stories, read event context and claims, save stories, and compare two source perspectives. Plus unlocks the full set of sources and available translations for a story, complete Lens Gap evidence, and deeper discovery controls.
-
-The first Android skeleton contains a clearly labeled local **Preview Plus** entitlement so the paywall and locked states can be designed and tested without processing purchases. It does not contain Google Play Billing, real prices, trials, or payment data. See [the access model](docs/MONETIZATION.md) for the complete free/Plus boundary, paywall behavior, and production requirements.
-
-## The first five screens
-
-| Screen | Initial skeleton experience |
-| --- | --- |
-| **Home** | Clustered mock stories with title, summary, topic, countries, source count, timestamp, and clearly labeled demo comparison data. Sort by latest, coverage breadth, or demo Lens Gap. |
-| **Story** | Event overview, attributed claims, sources, original article links, and a route into comparison. Distinguish disputed claims and missing evidence. |
-| **CrossLens** | Compare selected source coverage of one event: original and mock-translated headlines/excerpts, framing observations, and supporting references. Stack cards on narrow screens. |
-| **Explore** | Filter mock stories by region, country, topic, and original article language; combine filters and clear them. |
-| **Settings** | Persist preferred reading language, home country/region, source selections, translation display preference, and theme. |
-
-Home, Explore, and Settings are top-level destinations. Story and CrossLens are detail destinations addressed by stable story IDs, with predictable back navigation.
-
-## What's Implemented
-
-### Screens
-- **Home:** Story list with save/unsave, continue reading, mock edition label
-- **Story:** Event summary, attributed claims, sources, comparison action
-- **CrossLens:** Source-by-source comparison with flip animation, paywall gating
-- **Explore:** Region/topic filters with combined AND logic
-- **Settings:** Theme selection, reduced motion, Plus preview/reset, personal preferences management, editorial review access
-- **Source Detail:** Full article reader with publisher page access, demo AI digest, personal relevance feedback
-- **Editorial Review (Demo):** Offline workflow prototype for reviewing mock ingestion candidates
-
-### Features
-- ✅ Offline-first: All data seeded from mock fixtures in Room
-- ✅ Pull to refresh: Reload demo data with timestamp tracking
-- ✅ Free/Plus access: Free users see first 2 sources, Plus unlocks all
-- ✅ DataStore persistence: Saved stories, last-opened, preferences, personal relevance feedback, demo local location, refresh timestamps
-- ✅ Custom Material 3 theme: Editorial design with serif/sans typography
-- ✅ Reduced motion: Animations respect user preference
-- ✅ Multilingual fixtures: English, French, Arabic, Japanese samples
-- ✅ Editorial review workflow: Offline demo for reviewing cross-language matches and syndication candidates
-- ✅ Personal relevance feedback: Transparent "Show more/less like this" controls with clear preference management
-- ✅ Local sources: Demo local news from 4 cities (Seattle, Paris, London, Toronto) with manual location selection and filtering
-- ✅ For You — Demo: Personalized story recommendations using explicit metadata-based signals only (topics, regions, local location)
-- ✅ Personalization controls: Show/hide For You section, clear all preferences with confirmation, eligibility transparency
-
-### Mock Data
-- 7 story clusters (3 global + 4 local: climate summit, AI regulation, trade, Seattle transit, Paris cycling, London housing, Toronto tech)
-- 14 sources: 6 national/global + 8 local across 4 demo cities
-- Demo Lens Gap assessments clearly labeled
-- Claims with CORROBORATED/DISPUTED status
-- Frame observations with evidence references
-- Editorial review candidates (cross-language matches, syndication detection)
-- Local sources with publisher types (newspaper, TV)
-
-## Technical Foundation
-
-| Area | Implementation |
-| --- | --- |
-| Platform | Native Android, Kotlin, minimum API 29 (Android 10) |
-| UI | Jetpack Compose, Material 3, Navigation Compose |
-| Architecture | MVVM with immutable StateFlow UI state |
-| DI | Hilt with repository interfaces |
-| Database | Room 2.6.1 with idempotent seeding |
-| Preferences | DataStore 1.1.1 |
-| Networking | Retrofit/OkHttp defined but inactive in mock mode |
-| Build | Gradle 8.9, AGP 8.5.2, Kotlin 1.9.24, KSP |
-| Testing | JUnit 4, Mockito-Kotlin, Coroutines Test, Turbine |
-
-**Documented Toolchain:** See [BUILD_STATUS.md](docs/BUILD_STATUS.md) for complete version matrix
-
-```text
-Compose screen → ViewModel → repository interface
-                                   ↓
-                          mock repository → Room → bundled fixtures
-                                   ↓ later
-                          live repository → Retrofit/OkHttp → backend
-```
-
-Room supplies observable local data. ViewModels never depend on fixture files, Retrofit DTOs, or database entities. Dependency injection chooses the implementation, so future ingestion and translation services can replace mocks without rewriting screens.
-
-## Data model: events, reporting, and interpretation
-
-These are proposed domain contracts, not existing classes. Use stable IDs, UTC instants, ISO country codes, and BCP 47 language tags. Regions are explicit groupings; sources may cover multiple countries and articles may use a different language from their publisher's default.
-
-| Model | Essential fields and relationships |
-| --- | --- |
-| `Story` | ID, title, event summary, event time (optional), updated time, topic IDs, event country codes, article IDs, claim IDs; optional Lens Gap assessment |
-| `Source` | ID, name, homepage, country codes, region IDs, default languages, optional ownership/funding and editorial-context records with citations and review dates |
-| `Article` | ID, story ID, source ID, original URL, published time, original language, original headline and excerpt; attribution and content-use metadata |
-| `Translation` | ID, article ID, source/target language, translated headline/excerpt, status (`NOT_REQUESTED`, `PENDING`, `AVAILABLE`, `FAILED`, `UNAVAILABLE`), method/provider, generation time, original-content revision |
-| `Claim` | ID, story ID, statement, assessment (`REPORTED`, `CORROBORATED`, `DISPUTED`, `UNASSESSED`), supporting and contradicting article references, assessment provenance |
-| `FrameObservation` | ID, story ID, article IDs, emphasized actors/claims, language or sentiment observations, evidence references, method/version and confidence; optional omission hypothesis with comparison scope |
-| `Perspective` | ID, scope/article IDs, dimension (`GEOGRAPHIC`, `POLITICAL`, `INSTITUTIONAL`), descriptive label, evidence references, attribution and uncertainty |
-| `LensGapAssessment` | Story ID, status, nullable score, component explanations, source/article sample IDs, coverage window, confidence/limitations, method version, generated time, `isDemo` |
-| `UserPreferences` | Reading language, home country/region, enabled source IDs, translation preference, theme, reduced-motion preference |
-| `ReadingState` | Locally persisted saved story IDs and last-opened story ID; independent of seeded content |
-| `Entitlement` | Active tier (`FREE` or local `PLUS_DEMO`), access-state source, and update time; never a real purchase record in the skeleton |
-
-Keep original and translated content separate. Missing translations fall back to the original with a visible explanation. A corroborated claim still needs evidence; an apparent omission means “not found in this analyzed sample,” not proof of intentional suppression. Keep event location distinct from the country of a reporting source.
-
-## Future signature feature: Lens Gap
-
-**Lens Gap asks: how differently is this event being covered in the available reporting?**
-
-A future assessment may describe differences in emphasized claims, selected actors, terminology, and the distribution of attention across sources. Each result should reveal its sampled articles, geographic/language coverage, time window, explanatory components, and concrete evidence. Broad regional descriptions must identify the sampled publications and avoid implying a single regional viewpoint.
-
-A possible future display is **“Lens Gap: 72/100 — divergent emphasis.”** This is a proposed index, not a probability, factuality score, or claim that 72% of reporting is biased. The scoring method, thresholds, confidence calibration, and minimum evidence requirements remain research work.
-
-The skeleton uses deterministic fixture assessments labeled **“Demo Lens Gap — illustrative.”** It implements no scoring algorithm. Stories without sufficient comparison data show **“Not enough coverage”** with a null score, never a misleading zero. Demo sorting places unavailable scores last and explains that scores are simulated.
-
-Before real ranking ships, evaluate translation artifacts, duplicate/syndicated reporting, uneven source sampling, time-window effects, and uncertainty. More articles from the same syndicated report must not masquerade as independent agreement. Readers should be able to inspect the explanation and report a misleading comparison.
-
-## Roadmap
-
-1. ✅ **Android skeleton:** Five screens, local fixtures, offline persistence, preferences, navigation, meaningful tests, and a mock free/Plus access experience. *(Complete)*
-2. ✅ **Editorial review prototype:** Offline workflow demonstrating human review of ingestion candidates (cross-language matches, syndication detection). *(Complete - demo only)*
-3. **Source ingestion:** Backend API, source catalog, attribution/content permissions, article normalization, event clustering, and deduplication. Connect editorial review to live ingestion pipeline.
-4. **Translations:** Provider abstraction, cache/version handling, original-text access, explicit failure states, and multilingual/RTL validation.
-5. **Explainable comparisons:** Evidence-backed frame observations and a human-reviewed Lens Gap evaluation set before production scoring.
-6. **Discovery experiments:** Evaluate coverage breadth, cross-country differences, and “outside my usual sources” sorting with transparent controls.
-
-Accounts, real subscriptions/billing, scraping, production backend deployment, live translation, and automated political labels are outside the initial build.
-
-Future concepts such as reader-controlled personalization, relevant
-notifications, local reporting, and AI-assisted editorial triage are tracked
-in the [product ideas backlog](docs/PRODUCT_IDEAS.md). They are not currently
-implemented.
-
-## Project Structure
-
-```
-app/src/main/java/com/crosslens/app/
-├── CrossLensApplication.kt         # Hilt app, initializes data seeding
-├── MainActivity.kt                 # Edge-to-edge Compose host
-├── core/
-│   ├── model/                      # Domain models (Story, Article, Claim, etc.)
-│   └── ui/
-│       ├── theme/                  # Material 3 custom theme
-│       └── PaywallSheet.kt        # Reusable Plus paywall
-├── data/
-│   ├── local/
-│   │   ├── entity/                # Room entities
-│   │   ├── dao/                   # Room DAOs
-│   │   ├── CrossLensDatabase.kt   # Database definition
-│   │   ├── Converters.kt          # Type converters
-│   │   └── Mappers.kt             # Entity → Domain
-│   ├── mock/
-│   │   ├── MockFixtures.kt        # Fixture data
-│   │   └── Mock*Repository.kt     # Mock implementations
-│   ├── preferences/               # DataStore repositories
-│   └── repository/                # Repository interfaces
-├── di/                            # Hilt modules
-├── feature/
-│   ├── home/                      # HomeScreen + ViewModel
-│   ├── story/                     # StoryScreen + ViewModel
-│   ├── comparison/                # CrossLensScreen + ViewModel
-│   ├── explore/                   # ExploreScreen + ViewModel
-│   └── settings/                  # SettingsScreen + ViewModel
-└── navigation/                    # NavHost and destinations
-```
-
-## Known Limitations
-
-### Skeleton Scope
-- **No live backend:** All data is seeded from fixtures
-- **No real translations:** Demo translations are manually created samples
-- **No Lens Gap algorithm:** Scores are fixed demo values
-- **No Google Play Billing:** Plus access is local preview only
-- **No network requests:** Mock mode works offline
-- **No bundled imagery:** Text-only compositions
-
-### Device Testing
-- **Not tested on physical device** (no device available during build)
-- **No emulator screenshots captured**
-- **TalkBack not verified**
-- **Performance not profiled**
-
-See [QUALITY_REPORT.md](docs/QUALITY_REPORT.md) for complete audit results and blocked checks.
-
-## Development References
-
-- [BUILD_STATUS.md](docs/BUILD_STATUS.md) - Build verification and step status
-- [QUALITY_REPORT.md](docs/QUALITY_REPORT.md) - Complete audit with 6 reviews
-- [ANDROID_BUILD_GUIDE.md](docs/ANDROID_BUILD_GUIDE.md) - Implementation phases
-- [DESIGN_DIRECTION.md](docs/DESIGN_DIRECTION.md) - Visual design requirements
-- [MONETIZATION.md](docs/MONETIZATION.md) - Free/Plus access model
-- [Android Architecture Guide](https://developer.android.com/topic/architecture) - MVVM best practices
-
-## Contributing
-
-This is a demonstration project for the CrossLens concept. The skeleton implements:
-1. ✅ Five-screen navigation
-2. ✅ Room database with observable queries
-3. ✅ Free/Plus access model
-4. ✅ Custom editorial design
-5. ✅ Offline-first architecture
-
-Future work includes backend integration, live translations, and Lens Gap analysis algorithm.
+Product/design references: [design direction](docs/DESIGN_DIRECTION.md), [monetization boundaries](docs/MONETIZATION.md), [build guide](docs/ANDROID_BUILD_GUIDE.md), [security audit](docs/SECURITY_AUDIT.md). The original beta README and its proposed contracts are preserved in [beta history](docs/README_BETA_HISTORY.md); historical test counts and milestone claims are not current evidence.

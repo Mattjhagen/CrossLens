@@ -3,6 +3,7 @@ package com.crosslens.app.data.ingestion
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
+import java.util.Locale
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -22,8 +23,8 @@ class RssParser(
         // Common RSS/RFC 822 date formats
         private val RSS_DATE_FORMATTERS = listOf(
             DateTimeFormatter.RFC_1123_DATE_TIME,
-            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z"),
-            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z"),
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH),
+            DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH),
             DateTimeFormatter.ISO_INSTANT,
             DateTimeFormatter.ISO_OFFSET_DATE_TIME
         )
@@ -40,6 +41,8 @@ class RssParser(
                 throw IllegalArgumentException("Feed exceeds maximum size of ${MAX_FEED_SIZE_BYTES / 1024 / 1024}MB")
             }
 
+            require(!xmlContent.contains("<!DOCTYPE", ignoreCase = true) &&
+                !xmlContent.contains("<!ENTITY", ignoreCase = true)) { "DTD/entity declarations are forbidden" }
             val factory = XmlPullParserFactory.newInstance()
             factory.isNamespaceAware = true
             val parser = factory.newPullParser()
@@ -48,6 +51,8 @@ class RssParser(
             val items = mutableListOf<RssFeedItem>()
             var eventType = parser.eventType
 
+            var feedLanguage: String? = null
+            var itemLanguage: String? = null
             var inItem = false
             var currentTitle: String? = null
             var currentLink: String? = null
@@ -59,12 +64,21 @@ class RssParser(
             while (eventType != XmlPullParser.END_DOCUMENT && items.size < maxItems) {
                 when (eventType) {
                     XmlPullParser.START_TAG -> {
-                        val tagName = parser.name?.lowercase()
+                        val tagName = parser.name?.lowercase(Locale.ROOT)
                         val namespace = parser.namespace
 
                         when (tagName) {
-                            "item" -> {
+                            "language" -> {
+                                val language = readText(parser).trim().takeIf { it.isNotEmpty() }
+                                if (inItem) itemLanguage = language else feedLanguage = language
+                            }
+                            "feed", "rss" -> {
+                                feedLanguage = parser.getAttributeValue("http://www.w3.org/XML/1998/namespace", "lang")
+                                    ?: feedLanguage
+                            }
+                            "item", "entry" -> {
                                 inItem = true
+                                itemLanguage = parser.getAttributeValue("http://www.w3.org/XML/1998/namespace", "lang")
                                 currentTitle = null
                                 currentLink = null
                                 currentDescription = null
@@ -74,23 +88,30 @@ class RssParser(
                             }
                             "title" -> {
                                 if (inItem) {
-                                    currentTitle = readText(parser)
+                                    currentTitle = sanitizeHtml(readText(parser))
                                 }
                             }
                             "link" -> {
                                 if (inItem) {
-                                    currentLink = readText(parser)
+                                    val href = parser.getAttributeValue(null, "href")
+                                    val rel = parser.getAttributeValue(null, "rel")
+                                    if (href != null) {
+                                        if (rel == null || rel == "alternate") currentLink = href
+                                    } else {
+                                        currentLink = readText(parser)
+                                    }
                                 }
                             }
-                            "description" -> {
+                            "description", "summary" -> {
                                 if (inItem) {
                                     val rawDescription = readText(parser)
                                     currentDescription = sanitizeHtml(rawDescription).take(maxDescriptionLength)
                                 }
                             }
-                            "pubdate" -> {
+                            "pubdate", "published", "updated" -> {
                                 if (inItem) {
-                                    currentPubDate = readText(parser)
+                                    val value = readText(parser)
+                                    if (currentPubDate == null || tagName != "updated") currentPubDate = value
                                 }
                             }
                             "category" -> {
@@ -149,7 +170,7 @@ class RssParser(
                         }
                     }
                     XmlPullParser.END_TAG -> {
-                        if (parser.name == "item" && inItem) {
+                        if (parser.name in setOf("item", "entry") && inItem) {
                             // Validate required fields
                             if (!currentTitle.isNullOrBlank() && !currentLink.isNullOrBlank()) {
                                 items.add(
@@ -161,7 +182,8 @@ class RssParser(
                                         description = currentDescription?.trim() ?: "",
                                         pubDate = parsePubDate(currentPubDate),
                                         category = currentCategory?.trim(),
-                                        imageUrl = currentImageUrl?.trim()
+                                        imageUrl = currentImageUrl?.trim(),
+                                        languageTag = itemLanguage ?: feedLanguage
                                     )
                                 )
                             }
@@ -177,12 +199,17 @@ class RssParser(
     }
 
     private fun readText(parser: XmlPullParser): String {
-        var result = ""
-        if (parser.next() == XmlPullParser.TEXT) {
-            result = parser.text ?: ""
-            parser.nextTag()
+        val depth = parser.depth
+        val result = StringBuilder()
+        while (true) {
+            val event = parser.next()
+            if (event == XmlPullParser.END_DOCUMENT ||
+                (event == XmlPullParser.END_TAG && parser.depth == depth)) break
+            if (event == XmlPullParser.TEXT && result.length < 65_536) {
+                result.append((parser.text ?: "").take(65_536 - result.length))
+            }
         }
-        return result
+        return result.toString()
     }
 
     private fun parsePubDate(dateString: String?): Instant? {
@@ -356,5 +383,6 @@ data class RssFeedItem(
     val description: String,
     val pubDate: Instant?,
     val category: String?,
-    val imageUrl: String? // HTTPS URL to article image from enclosure or media:content
+    val imageUrl: String?, // HTTPS URL to article image from enclosure or media:content
+    val languageTag: String? = null
 )

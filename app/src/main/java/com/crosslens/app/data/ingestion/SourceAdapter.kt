@@ -56,6 +56,9 @@ data class SourceArticleRecord(
  * Documents the permission model for using this content.
  */
 enum class ContentPermission {
+    /** Public feed delivery is not evidence of a commercial redistribution license. */
+    PUBLIC_FEED_REVIEW_REQUIRED,
+
     /** Excerpt explicitly provided by source for display (RSS, API, etc.) */
     EXPLICIT_EXCERPT,
 
@@ -86,7 +89,7 @@ object SourceAdapterValidator {
         require(record.headline.isNotBlank()) {
             "Article headline cannot be blank"
         }
-        require(record.languageTag.matches(Regex("[a-z]{2}(-[A-Z]{2})?"))) {
+        require(LanguageTags.normalize(record.languageTag) != null) {
             "Invalid language tag: ${record.languageTag}"
         }
     }

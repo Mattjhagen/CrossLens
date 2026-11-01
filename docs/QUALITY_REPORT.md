@@ -1,3 +1,5 @@
+> Historical beta report. Current production status and actual verification results are recorded in [PRODUCTION_READINESS_REPORT.md](PRODUCTION_READINESS_REPORT.md). Earlier passing claims below do not describe the current candidate.
+
 # CrossLens Quality Audit Report
 
 **Date:** 2026-09-22  

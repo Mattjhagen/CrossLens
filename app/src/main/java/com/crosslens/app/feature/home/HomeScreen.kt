@@ -43,10 +43,17 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val connectivity = androidx.compose.runtime.remember(context) { com.crosslens.app.core.network.observeConnectivity(context.applicationContext) }
+    val online by connectivity.collectAsStateWithLifecycle(initialValue = true)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val savedStories by viewModel.savedStories.collectAsStateWithLifecycle()
+    val showSavedOnly by viewModel.showSavedOnly.collectAsStateWithLifecycle()
+    val continueReading by viewModel.continueReading.collectAsStateWithLifecycle()
     val showLocalOnly by viewModel.showLocalOnly.collectAsStateWithLifecycle()
     val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+    val refreshError by viewModel.refreshError.collectAsStateWithLifecycle()
     val lastRefreshedTime by viewModel.lastRefreshedTime.collectAsStateWithLifecycle()
     val showForYou by viewModel.showForYou.collectAsStateWithLifecycle()
     val forYouRecommendations by viewModel.forYouRecommendations.collectAsStateWithLifecycle()
@@ -188,7 +195,7 @@ fun HomeScreen(
                         .padding(paddingValues)
                         .semantics {
                             contentDescription = if (isRefreshing) {
-                                "Refreshing demo data"
+                                "Refreshing news"
                             } else {
                                 "Pull to refresh demo data"
                             }
@@ -215,6 +222,9 @@ fun HomeScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
 
+                                if (!online) Text(stringResource(R.string.offline_cached_notice),
+                                    style = MaterialTheme.typography.labelMedium)
+                                refreshError?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                                 // Feed state indicator
                                 val currentFeedMetadata = feedMetadata
                                 val feedStateLabel = when (currentFeedMetadata?.state) {
@@ -261,6 +271,16 @@ fun HomeScreen(
                             }
                         }
 
+                        item {
+                            FilterChip(selected = showSavedOnly, onClick = viewModel::toggleSavedFilter,
+                                label = { Text(stringResource(R.string.saved_stories_filter)) })
+                            continueReading?.let { story ->
+                                TextButton(onClick = { onStoryClick(story.id) }) {
+                                    Text(stringResource(R.string.continue_reading_story, story.title))
+                                }
+                            }
+                            if (showSavedOnly && savedStories.isEmpty()) Text(stringResource(R.string.no_saved_stories))
+                        }
                         // For You section
                         if (showForYou && forYouEligible && forYouRecommendations.isNotEmpty()) {
                             item {
@@ -279,7 +299,7 @@ fun HomeScreen(
                             }
                         }
 
-                        items(state.stories) { story ->
+                        items(if (showSavedOnly) savedStories else state.stories, key = { it.id }) { story ->
                             if (story.isEventCluster) {
                                 EventClusterCard(
                                     story = story,

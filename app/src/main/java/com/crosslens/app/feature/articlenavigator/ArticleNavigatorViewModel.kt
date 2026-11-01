@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -38,11 +39,12 @@ private const val MIN_DISTINCT_PUBLISHERS_FOR_NAVIGATION = 3
 @HiltViewModel
 class ArticleNavigatorViewModel @Inject constructor(
     private val repository: StoryRepository,
-    savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val readingStateRepository: com.crosslens.app.data.preferences.ReadingStateRepository
 ) : ViewModel() {
 
-    private val initialStoryId: String = checkNotNull(savedStateHandle["storyId"])
-    private val initialArticleId: String? = savedStateHandle["articleId"]
+    private val initialStoryId: String = savedStateHandle["currentStoryId"] ?: checkNotNull(savedStateHandle["storyId"])
+    private var initialArticleId: String? = savedStateHandle["currentArticleId"] ?: savedStateHandle["articleId"]
 
     private val _uiState = MutableStateFlow<ArticleNavigatorUiState>(ArticleNavigatorUiState.Loading)
     val uiState: StateFlow<ArticleNavigatorUiState> = _uiState.asStateFlow()
@@ -62,23 +64,20 @@ class ArticleNavigatorViewModel @Inject constructor(
     private fun loadNavigator() {
         viewModelScope.launch {
             try {
-                // Load all feed stories from the flow
-                repository.observeStories().collect { stories ->
-                    feedStories = stories
-
-                    // Find initial story position in feed
-                    currentFeedIndex = feedStories.indexOfFirst { it.id == initialStoryId }
-                    if (currentFeedIndex == -1) {
-                        _uiState.value = ArticleNavigatorUiState.Error("Story not found in feed")
-                        return@collect
-                    }
-
-                    // Load initial story and articles
-                    loadCurrentStoryAndArticles()
-
-                    // Stop collecting after first emission for initialization
-                    return@collect
+                // Read one snapshot: return@collect never ended the old collector and reset navigation
+                // on every refresh. A saved legacy story may be outside the current edition.
+                feedStories = repository.observeStories().first()
+                if (feedStories.none { it.id == initialStoryId }) {
+                    repository.getStory(initialStoryId)?.let { feedStories = listOf(it) + feedStories }
                 }
+                currentFeedIndex = feedStories.indexOfFirst { it.id == initialStoryId }
+                if (currentFeedIndex == -1) {
+                    _uiState.value = ArticleNavigatorUiState.Error("Story not found in feed")
+                    return@launch
+                }
+                loadCurrentStoryAndArticles()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = ArticleNavigatorUiState.Error(
                     e.message ?: "Failed to load article navigator"
@@ -115,6 +114,8 @@ class ArticleNavigatorViewModel @Inject constructor(
             }
         }
 
+        initialArticleId = null
+        readingStateRepository.updateLastOpened(story.id)
         updateUiState()
     }
 
@@ -126,6 +127,9 @@ class ArticleNavigatorViewModel @Inject constructor(
             _uiState.value = ArticleNavigatorUiState.Error("Failed to load current article")
             return
         }
+
+        savedStateHandle["currentStoryId"] = story.id
+        savedStateHandle["currentArticleId"] = articleWithMetadata.article.id
 
         // Check if horizontal navigation is available (only for confident clusters with 3+ distinct publishers)
         // Aligned with Read Across Coverage eligibility threshold
@@ -215,25 +219,17 @@ class ArticleNavigatorViewModel @Inject constructor(
             try {
                 repository.refresh()
 
-                // Reload stories from repository
-                repository.observeStories().collect { stories ->
-                    feedStories = stories
-
-                    // Navigate to first story and first article
-                    currentFeedIndex = 0
-                    currentArticleIndex = 0
-
-                    if (feedStories.isEmpty()) {
-                        _uiState.value = ArticleNavigatorUiState.Error("No stories available")
-                        return@collect
-                    }
-
-                    // Load first story's articles
-                    loadCurrentStoryAndArticles()
-
-                    // Stop after first emission
-                    return@collect
+                feedStories = repository.observeStories().first()
+                currentFeedIndex = 0
+                currentArticleIndex = 0
+                initialArticleId = null
+                if (feedStories.isEmpty()) {
+                    _uiState.value = ArticleNavigatorUiState.Error("No stories available")
+                    return@launch
                 }
+                loadCurrentStoryAndArticles()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = ArticleNavigatorUiState.Error(
                     e.message ?: "Failed to refresh feed"

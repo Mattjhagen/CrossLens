@@ -24,6 +24,7 @@ class SourceDigestGenerator @Inject constructor() {
         articles: List<Article>,
         sources: Map<String, Source>
     ): SourceDigest {
+        require(articles.all { it.contentUseMetadata.isDemo }) { "Demo digest cannot analyze real reporting" }
         // Demo: Create deterministic digest based on article count and content
         val sourceIds = articles.map { it.sourceId }.distinct()
 

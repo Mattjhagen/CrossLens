@@ -1,3 +1,5 @@
+> Historical beta report. Current production status and actual verification results are recorded in [PRODUCTION_READINESS_REPORT.md](PRODUCTION_READINESS_REPORT.md). Earlier passing claims below do not describe the current candidate.
+
 # CrossLens Build Status
 
 **Working Revision:** 3650a8f (Merge feature/source-health-visibility)  

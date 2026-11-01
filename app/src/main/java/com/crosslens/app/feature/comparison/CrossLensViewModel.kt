@@ -72,6 +72,8 @@ class CrossLensViewModel @Inject constructor(
                     articlesWithSources = articlesWithSources,
                     frameObservations = observations
                 )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.value = CrossLensUiState.Error(e.message ?: "Unknown error")
             }

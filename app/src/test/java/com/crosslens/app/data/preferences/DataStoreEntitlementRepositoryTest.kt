@@ -24,6 +24,12 @@ class DataStoreEntitlementRepositoryTest {
         dataStore = mock()
     }
 
+    @Test fun `release refuses stored preview and malformed tiers fail closed`() {
+        assertEquals(AccessTier.FREE, PreviewEntitlementPolicy.resolve("PLUS_DEMO", false))
+        assertEquals(AccessTier.FREE, PreviewEntitlementPolicy.resolve("unknown", true))
+        assertEquals(AccessTier.FREE, PreviewEntitlementPolicy.resolve(null, true))
+    }
+
     @Test
     fun `default entitlement is FREE`() = runTest {
         whenever(dataStore.data).thenReturn(flowOf(preferencesOf()))

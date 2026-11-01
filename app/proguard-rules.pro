@@ -40,3 +40,9 @@
 -keepattributes *Annotation*
 -keep class com.google.firebase.crashlytics.** { *; }
 -dontwarn com.google.firebase.crashlytics.**
+
+# Room preference/list converters use anonymous Gson TypeToken subclasses.
+# Preserve their generic signatures under R8 full mode (Gson < 2.11 has no bundled rules).
+# https://google.github.io/gson/Troubleshooting.html
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken

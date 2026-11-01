@@ -24,7 +24,8 @@ object DatabaseModule {
             CrossLensDatabase::class.java,
             "crosslens_database"
         )
-            .fallbackToDestructiveMigration() // Prototype mode: recreate on schema change
+            .addMigrations(*com.crosslens.app.data.local.ProductionMigrations.ALL)
+            // Unknown versions fail rather than erase reader data.
             .build()
     }
 
