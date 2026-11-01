@@ -67,7 +67,7 @@ android {
         minSdk = 29
         targetSdk = 36
         versionCode = 16
-        versionName = "1.0.0-rc01"
+        versionName = "0.0.16-beta"
         buildConfigField("boolean", "FIREBASE_ENABLED", firebaseEnabled.toString())
         buildConfigField("String", "PRIVACY_POLICY_URL", publicUrlProperty("crosslens.privacyPolicyUrl"))
         buildConfigField("String", "CONTACT_URL", publicUrlProperty("crosslens.contactUrl"))
