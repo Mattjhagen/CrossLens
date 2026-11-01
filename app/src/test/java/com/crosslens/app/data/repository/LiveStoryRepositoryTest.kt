@@ -38,7 +38,8 @@ class LiveStoryRepositoryTest {
     private val reading: ReadingStateRepository = mock()
     private val digest = SourceDigestGenerator()
     private val fixture = object : DebugEventFixtureProvider {
-        override fun getReadAcrossFixture() = emptyList<SourceArticleRecord>()
+        override fun getReadAcrossFixture(): List<SourceArticleRecord> =
+            error("Normal feed refresh must not request demo fixtures")
     }
 
     @Before fun setup() {
@@ -66,6 +67,20 @@ class LiveStoryRepositoryTest {
         whenever(adapter.fetchArticles()).thenReturn(listOf(SourceArticleRecord(url, Instant.parse("2026-10-31T12:00:00Z"),
             "en", "A dated report", "Publisher excerpt", imageUrl = "https://publisher.example/image.jpg", sourceId = "test-source")))
         return adapter
+    }
+
+    @Test fun `fresh offline launch stays empty without demo fallback`() = runTest {
+        val repository = repository()
+        assertTrue(repository.refresh().isFailure)
+        assertTrue(repository.observeStories().first().isEmpty())
+        assertEquals(FeedState.ERROR, repository.getFeedMetadata().state)
+    }
+
+    @Test fun `legacy demo cache is excluded while live stories remain`() = runTest {
+        database.storyDao().insertStories(listOf(story("fixture_story"), story("live_feed_existing")))
+        assertEquals(listOf("live_feed_existing"), repository().observeStories().first().map { it.id })
+        assertEquals(FeedState.CACHED, repository().getFeedMetadata().state)
+        assertTrue(repository().observeLocalStories("legacy_location").first().isEmpty())
     }
 
     @Test fun `startup seeding preserves live cache and is idempotent`() = runTest {
@@ -147,9 +162,9 @@ class LiveStoryRepositoryTest {
         assertNull(database.feedMetadataDao().getFeedMetadata())
     }
 
-    @Test fun `demo fallback is explicit when no cache exists`() = runTest {
+    @Test fun `legacy demo fallback never appears in normal feed`() = runTest {
         fallback.seedData()
-        assertEquals(FeedState.DEMO_FALLBACK, repository().getFeedMetadata().state)
-        assertTrue(repository().observeStories().first().isNotEmpty())
+        assertEquals(FeedState.ERROR, repository().getFeedMetadata().state)
+        assertTrue(repository().observeStories().first().isEmpty())
     }
 }

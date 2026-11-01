@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.crosslens.app.R
-import com.crosslens.app.core.model.AccessTier
 import com.crosslens.app.core.model.Theme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -210,36 +209,13 @@ fun SettingsScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = when (entitlement!!.activeTier) {
-                                    AccessTier.FREE -> stringResource(R.string.access_free)
-                                    AccessTier.PLUS_DEMO -> stringResource(R.string.access_plus_demo)
-                                },
+                                text = stringResource(R.string.premium_free_access),
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            if (entitlement!!.activeTier == AccessTier.FREE) {
-                                Button(
-                                    onClick = { viewModel.previewPlus() },
-                                    enabled = com.crosslens.app.BuildConfig.DEBUG,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(stringResource(R.string.preview_plus))
-                                }
-                            } else {
-                                OutlinedButton(
-                                    onClick = { viewModel.resetToFree() },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(stringResource(R.string.reset_to_free))
-                                }
-                            }
-
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = stringResource(if (com.crosslens.app.BuildConfig.DEBUG) R.string.paywall_demo_notice else R.string.billing_unavailable),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = stringResource(R.string.premium_free_notice),
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
@@ -266,53 +242,6 @@ fun SettingsScreen(
 
                 item {
                     Divider()
-                }
-
-                item {
-                    Text(
-                        text = "Local News",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-
-                item {
-                    LocalLocationSection(
-                        selectedLocationId = userPrefs!!.demoLocalLocation,
-                        onLocationSelected = viewModel::updateDemoLocalLocation
-                    )
-                }
-
-                item {
-                    Divider()
-                }
-
-                item {
-                    Card(
-                        onClick = onEditorialReviewClick,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.editorial_review_entry),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                Text(
-                                    text = stringResource(R.string.editorial_review_demo_notice)
-                                        .take(80) + "…",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 2
-                                )
-                            }
-                        }
-                    }
                 }
 
                 item {
@@ -569,119 +498,6 @@ private fun formatDimensionValue(value: String, type: com.crosslens.app.core.mod
                 else -> value.replace("_", " ").split(" ").joinToString(" ") {
                     it.replaceFirstChar { char -> char.uppercase() }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun LocalLocationSection(
-    selectedLocationId: String?,
-    onLocationSelected: (String?) -> Unit
-) {
-    Card {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                text = "Demo Local News",
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Text(
-                text = "Choose a demo location to see fictional local news stories. This is a preview feature - live local source availability will vary by location.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            val selectedLocation = selectedLocationId?.let {
-                com.crosslens.app.core.model.DemoLocalLocations.findById(it)
-            }
-
-            if (selectedLocation != null) {
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "${selectedLocation.cityName}, ${selectedLocation.regionName}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "Demo Location",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        IconButton(onClick = { onLocationSelected(null) }) {
-                            Text("×", style = MaterialTheme.typography.titleLarge)
-                        }
-                    }
-                }
-            }
-
-            var showLocationPicker by remember { mutableStateOf(false) }
-
-            OutlinedButton(
-                onClick = { showLocationPicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (selectedLocation == null) "Choose location" else "Change location")
-            }
-
-            if (showLocationPicker) {
-                AlertDialog(
-                    onDismissRequest = { showLocationPicker = false },
-                    title = { Text("Choose Demo Location") },
-                    text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "Select a demo location to explore fictional local news:",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            com.crosslens.app.core.model.DemoLocalLocations.ALL_DEMO_LOCATIONS.forEach { location ->
-                                Card(
-                                    onClick = {
-                                        onLocationSelected(location.id)
-                                        showLocationPicker = false
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text(
-                                            text = location.cityName,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text(
-                                            text = "${location.regionName}, ${location.countryCode}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = { showLocationPicker = false }) {
-                            Text("Cancel")
-                        }
-                    }
-                )
-            }
-
-            if (selectedLocation != null) {
-                Text(
-                    text = "Local stories from this location will appear in Home when you filter by local news.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }

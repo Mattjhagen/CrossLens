@@ -34,7 +34,8 @@ class CrossLensViewModel @Inject constructor(
     val selectedArticleIndex: StateFlow<Int> = _selectedArticleIndex.asStateFlow()
 
     val hasAllSourcesAccess = entitlementRepository.hasAccess(PlusFeature.ALL_SOURCES)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000),
+            com.crosslens.app.data.preferences.PremiumAccessPolicy.FREE_PREMIUM_ENABLED)
 
     val userPreferences = userPreferencesRepository.preferencesFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000),

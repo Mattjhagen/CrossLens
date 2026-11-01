@@ -1,3 +1,27 @@
+## 2026-11-01 scoped change review: free premium / demo removal
+
+- Architecture: production DI already binds LiveStoryRepository. Startup demo seeding,
+  fallback lists, debug fixture injection and demo-location entry points removed.
+  All four PlusFeature values pass through one temporary access policy; comparison
+  initializes from that policy to avoid a startup paywall flash.
+- Data/editorial integrity: fictional data is not relabeled as real reporting. Existing
+  saved demo data keeps its disclosure; new normal feeds contain publisher reporting.
+  Cold offline installs show an empty feed with Retry, cached live news stays available.
+- Design/accessibility: preview/reset and demo local/editorial controls removed; Settings
+  states premium is temporarily free. Refresh and For You copy no longer claims demo mode.
+  Visual and TalkBack checks are unverified without a device/emulator.
+- Security/privacy: billing gateway, server verifier contract, pending/restore/acknowledgement
+  implementation and dependency unchanged. Free access records no purchase and writes no
+  promotional tier to DataStore. Turning off the promotion still rejects saved PLUS_FREE.
+- Dependencies: no dependency/version changes. This review is not a fresh vulnerability scan.
+- Performance/offline: no new startup seeding or I/O; existing live cache retained. No measured
+  device performance claims. Automated evidence is in `FREE_PREMIUM_VERIFICATION.md`.
+
+Readiness: debug/release assembly, debug Android-test compilation, and unit tests pass;
+debug lint has one existing failure outside this change. Device acceptance remains incomplete.
+
+---
+
 > Historical beta report. Current production status and actual verification results are recorded in [PRODUCTION_READINESS_REPORT.md](PRODUCTION_READINESS_REPORT.md). Earlier passing claims below do not describe the current candidate.
 
 # CrossLens Quality Audit Report

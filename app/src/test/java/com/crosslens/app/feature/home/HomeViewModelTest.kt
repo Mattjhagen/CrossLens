@@ -112,7 +112,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `local filter active with no location shows EmptyLocal state`() = runTest {
+    fun `retired local filter preference does not hide stories`() = runTest {
         val stories = listOf(
             Story(
                 id = "test-1",
@@ -149,12 +149,13 @@ class HomeViewModelTest {
         val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine, readingStateRepository)
         advanceUntilIdle()
 
-        // Should show EmptyLocal state because filter is on but no location selected
-        assertTrue(viewModel.uiState.value is HomeUiState.EmptyLocal)
+        // Saved local-only settings came from the retired demo flow; keep normal feed visible.
+        assertTrue(viewModel.uiState.value is HomeUiState.Success)
+        assertFalse(viewModel.showLocalOnly.value)
     }
 
     @Test
-    fun `filter state initializes from preferences`() = runTest {
+    fun `retired local filter is not restored from preferences`() = runTest {
         whenever(storyRepository.observeStories()).thenReturn(flowOf(emptyList()))
 
         // Preferences with showLocalOnly=true
@@ -177,8 +178,7 @@ class HomeViewModelTest {
         val viewModel = HomeViewModel(storyRepository, userPreferencesRepository, personalRelevanceRepository, recommendationEngine, readingStateRepository)
         advanceUntilIdle()
 
-        // Filter state should be restored from preferences
-        assertTrue(viewModel.showLocalOnly.value)
+        assertFalse(viewModel.showLocalOnly.value)
     }
 
     @Test

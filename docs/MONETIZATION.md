@@ -1,3 +1,11 @@
+> Current Android policy (2026-11-01): all premium features are temporarily free in
+> debug and release. `PremiumAccessPolicy.FREE_PREMIUM_ENABLED` grants `PLUS_FREE`
+> independently of saved preview tiers, with source `free_promotion`. No payment,
+> purchase, trial or subscription is recorded. Normal UI has no preview/reset
+> controls or demo onboarding. The historical design below is retained for future
+> work, not the current access behavior. Billing stays dormant; verified production
+> entitlement integration and updated UI are required before charging anyone.
+
 # CrossLens access model
 
 CrossLens has a useful free tier and an optional **CrossLens Plus** upgrade. The free tier must never feel like a broken preview: readers can discover stories, read the neutral event overview, save stories, use basic Explore filters, and compare a limited selection of coverage. Plus unlocks the complete comparison experience for readers who want deeper context.

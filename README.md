@@ -9,12 +9,12 @@ CrossLens is a native Android news reader for comparing available reporting acro
 ## Implemented candidate behavior
 
 - RSS/Atom ingestion uses configured public feeds, publisher metadata, original links and publication timestamps. Undated entries are excluded rather than assigned invented dates. Public-feed and image redistribution rights still need owner review. This revision's real end-to-end ingestion has not been verified on device.
-- Room-backed cached reading, idempotent demo fallback, serialized transactional refresh, deterministic URL identities and saved/last-opened retention. Nine evidenced historical schema upgrade paths are implemented; SQLite checks passed, while Room/device upgrade validation remains pending. Unknown schema 7 is not guessed.
+- Room-backed cached reading, an empty retryable feed when no real reporting is cached, serialized transactional refresh, deterministic URL identities and saved/last-opened retention. Nine evidenced historical schema upgrade paths are implemented; SQLite checks passed, while Room/device upgrade validation remains pending. Unknown schema 7 is not guessed.
 - Story reading and automatic related-coverage grouping, attributed headlines/excerpts, publisher/country/language/time context, original reporting routes and adaptive paired comparison cards. Grouping may be wrong; verified framing/claim analysis and live Lens Gap scores are unavailable.
 - Home Saved/Continue reading controls, Explore publisher-country/region/original-language filters and search across cached headlines/summaries. Topic metadata is incomplete for live feeds. Settings retains theme/reduced motion, adds reading language, confirmed local-data deletion and configurable public privacy/contact links.
-- Constrained periodic WorkManager refresh, HTTPS-only feed/browser paths, lifecycle-aware network indicator, source health and explicit cached/demo states.
+- Constrained periodic WorkManager refresh, HTTPS-only feed/browser paths, lifecycle-aware network indicator, source health and explicit cached states.
 - Production translation provider is unconfigured. Labeled fixture translations remain available; a provider/cache boundary handles revision/provider/freshness, cancellation and failure while preserving originals. Feed/publisher language metadata is used; automatic text-language detection remains future work.
-- Release remains Free. Preview Plus is debug-only. A dormant Play Billing 9.1.0 gateway supports product queries, pending state, restore, server-verifier boundary and acknowledgement, but is not connected to app DI/UI. No paid purchases or production entitlement are enabled.
+- Premium features are temporarily free for everyone in debug and release, with no purchase required. Settings has no preview/reset controls, and startup no longer seeds fictional stories. A dormant Play Billing 9.1.0 gateway supports product queries, pending state, restore, server-verifier boundary and acknowledgement, but is not connected to app DI/UI. No paid purchases or production entitlement are enabled.
 - Firebase is optional and unconfigured by default; crash collection is disabled. Publisher and image requests still transmit network information. See the [privacy draft](docs/PRIVACY_POLICY_DRAFT.md) and [Data Safety worksheet](docs/DATA_SAFETY_WORKSHEET.md).
 
 ## Build
@@ -49,3 +49,16 @@ Added regression coverage for seed idempotence, transactional rollback, stable i
 Release blockers include compilation/test/lint/R8/device checks, actual beta upgrades, source rights and real ingestion, accessibility/performance/RTL/form-factor validation, complete dependency security review, public privacy/contact pages, Play declarations and signed artifacts. Translation/billing/Firebase need separate owner-configured services before activation. The full [Play checklist](docs/PLAY_STORE_RELEASE_CHECKLIST.md) includes listing copy, assets, internal/closed testing and rollout instructions.
 
 Product/design references: [design direction](docs/DESIGN_DIRECTION.md), [monetization boundaries](docs/MONETIZATION.md), [build guide](docs/ANDROID_BUILD_GUIDE.md), [security audit](docs/SECURITY_AUDIT.md). The original beta README and its proposed contracts are preserved in [beta history](docs/README_BETA_HISTORY.md); historical test counts and milestone claims are not current evidence.
+
+## Temporary free premium access
+
+`PremiumAccessPolicy.FREE_PREMIUM_ENABLED` is the single temporary access switch.
+It grants `PLUS_FREE` without overwriting saved legacy tiers or recording a purchase.
+Every `PlusFeature` uses the same repository policy. Comparison initializes with the
+promotion policy so a first frame cannot briefly show a paywall. Translation and
+analysis still require actual available providers/data; access does not invent them.
+The Play Billing gateway and verifier/acknowledgement boundary remain dormant and unchanged.
+Before reactivating payments, connect verified production entitlements, restore the
+purchase UI and update Settings copy; changing this switch alone does not enable billing.
+Demo location/editorial controls and automatic demo fixtures are absent from normal UI.
+Previously saved fictional content retains its disclosures rather than being relabeled as news.

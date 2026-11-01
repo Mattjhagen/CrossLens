@@ -10,5 +10,6 @@ data class Entitlement(
 
 enum class AccessTier {
     FREE,
+    PLUS_FREE, // Temporary promotional access; never proof of payment
     PLUS_DEMO // Local preview only, not a real subscription
 }
